@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 import { client as prisma } from "./prisma";
 
 export const authOptions: NextAuthOptions = {
-	adapter: PrismaAdapter(prisma),
+	adapter: PrismaAdapter(prisma) as any,
 
 	// Use JWT strategy because we're using CredentialsProvider
 	// (Credentials doesn't work with database sessions)
@@ -18,8 +18,8 @@ export const authOptions: NextAuthOptions = {
 
 	// Point NextAuth to your custom pages — it won't use its default UI
 	pages: {
-		signIn: "/auth/signin",
-		error: "/auth/signin", // errors redirect back to signin with ?error=
+		signIn: "/login",
+		error: "/login", // errors redirect back to signin with ?error=
 	},
 
 	providers: [
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
 					id: user.id,
 					email: user.email,
 					name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
-					avatar: user.avatar,
+					image: user.avatar,
 				};
 			},
 		}),
@@ -101,6 +101,7 @@ export const authOptions: NextAuthOptions = {
 			if (user) {
 				token.id = user.id;
 				token.name = user.name;
+				token.avatar = user.avatar;
 			}
 			return token;
 		},
@@ -110,6 +111,7 @@ export const authOptions: NextAuthOptions = {
 			if (token) {
 				session.user.id = token.id as string;
 				session.user.name = token.name as string;
+				session.user.avatar = token.avatar as string;
 			}
 			return session;
 		},
