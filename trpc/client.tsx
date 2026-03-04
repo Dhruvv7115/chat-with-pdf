@@ -7,7 +7,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 import { makeQueryClient } from "./query-client";
 import type { AppRouter } from "./routers/_app";
-export const trpc = createTRPCReact<AppRouter>();
+export const api = createTRPCReact<AppRouter>();
 let clientQueryClientSingleton: QueryClient;
 function getQueryClient() {
 	if (typeof window === "undefined") {
@@ -36,7 +36,7 @@ export function TRPCProvider(
 	//       render if it suspends and there is no boundary
 	const queryClient = getQueryClient();
 	const [trpcClient] = useState(() =>
-		trpc.createClient({
+		api.createClient({
 			links: [
 				httpBatchLink({
 					// transformer: superjson, <-- if you use a data transformer
@@ -46,13 +46,13 @@ export function TRPCProvider(
 		}),
 	);
 	return (
-		<trpc.Provider
+		<api.Provider
 			client={trpcClient}
 			queryClient={queryClient}
 		>
 			<QueryClientProvider client={queryClient}>
 				{props.children}
 			</QueryClientProvider>
-		</trpc.Provider>
+		</api.Provider>
 	);
 }
