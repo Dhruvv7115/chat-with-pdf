@@ -131,6 +131,7 @@ export function LoginForm({
 					<Button
 						variant="outline"
 						type="button"
+						onClick={() => signIn("google", { callbackUrl: "/" })}
 					>
 						<svg
 							viewBox="-3 0 262 262"
@@ -171,6 +172,7 @@ export function LoginForm({
 					<Button
 						variant="outline"
 						type="button"
+						onClick={() => signIn("github", { callbackUrl: "/" })}
 					>
 						<svg
 							viewBox="0 0 20 20"

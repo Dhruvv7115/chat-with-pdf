@@ -203,7 +203,9 @@ export function SignupForm({
 								value === getValues("password") || "Passwords do not match",
 						})}
 					/>
-					<FieldDescription className="text-xs">Please confirm your password.</FieldDescription>
+					<FieldDescription className="text-xs">
+						Please confirm your password.
+					</FieldDescription>
 				</Field>
 				<Field>
 					<Button
@@ -227,6 +229,7 @@ export function SignupForm({
 					<Button
 						variant="outline"
 						type="button"
+						onClick={() => signIn("google", { callbackUrl: "/" })}
 					>
 						<svg
 							viewBox="-3 0 262 262"
@@ -267,6 +270,7 @@ export function SignupForm({
 					<Button
 						variant="outline"
 						type="button"
+						onClick={() => signIn("github", { callbackUrl: "/" })}
 					>
 						<svg
 							viewBox="0 0 20 20"
