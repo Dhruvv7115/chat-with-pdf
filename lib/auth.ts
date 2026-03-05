@@ -1,6 +1,5 @@
 // src/lib/auth.ts
 import { NextAuthOptions } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
@@ -8,8 +7,6 @@ import bcrypt from "bcryptjs";
 import { client as prisma } from "./prisma";
 
 export const authOptions: NextAuthOptions = {
-	adapter: PrismaAdapter(prisma) as any,
-
 	// Use JWT strategy because we're using CredentialsProvider
 	// (Credentials doesn't work with database sessions)
 	session: {
@@ -66,6 +63,7 @@ export const authOptions: NextAuthOptions = {
 			clientId: process.env.GOOGLE_CLIENT_ID!,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
 			profile(profile) {
+				console.log("profile", profile);
 				return {
 					id: profile.sub,
 					firstName: profile.given_name,
@@ -73,6 +71,7 @@ export const authOptions: NextAuthOptions = {
 					email: profile.email,
 					avatar: profile.picture,
 					name: profile.name,
+					emailVerified: profile.email_verified ? new Date() : undefined,
 				};
 			},
 		}),
@@ -82,6 +81,7 @@ export const authOptions: NextAuthOptions = {
 			clientId: process.env.GITHUB_CLIENT_ID!,
 			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
 			profile(profile) {
+				console.log("profile", profile);
 				const [firstName, ...rest] = (profile.name ?? profile.login).split(" ");
 				return {
 					id: String(profile.id),
@@ -96,12 +96,30 @@ export const authOptions: NextAuthOptions = {
 	],
 
 	callbacks: {
-		// Attach user id and name to the JWT token
+		// Save user to database and attach data to JWT token
 		async jwt({ token, user }) {
 			if (user) {
-				token.id = user.id;
+				console.log("user", user);
+				// Save or update user in database for OAuth providers
+				const dbUser = await prisma.user.upsert({
+					where: { email: user.email || "" },
+					update: {
+						firstName: user?.firstName || user.name?.split(" ")[0],
+						lastName: user.lastName || user.name?.split(" ").slice(1).join(" "),
+						avatar: user.image || user.avatar,
+					},
+					create: {
+						email: user.email || "",
+						emailVerified: user.emailVerified!,
+						firstName: user.firstName || "",
+						lastName: user.lastName || "",
+						avatar: user.image || user.avatar,
+					},
+				});
+
+				token.id = dbUser.id;
 				token.name = user.name;
-				token.avatar = user.avatar;
+				token.avatar = dbUser.avatar;
 			}
 			return token;
 		},
