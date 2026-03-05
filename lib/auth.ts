@@ -90,6 +90,7 @@ export const authOptions: NextAuthOptions = {
 					email: profile.email,
 					avatar: profile.avatar_url,
 					name: profile.name ?? profile.login,
+					emailVerified: profile.verified ? new Date() : undefined,
 				};
 			},
 		}),

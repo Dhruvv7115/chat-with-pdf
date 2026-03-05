@@ -25,4 +25,19 @@ model User {
   emailVerified DateTime?
 
   password String?
+  pdfs     Pdf[]
+}
+
+model Pdf {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title     String
+  fileUrl   String
+  fileSize  Int?
+  pageCount Int?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
