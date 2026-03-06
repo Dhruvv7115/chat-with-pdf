@@ -23,9 +23,10 @@ model User {
   avatar        String?
   email         String    @unique
   emailVerified DateTime?
+  password      String?
 
-  password String?
-  pdfs     Pdf[]
+  pdfs  Pdf[]
+  chats Chat[]
 }
 
 model Pdf {
@@ -38,6 +39,40 @@ model Pdf {
   fileSize  Int?
   pageCount Int?
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  chats Chat[]
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title    String
+  messages Message[]
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  
+  pdf    Pdf    @relation(fields: [pdfId], references: [id], onDelete: Cascade)
+  pdfId  String
+}
+
+enum Role {
+  USER
+  ASSISTANT
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String
+  role    Role
+
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId String
 }
