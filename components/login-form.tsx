@@ -10,11 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api } from "@/trpc/client";
 import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { is } from "zod/v4/locales";
 import { Loader2 } from "lucide-react";
 type Inputs = {
 	email: string;

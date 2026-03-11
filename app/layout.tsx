@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { TRPCProvider } from "@/trpc/client";
-import { SessionProvider } from "next-auth/react";
 import { Providers } from "./providers";
 import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -35,14 +33,16 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<Providers>{children}</Providers>
-				<Toaster
-					richColors
-					position="top-center"
-					toastOptions={{
-						duration: 3000,
-					}}
-				/>
+				<Providers>
+					{children}
+					<Toaster
+						richColors
+						position="top-center"
+						toastOptions={{
+							duration: 3000,
+						}}
+					/>
+				</Providers>
 			</body>
 		</html>
 	);
