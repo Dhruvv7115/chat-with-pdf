@@ -35,7 +35,7 @@ model Pdf {
   updatedAt DateTime @updatedAt
 
   title     String
-  fileUrl   String
+  fileKey   String    @unique
   fileSize  Int?
   pageCount Int?
 
