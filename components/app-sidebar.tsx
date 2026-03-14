@@ -59,12 +59,12 @@ const AppSidebar = () => {
 								key={item.name}
 								href={item.href}
 								className={cn(
-									`flex items-center justify-start font-normal gap-2 text-base px-3 py-1 rounded-md`,
-									location === item.href && "bg-primary text-secondary",
+									`flex items-center justify-start font-normal gap-2 text-sm px-3 py-1 rounded-md`,
+									location === item.href && "bg-primary text-secondary font-semibold",
 									location !== item.href && "hover:bg-primary/10",
 								)}
 							>
-								<item.icon className="size-5" />
+								<item.icon className="size-4" />
 								{item.name}
 							</Link>
 						))}
