@@ -63,7 +63,6 @@ export const authOptions: NextAuthOptions = {
 			clientId: process.env.GOOGLE_CLIENT_ID!,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
 			profile(profile) {
-				console.log("profile", profile);
 				return {
 					id: profile.sub,
 					firstName: profile.given_name,
@@ -81,7 +80,6 @@ export const authOptions: NextAuthOptions = {
 			clientId: process.env.GITHUB_CLIENT_ID!,
 			clientSecret: process.env.GITHUB_CLIENT_SECRET!,
 			profile(profile) {
-				console.log("profile", profile);
 				const [firstName, ...rest] = (profile.name ?? profile.login).split(" ");
 				return {
 					id: String(profile.id),
@@ -100,7 +98,6 @@ export const authOptions: NextAuthOptions = {
 		// Save user to database and attach data to JWT token
 		async jwt({ token, user }) {
 			if (user) {
-				console.log("user", user);
 				// Save or update user in database for OAuth providers
 				const dbUser = await prisma.user.upsert({
 					where: { email: user.email || "" },

@@ -1,4 +1,6 @@
+import { authOptions } from "@/lib/auth";
 import { initTRPC } from "@trpc/server";
+import { getServerSession } from "next-auth";
 import { cache } from "react";
 export const createTRPCContext = cache(async () => {
 	/**
@@ -17,7 +19,21 @@ const t = initTRPC.create({
 	// transformer: superjson,
 });
 
+const authenticationMiddleware = t.middleware(async ({ ctx, next }) => {
+	const session = await getServerSession(authOptions);
+	if (!session) {
+		throw new Error("Unauthorized");
+	}
+
+	return next({
+		ctx: {
+			userId: session.user.id,
+		},
+	});
+});
+
 // Base router and procedure helpers
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
 export const publicProcedure = t.procedure;
+export const protectedProcedure = t.procedure.use(authenticationMiddleware);
