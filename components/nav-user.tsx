@@ -50,6 +50,7 @@ export function NavUser({
 								<AvatarImage
 									src={user.avatar}
 									alt={user.name}
+									referrerPolicy="no-referrer"
 								/>
 								<AvatarFallback className="rounded-lg">
                   {user.name[0]}

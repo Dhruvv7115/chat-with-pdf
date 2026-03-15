@@ -34,7 +34,6 @@ const sidebarContents = {
 const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
-	console.log(data);
 
 	return (
 		<Sidebar variant="inset">
