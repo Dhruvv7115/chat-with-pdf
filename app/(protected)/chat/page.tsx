@@ -1,11 +1,9 @@
 "use client";
 import FileUploadDemo from "@/components/file-upload-demo";
-import React from "react";
-import ChatInput from "@/components/chat-input";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
-import { create } from "node:domain";
 import { useRouter } from "next/navigation";
+import ChatStartInput from "@/components/chat-start-input";
 
 const ChatPage = () => {
 	const uploadPdf = api.pdf.getUploadUrl.useMutation();
@@ -67,7 +65,7 @@ const ChatPage = () => {
 
 			<div className="flex gap-2 w-full max-w-4xl mx-auto">
 				<FileUploadDemo onUpload={handlePdfUpload} />
-				<ChatInput />
+				<ChatStartInput />
 			</div>
 		</main>
 	);
