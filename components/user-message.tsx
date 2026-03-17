@@ -2,8 +2,16 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AvatarFallback, AvatarImage, Avatar } from "./ui/avatar";
-
-const UserMessage = () => {
+import { Role } from "@/lib/generated/prisma/enums";
+type Message = {
+	id: string;
+	role: Role;
+	content: string;
+	createdAt: string;
+	updatedAt: string;
+	chatId: string;
+};
+const UserMessage = ({ message }: { message: Message }) => {
 	const { data: session } = useSession();
 	if (!session) return null;
 	const user = session.user;
