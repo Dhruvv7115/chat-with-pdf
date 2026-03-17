@@ -53,7 +53,7 @@ const ResizablePdfChat = ({
 				defaultSize={50}
 				className="h-full overflow-hidden"
 			>
-				<ChatAi />
+				<ChatAi chat={chat} pdfUrl={pdfUrl} />
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);
