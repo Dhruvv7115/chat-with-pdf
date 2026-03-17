@@ -35,14 +35,15 @@ model Pdf {
   updatedAt DateTime @updatedAt
 
   title     String
-  fileKey   String    @unique
+  fileKey   String @unique
   fileSize  Int?
   pageCount Int?
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  chats Chat[]
+  chats         Chat[]
+  pdfEmbeddings PdfEmbedding[]
 }
 
 model Chat {
@@ -55,9 +56,9 @@ model Chat {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
-  
-  pdf    Pdf    @relation(fields: [pdfId], references: [id], onDelete: Cascade)
-  pdfId  String
+
+  pdf   Pdf    @relation(fields: [pdfId], references: [id], onDelete: Cascade)
+  pdfId String
 }
 
 enum Role {
@@ -75,4 +76,12 @@ model Message {
 
   chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId String
+}
+
+model PdfEmbedding {
+  id        String                       @id @default(cuid())
+  pdfId     String
+  content   String
+  embedding Unsupported("vector(3072)")?
+  pdf       Pdf                          @relation(fields: [pdfId], references: [id])
 }

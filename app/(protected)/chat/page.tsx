@@ -13,31 +13,6 @@ const ChatPage = () => {
 	const createChat = api.chat.createChat.useMutation();
 	const router = useRouter();
 
-	// await Promise.all(
-	// 	files.map(async (file) => {
-	// 		await createPdf.mutateAsync(
-	// 			{
-	// 				name: file.name,
-	// 				type: file.type,
-	// 				size: file.size,
-	// 			},
-	// 			{
-	// 				onSuccess: (data) => {
-	// 					fetch(data.url, {
-	// 						method: "PUT",
-	// 						body: file,
-	// 					}).then(() => {
-	// 						toast.success("File uploaded successfully");
-	// 					});
-	// 				},
-	// 				onError: (error) => {
-	// 					toast.error("Something went wrong");
-	// 					console.log(error);
-	// 				},
-	// 			},
-	// 		);
-	// 	}),
-	// );
 	const handlePdfUpload = async (files: File[]) => {
 		if (!files.length) return;
 		if (files.length > 1) {
