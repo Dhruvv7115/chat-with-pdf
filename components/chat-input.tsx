@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -19,19 +19,28 @@ import { ArrowUp } from "lucide-react";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
 
-const ChatInput = ({ chatId }: { chatId?: string }) => {
+const ChatInput = ({
+	chatId,
+	setAiResponse,
+}: {
+	chatId: string;
+	setAiResponse: React.Dispatch<React.SetStateAction<string>>;
+}) => {
+	const utils = api.useUtils();
 	const createMessage = api.message.createMessage.useMutation();
-	const userMessageRef = useRef<HTMLTextAreaElement | null>(null);
+	const aiResponseRef = useRef<string>("");
+
+	const [question, setQuestion] = useState(""); // controls the input
 
 	return (
 		<InputGroup className="p-2">
 			<InputGroupTextarea
 				id="block-end-textarea"
 				placeholder="Ask to start a chat..."
-				className="text-lg!"
+				className=""
 				disabled={createMessage.isPending}
-				ref={userMessageRef}
-				onChange={() => console.log(userMessageRef.current?.value)}
+				value={question}
+				onChange={(e) => setQuestion(e.target.value)}
 			/>
 			<InputGroupAddon align="block-end">
 				<Select>
@@ -52,23 +61,42 @@ const ChatInput = ({ chatId }: { chatId?: string }) => {
 					className="ml-auto rounded-full p-2"
 					disabled={createMessage.isPending}
 					onClick={() => {
-						if (chatId) {
-							if (
-								userMessageRef.current?.value.trim() === "" ||
-								!userMessageRef.current
-							) {
-								toast.info("Please enter a message");
-								return;
-							}
-
-							createMessage.mutate({
+						createMessage
+							.mutateAsync({
 								chatId,
-								content: userMessageRef.current.value,
+								content: question,
 								role: "USER",
+							})
+							.then(() => {
+								setQuestion("");
+								utils.chat.getMessages.invalidate();
+								fetch("/api/ai/chat", {
+									method: "POST",
+									headers: { "Content-Type": "application/json" },
+									body: JSON.stringify({
+										chatId,
+										question,
+									}),
+								}).then(async (res) => {
+									const reader = res.body?.getReader();
+									const decoder = new TextDecoder();
+
+									while (true) {
+										const { done, value } = await reader!.read();
+										if (done) break;
+										setAiResponse((p) => p + decoder.decode(value));
+										aiResponseRef.current += decoder.decode(value);
+									}
+									await createMessage.mutateAsync({
+										chatId,
+										content: aiResponseRef.current,
+										role: "ASSISTANT",
+									});
+									aiResponseRef.current = "";
+									setAiResponse("");
+									utils.chat.getMessages.invalidate();
+								});
 							});
-						} else {
-							// TODO: add chat creation logic here for /chat page
-						}
 					}}
 				>
 					<ArrowUp />
