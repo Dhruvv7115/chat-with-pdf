@@ -82,6 +82,6 @@ model PdfEmbedding {
   id        String                       @id @default(cuid())
   pdfId     String
   content   String
-  embedding Unsupported("vector(3072)")?
+  embedding Unsupported("vector(768)")?
   pdf       Pdf                          @relation(fields: [pdfId], references: [id])
 }

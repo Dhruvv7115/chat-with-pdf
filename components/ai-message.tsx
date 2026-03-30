@@ -13,7 +13,7 @@ type Message = {
 };
 const AiMessage = ({ message }: { message: Message }) => {
 	return (
-		<div className="flex items-start justify-start gap-4 w-full h-fit">
+		<div className="flex items-start justify-start gap-4 w-full h-fit mb-4">
 			<Avatar>
 				<AvatarImage
 					src="/message-bot.png"
