@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import AiMessage from "./ai-message";
 import UserMessage from "./user-message";
 import ChatInput from "./chat-input";
@@ -12,35 +12,59 @@ type Chat = {
 	createdAt: Date;
 	updatedAt: Date;
 };
+type Pdf = {
+	userId: string;
+	title: string;
+	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	fileKey: string;
+	fileSize: number | null;
+	pageCount: number | null;
+};
 
-const ChatAi = ({ chat, pdfUrl }: { chat: Chat; pdfUrl?: string }) => {
+const ChatAi = ({
+	chat,
+	pdfUrl,
+	pdf,
+}: {
+	chat: Chat;
+	pdfUrl?: string;
+	pdf: Pdf;
+}) => {
 	const { data: messages, refetch } = api.chat.getMessages.useQuery({
 		chatId: chat.id,
 	});
-	console.log(messages);
-	const [aiSummary, setAiSummary] = useState<string>("");
 	const createMessage = api.message.createMessage.useMutation();
+	const aiSummaryRef = useRef("");
 	api.message.createAiSummary.useSubscription(
 		{
-			chatId: chat.id,
+			pdfId: pdf?.id ?? "",
 			pdfUrl: pdfUrl ?? "",
 		},
 		{
 			enabled: (pdfUrl && messages?.length === 0) || false,
 			onData: (data) => {
-				setAiSummary((prev) => prev + data.value);
+				aiSummaryRef.current += data.value;
 				console.log(data.value);
 			},
 			onComplete: () => {
 				createMessage.mutate({
 					chatId: chat.id,
-					content: aiSummary,
+					content: aiSummaryRef.current,
 					role: "ASSISTANT",
 				});
 				refetch();
 			},
 		},
 	);
+	const [aiResponse, setAiResponse] = useState<string>("");
+
+	const bottomRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages, aiResponse]);
 
 	return (
 		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
@@ -58,9 +82,25 @@ const ChatAi = ({ chat, pdfUrl }: { chat: Chat; pdfUrl?: string }) => {
 						/>
 					);
 				})}
+				{!!aiResponse && (
+					<AiMessage
+						message={{
+							id: "ai-response",
+							role: "ASSISTANT",
+							content: aiResponse,
+							createdAt: new Date().toISOString(),
+							updatedAt: new Date().toISOString(),
+							chatId: chat.id,
+						}}
+					/>
+				)}
+				<div ref={bottomRef} />
 			</div>
-			<div className="px-4 py-2">
-				<ChatInput chatId={chat.id} />
+			<div className="px-6 py-2">
+				<ChatInput
+					chatId={chat.id}
+					setAiResponse={setAiResponse}
+				/>
 			</div>
 		</div>
 	);
