@@ -45,9 +45,10 @@ export const chatRouter = createTRPCRouter({
 		)
 		.query(async ({ input, ctx }) => {
 			const { chatId } = input;
-			return client.message.findMany({
+			const messages = await client.message.findMany({
 				where: { chatId },
-				orderBy: { createdAt: "desc" },
+				orderBy: { createdAt: "asc" },
 			});
+			return messages;
 		}),
 });

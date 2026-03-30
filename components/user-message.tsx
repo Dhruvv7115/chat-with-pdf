@@ -17,11 +17,9 @@ const UserMessage = ({ message }: { message: Message }) => {
 	const user = session.user;
 
 	return (
-		<div className="flex items-center justify-end gap-4 w-full h-full">
-			<div>
-				<div className="bg-primary rounded-lg w-fit flex items-center justify-center py-2 px-4 text-base text-secondary">
-					hello
-				</div>
+		<div className="flex items-start justify-end gap-4 w-full h-fit mb-4">
+			<div className="bg-primary rounded-lg w-fit flex items-center justify-center py-2 px-4 text-base text-secondary max-w-[80%]">
+				{message.content}
 			</div>
 			<Avatar className="h-8 w-8 rounded-lg">
 				<AvatarImage

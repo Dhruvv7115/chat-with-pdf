@@ -53,13 +53,10 @@ const ReactPdf = ({ pdfUrl }: { pdfUrl: string }) => {
 					width={containerWidth ? containerWidth - 32 : undefined}
 				/>
 			</Document>
-
 			<Pagination
 				className={cn(
 					"sticky bottom-8 z-50 bg-white dark:bg-neutral-900 w-fit p-1 rounded-xl shadow-2xl border border-neutral-300 dark:border-neutral-800",
-					showPagination && numPages && pageNumber && numPages > 1
-						? ""
-						: "hidden",
+					showPagination && numPages && pageNumber ? "" : "hidden",
 				)}
 			>
 				<PaginationContent>
