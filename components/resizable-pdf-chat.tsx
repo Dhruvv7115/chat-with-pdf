@@ -1,5 +1,4 @@
 "use client";
-import React, { useState } from "react";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -26,14 +25,14 @@ type Pdf = {
 	fileKey: string;
 	fileSize: number | null;
 	pageCount: number | null;
-} | null;
+};
 
 const ResizablePdfChat = ({
 	pdf,
 	chat,
 	pdfUrl,
 }: {
-	pdf?: Pdf;
+	pdf: Pdf;
 	chat: Chat;
 	pdfUrl?: string;
 }) => {
@@ -53,7 +52,7 @@ const ResizablePdfChat = ({
 				defaultSize={50}
 				className="h-full overflow-hidden"
 			>
-				<ChatAi chat={chat} pdfUrl={pdfUrl} />
+				<ChatAi chat={chat} pdfUrl={pdfUrl} pdf={pdf} />
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);

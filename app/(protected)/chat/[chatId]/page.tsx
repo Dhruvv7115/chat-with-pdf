@@ -19,6 +19,7 @@ const page = async ({ params }: Props) => {
 			pdfUrl = await getFileUrl(pdf.fileKey);
 		}
 	}
+	if (!pdf) return redirect("/chat");
 	return (
 		<div className="h-full overflow-hidden">
 			<ResizablePdfChat
