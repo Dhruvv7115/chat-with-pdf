@@ -3,6 +3,7 @@ import AiMessage from "./ai-message";
 import UserMessage from "./user-message";
 import ChatInput from "./chat-input";
 import { api } from "@/trpc/client";
+import { Loader2 } from "lucide-react";
 
 type Chat = {
 	id: string;
@@ -37,27 +38,40 @@ const ChatAi = ({
 	});
 	const createMessage = api.message.createMessage.useMutation();
 	const aiSummaryRef = useRef("");
-	api.message.createAiSummary.useSubscription(
-		{
-			pdfId: pdf?.id ?? "",
-			pdfUrl: pdfUrl ?? "",
-		},
-		{
-			enabled: (pdfUrl && messages?.length === 0) || false,
-			onData: (data) => {
-				aiSummaryRef.current += data.value;
-				console.log(data.value);
-			},
-			onComplete: () => {
-				createMessage.mutate({
+	const hasFetched = useRef(false);
+
+	useEffect(() => {
+		if (pdfUrl && messages?.length === 0) {
+			hasFetched.current = true;
+			fetch("/api/ai/summary", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					pdfId: pdf.id,
+					pdfUrl,
+				}),
+			}).then(async (res) => {
+				const reader = res.body?.getReader();
+				const decoder = new TextDecoder();
+
+				while (true) {
+					const { done, value } = await reader!.read();
+					if (done) break;
+					const text = decoder.decode(value);
+					setAiResponse((p) => p + text);
+					aiSummaryRef.current += text;
+				}
+				await createMessage.mutateAsync({
 					chatId: chat.id,
 					content: aiSummaryRef.current,
 					role: "ASSISTANT",
 				});
+				aiSummaryRef.current = "";
+				setAiResponse("");
 				refetch();
-			},
-		},
-	);
+			});
+		}
+	}, [messages]);
 	const [aiResponse, setAiResponse] = useState<string>("");
 
 	const bottomRef = useRef<HTMLDivElement>(null);
@@ -69,6 +83,16 @@ const ChatAi = ({
 	return (
 		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
 			<div className="px-4 py-6 overflow-y-auto h-full">
+				{messages?.length === 0 && (
+					// <div className="flex gap-1">
+					// 	<div className="animate-bounce delay-200 duration-100">•</div>
+					// 	<div className="animate-bounce delay-100 duration-100">•</div>
+					// 	<div className="animate-bounce delay-0 duration-100">•</div>
+					// </div>
+					<div className="flex items-center justify-center h-full w-full">
+						<Loader2 className="animate-spin w-20 h-20 text-neutral-400" />
+					</div>
+				)}
 				{messages?.map((message) => {
 					return message.role === "USER" ? (
 						<UserMessage
