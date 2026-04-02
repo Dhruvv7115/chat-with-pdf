@@ -1,7 +1,7 @@
 import { client } from "@/lib/prisma";
 import { generateAnswer, generateQueryEmbedding } from "@/utils/gemini";
 import { similaritySearch } from "@/utils/rag";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
 	const { chatId } = await req.json();
