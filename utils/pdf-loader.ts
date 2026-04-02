@@ -13,7 +13,7 @@ export async function loadPdfText(pdfUrl: string) {
 	return pdf;
 }
 
-export async function* indexPdf(pdfUrl: string, pdfId: string) {
+export async function indexPdf(pdfUrl: string, pdfId: string) {
 	const docs = await loadPdfText(pdfUrl);
 	const content = docs
 		.map((doc, index) => `--- PAGE ${index + 1} ---\n${doc.pageContent}`)
@@ -22,7 +22,7 @@ export async function* indexPdf(pdfUrl: string, pdfId: string) {
 	const contentForChunking = docs.map((doc) => doc.pageContent).join("\n\n");
 	const chunks = await chunkPdf(contentForChunking);
 
-	// We are batching the chunks so that we dont hit the api rate limits, for now a batch of 10 (a single batch would execute parallely -> 10 chunks)
+	// We are batching the chunks so that we dont hit the api rate limits, for now a batch of 5 (a single batch would execute parallely -> 5 chunks)
 	const batches: string[][] = [];
 	chunks.forEach((chunk, index) => {
 		const batchIndex = Math.floor(index / 5);
@@ -62,14 +62,9 @@ export async function* indexPdf(pdfUrl: string, pdfId: string) {
 		allEmbeddings.push(...batchEmbeddings);
 	}
 
-	const response = await summarizePdf(content);
-	for await (const chunk of response) {
-		yield {
-			type: "text" as const,
-			value: chunk.text,
-		};
-	}
+	return summarizePdf(content);
 }
+
 export async function chunkPdf(document: string) {
 	const splitter = new RecursiveCharacterTextSplitter({
 		chunkSize: 1000,

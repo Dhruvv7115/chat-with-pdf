@@ -65,6 +65,7 @@ export const FileUpload = ({
           type="file"
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
+          accept=".pdf"
         />
         <div className="absolute inset-0 mask-[radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
