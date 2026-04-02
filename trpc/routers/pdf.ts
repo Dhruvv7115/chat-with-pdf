@@ -65,6 +65,7 @@ export const pdfRouter = createTRPCRouter({
 		return client.pdf.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
+		  take: 3
 		});
 	}),
 });

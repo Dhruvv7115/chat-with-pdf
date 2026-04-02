@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
 import { useSession } from "next-auth/react";
+import { api } from "@/trpc/client";
 
 const sidebarContents = {
 	group1: [
@@ -34,6 +35,7 @@ const sidebarContents = {
 const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
+	const { data: recentPdfs } = api.pdf.getUserPdfs.useQuery();
 
 	return (
 		<Sidebar variant="inset">
@@ -59,7 +61,8 @@ const AppSidebar = () => {
 								href={item.href}
 								className={cn(
 									`flex items-center justify-start font-normal gap-2 text-sm px-3 py-1 rounded-md`,
-									location === item.href && "bg-primary text-secondary font-semibold",
+									location === item.href &&
+										"bg-primary text-secondary font-semibold",
 									location !== item.href && "hover:bg-primary/10",
 								)}
 							>
@@ -71,7 +74,18 @@ const AppSidebar = () => {
 				</SidebarGroup>
 				<SidebarGroup id="group-2">
 					<SidebarGroupLabel>Recent PDFs</SidebarGroupLabel>
-					<SidebarGroupContent></SidebarGroupContent>
+					<SidebarGroupContent className="flex flex-col gap-2 my-2">
+						{recentPdfs?.map((pdf) => (
+							<Link
+								href="/"
+								className="rounded-lg hover:bg-accent px-2 py-1"
+							>
+								{pdf.title.length > 20
+									? pdf.title.slice(0, 20) + "..."
+									: pdf.title}
+							</Link>
+						))}
+					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter>
