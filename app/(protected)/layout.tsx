@@ -19,7 +19,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
 						<Separator orientation="vertical" />
 					</div>
 				</header>
-				<div className="flex-1 overflow-hidden">{children}</div>
+				<div className="flex-1 overflow-scroll">{children}</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);
