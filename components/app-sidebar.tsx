@@ -77,7 +77,8 @@ const AppSidebar = () => {
 					<SidebarGroupContent className="flex flex-col gap-2 my-2">
 						{recentPdfs?.map((pdf) => (
 							<Link
-								href="/"
+								key={pdf.id}
+								href={"/dashboard/" + pdf.id}
 								className="rounded-lg hover:bg-accent px-2 py-1"
 							>
 								{pdf.title.length > 20
