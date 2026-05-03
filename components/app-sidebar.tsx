@@ -78,7 +78,7 @@ const AppSidebar = () => {
 						{recentPdfs?.map((pdf) => (
 							<Link
 								key={pdf.id}
-								href={"/dashboard/" + pdf.id}
+								href={"/chat/" + pdf.id}
 								className="rounded-lg hover:bg-accent px-2 py-1"
 							>
 								{pdf.title.length > 20
