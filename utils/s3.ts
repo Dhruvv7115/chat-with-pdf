@@ -47,6 +47,32 @@ const uploadFile = async (
 	return { url, key }; // save key to DB
 };
 
+const uploadUserImage = async (
+	userId: string,
+	file: {
+		name: string;
+		type: string;
+		size: number;
+	},
+) => {
+	const allowedType = "images/*";
+	if (allowedType !== file.type) throw new Error("Invalid file type");
+	const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+	const key = `users/${userId}/avatars/${Date.now()}-${safeName}`;
+
+	const url = await getSignedUrl(
+		s3,
+		new PutObjectCommand({
+			Bucket: process.env.AWS_BUCKET_NAME!,
+			Key: key,
+			ContentType: file.type,
+		}),
+		{ expiresIn: 300 },
+	);
+
+	return { url, key }; // save key to DB
+};
+
 const getFileUrl = async (key: string) => {
 	const command = new GetObjectCommand({
 		Bucket: process.env.AWS_BUCKET_NAME!,
@@ -64,4 +90,4 @@ const deleteFile = async (key: string) => {
 	);
 };
 
-export { uploadFile, getFileUrl, deleteFile };
+export { uploadFile, getFileUrl, deleteFile, uploadUserImage };
