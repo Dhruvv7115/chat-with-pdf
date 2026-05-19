@@ -1,8 +1,9 @@
-import { publicProcedure, createTRPCRouter } from "../init";
+import { publicProcedure, createTRPCRouter, protectedProcedure } from "../init";
 import z from "zod";
 import { client } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
 import { hashPassword } from "@/utils/bcrypt";
+import { uploadUserImage } from "@/utils/s3";
 
 export const userRouter = createTRPCRouter({
 	register: publicProcedure
@@ -61,4 +62,46 @@ export const userRouter = createTRPCRouter({
 				});
 			}
 		}),
+
+	updateProfile: protectedProcedure
+		.input(
+			z.object({
+				firstName: z.string().optional(),
+				lastName: z.string().optional(),
+				email: z.string().optional(),
+				userAvatar: z.file().optional(),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			console.log(input);
+			if (
+				!input.email &&
+				!input.firstName &&
+				!input.lastName &&
+				!input.userAvatar
+			)
+				return new TRPCError({
+					code: "BAD_REQUEST",
+					message: "atleast one field is necessary",
+				});
+			let image;
+			if (input.userAvatar)
+				image = uploadUserImage(ctx.userId, input.userAvatar);
+			const updatedUser = await client.user.update({
+				where: {
+					id: ctx.userId,
+				},
+				data: input,
+			});
+			console.log("updatedUser", updatedUser);
+			return updatedUser;
+		}),
+
+	getProfile: protectedProcedure.query(async ({ ctx }) => {
+		const user = await client.user.findUnique({
+			where: { id: ctx.userId },
+		});
+		console.log("user", user);
+		return user;
+	}),
 });
