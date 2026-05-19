@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useRefetch } from "@/hooks/use-refetch";
 import {
 	Card,
 	CardContent,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { api } from "@/trpc/client";
 
 function getInitials(firstName?: string | null, lastName?: string | null) {
 	return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
@@ -32,13 +34,22 @@ function getInitials(firstName?: string | null, lastName?: string | null) {
 
 export default function SettingsPage() {
 	const { data: session } = useSession();
+	const { data: profile } = api.user.getProfile.useQuery();
+	const refetch = useRefetch();
+
 	const user = session?.user;
-	console.log(user);
+	console.log("profile from db: ", profile);
+
+	const updateProfile = api.user.updateProfile.useMutation();
 
 	// Profile form state
-	const [firstName, setFirstName] = useState(user?.name?.split(" ")[0] ?? "");
-	const [lastName, setLastName] = useState(user?.name?.split(" ")[1] ?? "");
-	const [email, setEmail] = useState(user?.email ?? "");
+	const [firstName, setFirstName] = useState(
+		profile?.firstName ?? user?.name?.split(" ")[0] ?? "",
+	);
+	const [lastName, setLastName] = useState(
+		profile?.lastName ?? user?.name?.split(" ")[1] ?? "",
+	);
+	const [email, setEmail] = useState(profile?.email ?? user?.email ?? "");
 	const [userAvatar, setUserAvatar] = useState<string>("");
 	const [userAvatarFile, setUserAvatarFile] = useState<File>();
 
@@ -49,7 +60,37 @@ export default function SettingsPage() {
 
 	function handleSaveProfile() {
 		// TODO: call your tRPC mutation here e.g. api.user.updateProfile.mutate(...)
+		if (
+			!firstName.trim() &&
+			!lastName.trim() &&
+			!email.trim() &&
+			!userAvatarFile
+		) {
+			toast.info("Please change atleast one attribute.");
+			return;
+		}
+		interface ProfileChanges {
+			firstName?: string;
+			lastName?: string;
+			userAvatar?: File;
+			email?: string;
+		}
+		let obj: ProfileChanges = {};
+		if (firstName.trim() !== "") obj.firstName = firstName;
+		if (lastName.trim() !== "") obj.lastName = lastName;
+		if (email.trim() !== "") obj.email = email;
+		if (userAvatarFile) obj.userAvatar = userAvatarFile;
+
 		console.log("save profile", { firstName, lastName, email });
+		updateProfile.mutate(obj, {
+			onSuccess: () => {
+				refetch();
+				toast.success("Profile updated successfully");
+			},
+			onError: (error) => {
+				toast.error(error.message);
+			},
+		});
 	}
 
 	function handleUpdatePassword() {
@@ -105,7 +146,10 @@ export default function SettingsPage() {
 							</AvatarFallback>
 						</Avatar>
 						<div>
-							<p className="text-sm font-medium">{user?.name}</p>
+							<p className="text-sm font-medium">
+								{profile?.firstName} {profile?.lastName}{" "}
+								{!profile?.firstName && !profile?.lastName && user?.name}
+							</p>
 							<p className="text-xs text-muted-foreground mb-2">
 								{user?.email}
 							</p>
@@ -132,7 +176,7 @@ export default function SettingsPage() {
 					</div>
 
 					{/* Name fields */}
-					<div className="grid sm:grid-cols-3 grid-cols-1 gap-3">
+					<div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
 						<div className="flex flex-col gap-1.5">
 							<Label className="text-xs">First name</Label>
 							<Input
@@ -147,15 +191,6 @@ export default function SettingsPage() {
 								value={lastName}
 								onChange={(e) => setLastName(e.target.value)}
 								placeholder="Doe"
-							/>
-						</div>
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-xs">Email</Label>
-							<Input
-								type="email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								placeholder="you@example.com"
 							/>
 						</div>
 					</div>
