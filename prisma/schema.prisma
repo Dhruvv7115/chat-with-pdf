@@ -25,8 +25,9 @@ model User {
   emailVerified DateTime?
   password      String?
 
-  pdfs  Pdf[]
-  chats Chat[]
+  pdfs         Pdf[]
+  chats        Chat[]
+  subscription Subscription?
 }
 
 model Pdf {
@@ -79,9 +80,41 @@ model Message {
 }
 
 model PdfEmbedding {
-  id        String                       @id @default(cuid())
+  id        String                      @id @default(cuid())
   pdfId     String
   content   String
   embedding Unsupported("vector(768)")?
-  pdf       Pdf                          @relation(fields: [pdfId], references: [id])
+  pdf       Pdf                         @relation(fields: [pdfId], references: [id])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  plan   Plan      @default(FREE)
+  status SubStatus @default(ACTIVE)
+
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+enum SubStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
 }
