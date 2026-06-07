@@ -45,7 +45,7 @@ const ReactPdf = ({ pdfUrl }: { pdfUrl: string }) => {
 			onMouseLeave={() => setShowPagination(false)}
 		>
 			<Document
-				file={pdfUrl}
+				file={pdfUrl ?? ""}
 				onLoadSuccess={({ numPages }) => setNumPages(numPages)}
 			>
 				<Page

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Sidebar,
 	SidebarContent,
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/client";
+import { motion } from "motion/react";
 
 const sidebarContents = {
 	group1: [
@@ -36,6 +37,7 @@ const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
 	const { data: recentPdfs } = api.pdf.getUserPdfs.useQuery();
+	const [hovered, setHovered] = useState<string>("");
 
 	return (
 		<Sidebar variant="inset">
@@ -59,15 +61,33 @@ const AppSidebar = () => {
 							<Link
 								key={item.name}
 								href={item.href}
+								onMouseEnter={() => setHovered(item.name)}
+								onMouseLeave={() => setHovered("")}
 								className={cn(
-									`flex items-center justify-start font-normal gap-2 text-sm px-3 py-1 rounded-md`,
+									"flex items-center justify-start font-normal gap-2 text-base px-3 py-1 rounded-md relative z-50 bg-transparent",
 									location === item.href &&
 										"bg-primary text-secondary font-semibold",
-									location !== item.href && "hover:bg-primary/10",
 								)}
 							>
+								{hovered === item.name && location !== item.href && (
+									<motion.span
+										className="absolute inset-0 -z-20 bg-muted rounded-md"
+										layoutId="hovered-span"
+										transition={{
+											ease: "easeInOut",
+											duration: 0.3,
+										}}
+									/>
+								)}
 								<item.icon className="size-4" />
-								{item.name}
+								<motion.span
+									animate={{
+										x: hovered === item.name && location !== item.href ? 5 : 0,
+									}}
+									transition={{ type: "tween", duration: 0.2 }}
+								>
+									{item.name}
+								</motion.span>
 							</Link>
 						))}
 					</SidebarGroupContent>
