@@ -1,10 +1,12 @@
 "use client";
 
 import { SignupForm } from "@/components/signup-form";
-import { GalleryVerticalEndIcon } from "lucide-react";
+import { GalleryVerticalEndIcon, LogIn } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+	const router = useRouter();
 	return (
 		<div className="grid min-h-svh lg:grid-cols-2">
 			<div className="flex flex-col gap-4 p-6 md:p-10">
@@ -25,12 +27,29 @@ export default function SignupPage() {
 					</div>
 				</div>
 			</div>
-			<div className="relative hidden bg-muted lg:block">
-				<img
-					src="/chat-with-pdf.png"
-					alt="Image"
-					className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-				/>
+			<div className="relative hidden bg-muted lg:flex items-center justify-center bg-linear-to-br from-rose-100 to-emerald-100 bg-blend-color">
+				<div className="flex flex-col items-center justify-center gap-4 md:justify-start max-w-xl">
+					<Link
+						href="/"
+						className="flex items-center gap-4 font-bold text-[2.5rem]"
+					>
+						<div className="flex size-12 items-center justify-center rounded-md bg-primary text-primary-foreground">
+							<GalleryVerticalEndIcon className="size-8" />
+						</div>
+						<h1>ChatWithPDF</h1>
+					</Link>
+					<p className="mt-4 text-center text-sm font-light">
+						Join millions of students, researchers and professionals to
+						instantly answer questions and understand research with AI
+					</p>
+					<button
+						className="bg-linear-to-br bg-blend-color from-lime-500 to-lime-700 mt-2 px-5 py-2 text-white rounded-xl text-base inline-flex items-center gap-2 hover:bg-linear-to-br hover:from-lime-700 hover:to-lime-500 transition-colors duration-300 ease-in-out cursor-pointer font-medium"
+						onClick={() => router.push("/login")}
+					>
+						Login to your account
+						<LogIn className="w-4 h-4 ml-2" />
+					</button>
+				</div>
 			</div>
 		</div>
 	);
