@@ -32,6 +32,7 @@ export const userRouter = createTRPCRouter({
 			const existingUser = await client.user.findUnique({
 				where: { email },
 			});
+
 			if (existingUser) {
 				throw new TRPCError({
 					code: "CONFLICT",
@@ -40,6 +41,7 @@ export const userRouter = createTRPCRouter({
 			}
 
 			const passwordHash = await hashPassword(password);
+
 			try {
 				const user = await client.user.create({
 					data: {
@@ -49,10 +51,18 @@ export const userRouter = createTRPCRouter({
 						password: passwordHash,
 					},
 				});
+				const subscription = await client.subscription.create({
+					data: {
+						userId: user.id,
+						plan: "FREE",
+					},
+				});
+				console.log("subscription", subscription);
 				return {
 					id: user.id,
 					email: user.email,
 					firstName: user.firstName,
+					subscription: subscription.plan,
 				};
 			} catch (error) {
 				console.log(error);
