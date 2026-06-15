@@ -26,46 +26,12 @@ import {
 	Sparkles,
 	Zap,
 } from "lucide-react";
-
-const PLANS = [
-	{
-		name: "Free",
-		price: "$0",
-		period: "forever",
-		description: "Get started with the basics",
-		icon: FileText,
-		features: ["5 PDF uploads", "50 messages / month", "Basic chat"],
-		current: false,
-	},
-	{
-		name: "Pro",
-		price: "$12",
-		period: "per month",
-		description: "For power users and researchers",
-		icon: Zap,
-		features: [
-			"Unlimited PDF uploads",
-			"Unlimited messages",
-			"Priority processing",
-			"Export chat history",
-		],
-		current: true,
-	},
-	{
-		name: "Team",
-		price: "$39",
-		period: "per month",
-		description: "Collaborate with your team",
-		icon: Sparkles,
-		features: [
-			"Everything in Pro",
-			"Up to 10 seats",
-			"Shared PDF library",
-			"Admin controls",
-		],
-		current: false,
-	},
-];
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import axios from "axios";
+import { cn } from "@/lib/utils";
+import PricingCards from "./pricing-cards";
 
 const INVOICES = [
 	{ id: "INV-0005", date: "May 1, 2026", amount: "$12.00", status: "Paid" },
@@ -75,7 +41,21 @@ const INVOICES = [
 	{ id: "INV-0001", date: "Jan 1, 2026", amount: "$12.00", status: "Paid" },
 ];
 
+
 export default function BillingPage() {
+	const searchParams = useSearchParams();
+	const [loading, setLoading] = useState(false);
+	console.log(searchParams.get("success"));
+
+	useEffect(() => {
+		if (searchParams.get("success")) {
+			toast.success("You're now on the Pro plan!");
+		}
+		if (searchParams.get("canceled")) {
+			toast.error("Payment canceled.");
+		}
+	}, [searchParams]);
+
 	return (
 		<div className="min-h-screen bg-background">
 			<div className="mx-auto px-6 py-8 space-y-8">
@@ -95,7 +75,7 @@ export default function BillingPage() {
 						<CardTitle className="text-base font-medium">
 							Current plan
 						</CardTitle>
-						<CardDescription>You are on the Pro plan</CardDescription>
+						<CardDescription>You are on the Free plan</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="flex items-center justify-between">
@@ -104,14 +84,14 @@ export default function BillingPage() {
 									<Zap className="w-4 h-4 text-primary" />
 								</div>
 								<div>
-									<p className="text-sm font-medium">Pro</p>
+									<p className="text-sm font-medium">Free</p>
 									<p className="text-xs text-muted-foreground">
-										Renews June 1, 2026
+										5 PDF + 50 messages / month
 									</p>
 								</div>
 							</div>
 							<div className="text-right">
-								<p className="text-sm font-medium">$12.00 / month</p>
+								<p className="text-sm font-medium">$0.00 / month</p>
 								<Badge
 									variant="secondary"
 									className="text-xs mt-1"
@@ -150,62 +130,7 @@ export default function BillingPage() {
 				</Card>
 
 				{/* Plans */}
-				<div>
-					<h2 className="text-sm font-medium mb-3">Change plan</h2>
-					<div className="grid grid-cols-3 gap-3">
-						{PLANS.map((plan) => {
-							const Icon = plan.icon;
-							return (
-								<Card
-									key={plan.name}
-									className={plan.current ? "border-primary border-2" : ""}
-								>
-									<CardHeader className="pb-3">
-										{plan.current && (
-											<Badge className="w-fit text-xs mb-2">Current plan</Badge>
-										)}
-										<div className="flex items-center gap-2">
-											<Icon className="w-4 h-4 text-muted-foreground" />
-											<CardTitle className="text-sm font-medium">
-												{plan.name}
-											</CardTitle>
-										</div>
-										<div className="flex items-baseline gap-1 mt-1">
-											<span className="text-xl font-medium">{plan.price}</span>
-											<span className="text-xs text-muted-foreground">
-												{plan.period}
-											</span>
-										</div>
-										<CardDescription className="text-xs">
-											{plan.description}
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="space-y-3">
-										<ul className="space-y-1.5">
-											{plan.features.map((f) => (
-												<li
-													key={f}
-													className="flex items-center gap-2 text-xs text-muted-foreground"
-												>
-													<CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-													{f}
-												</li>
-											))}
-										</ul>
-										<Button
-											variant={plan.current ? "secondary" : "outline"}
-											size="sm"
-											className="w-full mt-2"
-											disabled={plan.current}
-										>
-											{plan.current ? "Current plan" : `Switch to ${plan.name}`}
-										</Button>
-									</CardContent>
-								</Card>
-							);
-						})}
-					</div>
-				</div>
+				<PricingCards loading={loading} setLoading={setLoading} />
 
 				{/* Invoice history */}
 				<div>
