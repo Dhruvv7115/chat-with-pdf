@@ -56,7 +56,7 @@ const AppSidebar = () => {
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup id="group-1">
-					<SidebarGroupContent className="flex flex-col gap-2">
+					<SidebarGroupContent className="flex flex-col">
 						{sidebarContents.group1.map((item) => (
 							<Link
 								key={item.name}
@@ -64,25 +64,25 @@ const AppSidebar = () => {
 								onMouseEnter={() => setHovered(item.name)}
 								onMouseLeave={() => setHovered("")}
 								className={cn(
-									"flex items-center justify-start font-normal gap-2 text-base px-3 py-1 rounded-md relative z-50 bg-transparent",
+									"flex items-center justify-start font-normal gap-2 text-sm px-4 py-2 rounded-md relative z-50 bg-transparent",
 									location === item.href &&
-										"bg-primary text-secondary font-semibold",
+										"bg-primary text-secondary font-medium",
 								)}
 							>
 								{hovered === item.name && location !== item.href && (
 									<motion.span
-										className="absolute inset-0 -z-20 bg-muted rounded-md"
+										className="absolute inset-0 -z-20 bg-neutral-500/10 rounded-md"
 										layoutId="hovered-span"
 										transition={{
-											ease: "easeInOut",
+											type: "tween",
 											duration: 0.3,
 										}}
 									/>
 								)}
-								<item.icon className="size-4" />
+								<item.icon className="size-5" />
 								<motion.span
 									animate={{
-										x: hovered === item.name && location !== item.href ? 5 : 0,
+										x: hovered === item.name && location !== item.href ? 4 : 0,
 									}}
 									transition={{ type: "tween", duration: 0.2 }}
 								>
