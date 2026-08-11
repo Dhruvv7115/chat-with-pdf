@@ -57,7 +57,6 @@ export const userRouter = createTRPCRouter({
 						plan: "FREE",
 					},
 				});
-				console.log("subscription", subscription);
 				return {
 					id: user.id,
 					email: user.email,
