@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
 	Card,
 	CardContent,
@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PLANS } from "@/lib/plans";
-const commonDotStyles =
-	"absolute w-1 h-1 rounded-full bg-neutral-600 dark:bg-neutral-400 animate-pulse";
+
+import { commonDotStyles } from "./page";
+import { api } from "@/trpc/client";
 export default function PricingCards({
 	loading,
 	setLoading,
@@ -20,6 +21,12 @@ export default function PricingCards({
 	loading: boolean;
 	setLoading: (l: boolean) => void;
 }) {
+	const [clickedPlan, setClickedPlan] = useState<string>("");
+	const { data: currentPlan } = api.subscription.getCurrentPlan.useQuery();
+	const PLANS_WITH_CURRENT = PLANS.map((plan) => ({
+		...plan,
+		current: plan.name === currentPlan,
+	}));
 	const handleCheckout = async () => {
 		setLoading(true);
 		try {
@@ -37,7 +44,7 @@ export default function PricingCards({
 			<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
 			<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}></span>
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-6 mx-auto max-w-7xl">
-				{PLANS.map((plan) => {
+				{PLANS_WITH_CURRENT.map((plan) => {
 					return (
 						<Card
 							key={plan.name}
@@ -122,13 +129,18 @@ export default function PricingCards({
 											? "bg-black"
 											: "bg-linear-to-t from-lime-600 to-lime-500 shadow-[0px_0.5px_2px_0px_var(--color-lime-300)_inset]",
 									)}
-									disabled={plan.current}
-									onClick={handleCheckout}
+									disabled={plan.current || loading}
+									onClick={() => {
+										if (!plan.current) {
+											setClickedPlan(plan.name);
+											handleCheckout();
+										}
+									}}
 								>
 									{plan.current
 										? "Current plan"
-										: loading
-											? `Switch to ${plan.name}...`
+										: loading && clickedPlan === plan.name
+											? `Switching to ${plan.name}...`
 											: `Switch to ${plan.name}`}
 								</button>
 								<div
@@ -160,7 +172,14 @@ export default function PricingCards({
 													: " text-neutral-700 dark:text-neutral-300",
 											)}
 										>
-											<div className={cn("mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full p-0", plan.current ? "bg-neutral-700 dark:bg-neutral-200": "bg-neutral-200 dark:bg-neutral-700")}>
+											<div
+												className={cn(
+													"mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full p-0",
+													plan.current
+														? "bg-neutral-700 dark:bg-neutral-200"
+														: "bg-neutral-200 dark:bg-neutral-700",
+												)}
+											>
 												<Check className="size-2 stroke-[4px]" />
 											</div>
 											{f}

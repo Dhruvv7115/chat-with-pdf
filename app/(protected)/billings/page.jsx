@@ -13,7 +13,9 @@ import { Separator } from "@/components/ui/separator";
 import {
 	Table,
 	TableBody,
+	TableCaption,
 	TableCell,
+	TableFooter,
 	TableHead,
 	TableHeader,
 	TableRow,
@@ -32,19 +34,17 @@ import { toast } from "sonner";
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import PricingCards from "./pricing-cards";
+import { api } from "@/trpc/client";
 
-const INVOICES = [
-	{ id: "INV-0005", date: "May 1, 2026", amount: "$12.00", status: "Paid" },
-	{ id: "INV-0004", date: "Apr 1, 2026", amount: "$12.00", status: "Paid" },
-	{ id: "INV-0003", date: "Mar 1, 2026", amount: "$12.00", status: "Paid" },
-	{ id: "INV-0002", date: "Feb 1, 2026", amount: "$12.00", status: "Paid" },
-	{ id: "INV-0001", date: "Jan 1, 2026", amount: "$12.00", status: "Paid" },
-];
-
+export const commonDotStyles =
+	"absolute w-1 h-1 rounded-full bg-neutral-600 dark:bg-neutral-400 animate-pulse";
 
 export default function BillingPage() {
 	const searchParams = useSearchParams();
 	const [loading, setLoading] = useState(false);
+	const { data: invoices = [], isLoading: invoicesLoading } =
+		api.subscription.getInvoices.useQuery();
+
 	console.log(searchParams.get("success"));
 
 	useEffect(() => {
@@ -70,114 +70,178 @@ export default function BillingPage() {
 				</div>
 
 				{/* Current plan summary */}
-				<Card>
-					<CardHeader className="pb-3">
-						<CardTitle className="text-base font-medium">
-							Current plan
-						</CardTitle>
-						<CardDescription>You are on the Free plan</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="flex items-center justify-between">
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>
+					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)}></span>
+					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
+					<span
+						className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}
+					></span>
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base font-medium">
+								Current plan
+							</CardTitle>
+							<CardDescription>You are on the Free plan</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+										<Zap className="w-4 h-4 text-primary" />
+									</div>
+									<div>
+										<p className="text-sm font-medium">Free</p>
+										<p className="text-xs text-muted-foreground">
+											5 PDF + 50 messages / month
+										</p>
+									</div>
+								</div>
+								<div className="text-right">
+									<p className="text-sm font-medium">$0.00 / month</p>
+									<Badge
+										variant="secondary"
+										className="text-xs mt-1"
+									>
+										Active
+									</Badge>
+								</div>
+							</div>
+
+							<Separator />
+
 							<div className="flex items-center gap-3">
-								<div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-									<Zap className="w-4 h-4 text-primary" />
-								</div>
-								<div>
-									<p className="text-sm font-medium">Free</p>
-									<p className="text-xs text-muted-foreground">
-										5 PDF + 50 messages / month
-									</p>
-								</div>
-							</div>
-							<div className="text-right">
-								<p className="text-sm font-medium">$0.00 / month</p>
-								<Badge
-									variant="secondary"
-									className="text-xs mt-1"
+								<CreditCard className="w-4 h-4 text-muted-foreground" />
+								<p className="text-sm text-muted-foreground">
+									Visa ending in{" "}
+									<span className="font-medium text-foreground">4242</span>
+								</p>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="ml-auto h-7 text-xs"
 								>
-									Active
-								</Badge>
+									Update card
+								</Button>
 							</div>
-						</div>
 
-						<Separator />
-
-						<div className="flex items-center gap-3">
-							<CreditCard className="w-4 h-4 text-muted-foreground" />
-							<p className="text-sm text-muted-foreground">
-								Visa ending in{" "}
-								<span className="font-medium text-foreground">4242</span>
-							</p>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="ml-auto h-7 text-xs"
-							>
-								Update card
-							</Button>
-						</div>
-
-						<div className="flex gap-2 pt-1">
-							<Button
-								variant="outline"
-								size="sm"
-							>
-								Cancel plan
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
-
+							<div className="flex gap-2 pt-1">
+								<Button
+									variant="outline"
+									size="sm"
+								>
+									Cancel plan
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
 				{/* Plans */}
-				<PricingCards loading={loading} setLoading={setLoading} />
+				<PricingCards
+					loading={loading}
+					setLoading={setLoading}
+				/>
 
 				{/* Invoice history */}
-				<div>
-					<h2 className="text-sm font-medium mb-3">Invoice history</h2>
-					<Card>
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead className="text-xs">Invoice</TableHead>
-									<TableHead className="text-xs">Date</TableHead>
-									<TableHead className="text-xs">Amount</TableHead>
-									<TableHead className="text-xs">Status</TableHead>
-									<TableHead className="text-xs text-right">Download</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{INVOICES.map((inv) => (
-									<TableRow key={inv.id}>
-										<TableCell className="text-sm font-medium">
-											{inv.id}
-										</TableCell>
-										<TableCell className="text-sm text-muted-foreground">
-											{inv.date}
-										</TableCell>
-										<TableCell className="text-sm">{inv.amount}</TableCell>
-										<TableCell>
-											<Badge
-												variant="secondary"
-												className="text-xs"
-											>
-												{inv.status}
-											</Badge>
-										</TableCell>
-										<TableCell className="text-right">
-											<Button
-												variant="ghost"
-												size="icon"
-												className="h-7 w-7"
-											>
-												<Download className="w-3.5 h-3.5" />
-											</Button>
-										</TableCell>
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>
+					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)}></span>
+					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
+					<span
+						className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}
+					></span>
+					<div>
+						<h2 className="text-sm font-medium mb-3">Invoice history</h2>
+						<Card>
+							<Table>
+								<TableCaption>A list of your recent invoices.</TableCaption>
+								<TableHeader>
+									<TableRow>
+										<TableHead className="w-25">Invoice</TableHead>
+										<TableHead>Date</TableHead>
+										<TableHead>Status</TableHead>
+										<TableHead>Method</TableHead>
+										<TableHead className="text-right">Amount</TableHead>
+										<TableHead className="text-right">Action</TableHead>
 									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</Card>
+								</TableHeader>
+								<TableBody>
+									{invoicesLoading ? (
+										<TableRow>
+											<TableCell
+												colSpan={6}
+												className="text-center py-8"
+											>
+												Loading invoices...
+											</TableCell>
+										</TableRow>
+									) : invoices.length === 0 ? (
+										<TableRow>
+											<TableCell
+												colSpan={6}
+												className="text-center py-8 text-muted-foreground"
+											>
+												No invoices yet
+											</TableCell>
+										</TableRow>
+									) : (
+										invoices.map((invoice) => (
+											<TableRow key={invoice.id}>
+												<TableCell className="font-medium">
+													{invoice.invoice}
+												</TableCell>
+												<TableCell>{invoice.date}</TableCell>
+												<TableCell>
+													<Badge
+														variant={
+															invoice.paymentStatus === "Paid"
+																? "default"
+																: "secondary"
+														}
+													>
+														{invoice.paymentStatus}
+													</Badge>
+												</TableCell>
+												<TableCell>{invoice.paymentMethod}</TableCell>
+												<TableCell className="text-right">
+													{invoice.totalAmount}
+												</TableCell>
+												<TableCell className="text-right">
+													{invoice.pdfUrl && (
+														<a
+															href={invoice.pdfUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-primary hover:underline flex items-center gap-1 justify-end"
+														>
+															<Download className="w-4 h-4" />
+														</a>
+													)}
+												</TableCell>
+											</TableRow>
+										))
+									)}
+								</TableBody>
+								<TableFooter>
+									<TableRow>
+										<TableCell colSpan={4}>Total</TableCell>
+										<TableCell className="text-right">
+											₹
+											{invoices
+												.reduce((sum, inv) => {
+													const amount = parseFloat(
+														inv.totalAmount.replace("₹", ""),
+													);
+													return sum + (isNaN(amount) ? 0 : amount);
+												}, 0)
+												.toFixed(2)}
+										</TableCell>
+										<TableCell />
+									</TableRow>
+								</TableFooter>
+							</Table>
+						</Card>
+					</div>
 				</div>
 			</div>
 		</div>
