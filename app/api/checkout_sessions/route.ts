@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
 import { stripe } from "@/lib/stripe";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST() {
+	const serverSession = await getServerSession(authOptions);
+
+	if (!serverSession?.user?.id) {
+		return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+	}
 	try {
 		const headersList = await headers();
 		const origin = headersList.get("origin");
@@ -17,6 +24,7 @@ export async function POST() {
 					quantity: 1,
 				},
 			],
+			client_reference_id: serverSession.user.id,
 			mode: "subscription",
 			success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billings?success=true`,
 			cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billings?canceled=true`,
