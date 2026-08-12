@@ -81,8 +81,8 @@ const ChatAi = ({
 	}, [messages, aiResponse]);
 
 	return (
-		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
-			<div className="px-4 py-6 overflow-y-auto h-full">
+		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4 bg-muted">
+			<div className="overflow-y-auto h-full w-full">
 				{messages?.length === 0 && (
 					// <div className="flex gap-1">
 					// 	<div className="animate-bounce delay-200 duration-100">•</div>

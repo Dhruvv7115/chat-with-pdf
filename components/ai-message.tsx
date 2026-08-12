@@ -1,6 +1,3 @@
-import { Bot } from "lucide-react";
-import React from "react";
-import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Role } from "@/lib/generated/prisma/enums";
 import ReactMarkdown from "react-markdown";
 type Message = {
@@ -13,16 +10,8 @@ type Message = {
 };
 const AiMessage = ({ message }: { message: Message }) => {
 	return (
-		<div className="flex items-start justify-start gap-4 w-full h-fit mb-4">
-			<Avatar>
-				<AvatarImage
-					src="/message-bot.png"
-					alt="@evilrabbit"
-				/>
-				<AvatarFallback>ER</AvatarFallback>
-				<AvatarBadge className="bg-green-600 dark:bg-green-800" />
-			</Avatar>
-			<div className="bg-muted rounded-lg w-fit py-2 px-4 max-w-[80%] prose prose-lime prose-sm prose-li:marker:text-black/50 dark:prose-invert">
+		<div className="flex items-center justify-start gap-4 w-full h-fit mb-4">
+			<div className="rounded-lg lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full prose prose-lime prose-sm prose-li:marker:text-black/50 dark:prose-invert">
 				<ReactMarkdown>{message.content}</ReactMarkdown>
 			</div>
 		</div>
