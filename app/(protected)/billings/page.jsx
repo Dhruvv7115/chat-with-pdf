@@ -98,7 +98,7 @@ export default function BillingPage() {
 									</div>
 								</div>
 								<div className="text-right">
-									<p className="text-sm font-medium">$0.00 / month</p>
+									<p className="text-sm font-medium">₹0.00 / month</p>
 									<Badge
 										variant="secondary"
 										className="text-xs mt-1"

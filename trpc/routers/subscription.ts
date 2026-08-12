@@ -40,7 +40,7 @@ export const subscriptionRouter = createTRPCRouter({
 			}),
 			paymentStatus: invoice.status === "paid" ? "Paid" : "Unpaid",
 			paymentMethod: "Card",
-			totalAmount: `$${(invoice.total / 100).toFixed(2)}`,
+			totalAmount: `₹${(invoice.total / 100).toFixed(2)}`,
 			pdfUrl: invoice.invoice_pdf,
 		}));
 	}),
