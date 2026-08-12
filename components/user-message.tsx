@@ -16,7 +16,7 @@ const UserMessage = ({ message }: { message: Message }) => {
 
 	return (
 		<div className="flex items-center justify-end gap-4 w-full max-w-full h-fit mb-4 pr-4">
-			<div className="bg-primary rounded-lg w-fit max-w-[80%] flex items-center justify-center py-2 px-4 text-base text-secondary">
+			<div className="bg-primary rounded-lg w-fit max-w-[80%] flex items-center justify-center py-2 px-4 text-sm text-secondary">
 				{message.content}
 			</div>
 		</div>
