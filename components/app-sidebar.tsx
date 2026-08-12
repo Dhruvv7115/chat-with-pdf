@@ -12,6 +12,7 @@ import Link from "next/link";
 import {
 	Bot,
 	CreditCard,
+	FileText,
 	GalleryVerticalEndIcon,
 	LayoutDashboard,
 	Settings,
@@ -27,6 +28,7 @@ const sidebarContents = {
 	group1: [
 		{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 		{ name: "Chat", href: "/chat", icon: Bot },
+		{ name: "PDFs", href: "/pdfs", icon: FileText },
 		{ name: "Billings", href: "/billings", icon: CreditCard },
 		{ name: "Settings", href: "/settings", icon: Settings },
 	],

@@ -119,12 +119,37 @@ export const pdfRouter = createTRPCRouter({
 			await client.pdf.delete({ where: { fileKey: input.key } });
 		}),
 
-	// Get all user's PDFs
+	// Get recent user PDFs (limited)
 	getUserPdfs: protectedProcedure.query(async ({ ctx }) => {
 		return client.pdf.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
 			take: 3,
 		});
+	}),
+
+	// Get all user's PDFs with presigned S3 URLs
+	getAllUserPdfsWithUrls: protectedProcedure.query(async ({ ctx }) => {
+		const pdfs = await client.pdf.findMany({
+			where: { userId: ctx.userId },
+			orderBy: { createdAt: "desc" },
+		});
+
+		const pdfsWithUrls = await Promise.all(
+			pdfs.map(async (pdf) => {
+				let url = "";
+				try {
+					url = await getFileUrl(pdf.fileKey);
+				} catch (err) {
+					console.error("Error generating presigned URL for key:", pdf.fileKey, err);
+				}
+				return {
+					...pdf,
+					url,
+				};
+			}),
+		);
+
+		return pdfsWithUrls;
 	}),
 });
