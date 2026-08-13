@@ -14,6 +14,7 @@ const ChatPage = () => {
 	const saveDoc = api.pdf.saveDoc.useMutation();
 	const createChat = api.chat.createChat.useMutation();
 	const router = useRouter();
+	const sendMessage = api.message.createMessage.useMutation();
 
 	// Fetch upload quota
 	const { data: quota } = api.pdf.getUploadQuota.useQuery();
@@ -53,6 +54,7 @@ const ChatPage = () => {
 				key,
 				title: safeFileName,
 				fileType,
+				fileSize: file.size,
 			});
 
 			// 5. Create chat
@@ -68,6 +70,27 @@ const ChatPage = () => {
 			toast.error(errorMessage);
 			console.error(error);
 		}
+	};
+
+	const handleChatStart = async (message: string) => {
+		if (message.length === 0 || !message) {
+			toast.error("please enter a message");
+			return;
+		}
+
+		try {
+			// then send the first message into that chat, same as any other message
+			const chat = await createChat.mutateAsync({
+				title: message.slice(0, 50), // or however you want to derive a title
+			});
+			await sendMessage.mutateAsync({
+				chatId: chat.id,
+				content: message,
+				role: "USER",
+			});
+
+			router.push(`/chat/${chat.id}`);
+		} catch (error) {}
 	};
 
 	return (
