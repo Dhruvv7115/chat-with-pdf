@@ -7,10 +7,11 @@ import ChatStartInput from "@/components/chat-start-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { getFileType } from "@/utils/file-type";
 
 const ChatPage = () => {
-	const uploadPdf = api.pdf.getUploadUrl.useMutation();
-	const savePdf = api.pdf.savePdf.useMutation();
+	const uploadDoc = api.pdf.getUploadUrl.useMutation();
+	const saveDoc = api.pdf.saveDoc.useMutation();
 	const createChat = api.chat.createChat.useMutation();
 	const router = useRouter();
 
@@ -27,8 +28,16 @@ const ChatPage = () => {
 		const file = files[0];
 
 		try {
-			// 1. Get pre-signed upload URL
-			const { url, key } = await uploadPdf.mutateAsync({
+			// 1. Check file type if not the correct one(md, txt, pdf, docx, doc, markdown, csv) return
+			const fileType = getFileType(file);
+			if (!fileType) {
+				toast.error(
+					"File type not supported please try uploading one of the supported file types - [MD, PDF, DOCX, TXT]",
+				);
+				return;
+			}
+			// 2. Get pre-signed upload URL
+			const { url, key } = await uploadDoc.mutateAsync({
 				name: file.name,
 				type: file.type,
 				size: file.size,
@@ -36,19 +45,20 @@ const ChatPage = () => {
 
 			const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-			// 2. Upload directly to S3
+			// 3. Upload directly to S3
 			await fetch(url, { method: "PUT", body: file });
 
-			// 3. Save PDF to DB
-			const pdf = await savePdf.mutateAsync({
+			// 4. Save PDF to DB
+			const doc = await saveDoc.mutateAsync({
 				key,
 				title: safeFileName,
+				fileType,
 			});
 
-			// 4. Create chat
+			// 5. Create chat
 			const chat = await createChat.mutateAsync({
 				title: safeFileName,
-				pdfId: pdf.id,
+				docId: doc.id,
 			});
 
 			toast.success("Chat created successfully");

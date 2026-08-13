@@ -1,7 +1,7 @@
 import { createTRPCRouter } from "../init";
 import { chatRouter } from "./chat";
 import { messageRouter } from "./message";
-import { pdfRouter } from "./pdf";
+import { pdfRouter } from "./document";
 import { subscriptionRouter } from "./subscription";
 import { userRouter } from "./user";
 

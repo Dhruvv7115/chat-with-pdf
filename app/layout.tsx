@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "ChatWithPDF",
-	description: "Chat with your PDFs in seconds, powered by Gemini AI.",
+	description: "Chat with your documents in seconds, powered by Gemini AI.",
 };
 
 export default function RootLayout({

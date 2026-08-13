@@ -9,7 +9,7 @@ async function getPdfsUploadedThisMonth(userId: string) {
 	const now = new Date();
 	const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-	const count = await client.pdf.count({
+	const count = await client.document.count({
 		where: {
 			userId,
 			createdAt: {
@@ -24,7 +24,12 @@ async function getPdfsUploadedThisMonth(userId: string) {
 // Helper function to check if user can upload more PDFs
 async function canUploadPdf(
 	userId: string,
-): Promise<{ canUpload: boolean; uploaded: number; limit: number, pro: boolean }> {
+): Promise<{
+	canUpload: boolean;
+	uploaded: number;
+	limit: number;
+	pro: boolean;
+}> {
 	// Get user's subscription plan
 	const subscription = await client.subscription.findUnique({
 		where: { userId },
@@ -67,15 +72,18 @@ export const pdfRouter = createTRPCRouter({
 		return canUploadPdf(ctx.userId);
 	}),
 
-	savePdf: protectedProcedure
+	saveDoc: protectedProcedure
 		.input(
 			z.object({
 				key: z.string(),
 				title: z.string(),
+				fileType: z.enum(["PDF", "DOCX", "MARKDOWN", "TXT", "IMAGE"]),
+				fileSize: z.number().optional(),
+				pageCount: z.number().optional(),
 			}),
 		)
 		.mutation(async ({ input, ctx }) => {
-			const { key, title } = input;
+			const { key, title, fileType, fileSize, pageCount } = input;
 
 			// Check if user can upload
 			const { canUpload, uploaded, limit } = await canUploadPdf(ctx.userId);
@@ -87,14 +95,17 @@ export const pdfRouter = createTRPCRouter({
 				});
 			}
 
-			const pdf = await client.pdf.create({
+			const doc = await client.document.create({
 				data: {
 					fileKey: key,
 					title,
 					userId: ctx.userId,
+					fileType,
+					fileSize,
+					pageCount,
 				},
 			});
-			return pdf;
+			return doc;
 		}),
 
 	// Get file URL
@@ -116,12 +127,12 @@ export const pdfRouter = createTRPCRouter({
 				throw new TRPCError({ code: "UNAUTHORIZED" });
 			}
 			await deleteFile(input.key);
-			await client.pdf.delete({ where: { fileKey: input.key } });
+			await client.document.delete({ where: { fileKey: input.key } });
 		}),
 
 	// Get recent user PDFs (limited)
 	getUserPdfs: protectedProcedure.query(async ({ ctx }) => {
-		return client.pdf.findMany({
+		return client.document.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
 			take: 3,
@@ -130,7 +141,7 @@ export const pdfRouter = createTRPCRouter({
 
 	// Get all user's PDFs with presigned S3 URLs
 	getAllUserPdfsWithUrls: protectedProcedure.query(async ({ ctx }) => {
-		const pdfs = await client.pdf.findMany({
+		const pdfs = await client.document.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
 		});
@@ -141,7 +152,11 @@ export const pdfRouter = createTRPCRouter({
 				try {
 					url = await getFileUrl(pdf.fileKey);
 				} catch (err) {
-					console.error("Error generating presigned URL for key:", pdf.fileKey, err);
+					console.error(
+						"Error generating presigned URL for key:",
+						pdf.fileKey,
+						err,
+					);
 				}
 				return {
 					...pdf,

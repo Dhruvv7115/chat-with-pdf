@@ -47,7 +47,7 @@ model Document {
   fileKey   String   @unique
   fileType  FileType
   fileSize  Int?
-  pageCount Int?     // nullable, only meaningful for PDF/DOCX
+  pageCount Int? // nullable, only meaningful for PDF/DOCX
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
@@ -89,11 +89,11 @@ model Message {
 }
 
 model DocumentEmbedding {
-  id        String                      @id @default(cuid())
-  documentId     String
-  content   String
-  embedding Unsupported("vector(768)")?
-  document       Document                         @relation(fields: [documentId], references: [id])
+  id         String                      @id @default(cuid())
+  documentId String
+  content    String
+  embedding  Unsupported("vector(768)")?
+  document   Document                    @relation(fields: [documentId], references: [id])
 }
 
 model Subscription {
@@ -109,7 +109,7 @@ model Subscription {
 
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean?   @default(false)
+  cancelAtPeriodEnd  Boolean?  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -93,7 +93,7 @@ export default function BillingPage() {
 									<div>
 										<p className="text-sm font-medium">Free</p>
 										<p className="text-xs text-muted-foreground">
-											5 PDF + 50 messages / month
+											5 Docs + 50 messages / month
 										</p>
 									</div>
 								</div>
