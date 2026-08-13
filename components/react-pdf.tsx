@@ -18,7 +18,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	import.meta.url,
 ).toString();
 
-const ReactPdf = ({ pdfUrl }: { pdfUrl: string }) => {
+const ReactPdf = ({ docUrl }: { docUrl: string }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [containerWidth, setContainerWidth] = useState<number>();
 	const [numPages, setNumPages] = useState<number>();
@@ -45,7 +45,7 @@ const ReactPdf = ({ pdfUrl }: { pdfUrl: string }) => {
 			onMouseLeave={() => setShowPagination(false)}
 		>
 			<Document
-				file={pdfUrl ?? ""}
+				file={docUrl ?? ""}
 				onLoadSuccess={({ numPages }) => setNumPages(numPages)}
 			>
 				<Page

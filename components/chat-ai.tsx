@@ -5,15 +5,15 @@ import ChatInput from "./chat-input";
 import { api } from "@/trpc/client";
 import { Loader2 } from "lucide-react";
 
-type Chat = {
+export type Chat = {
 	id: string;
 	title: string;
 	userId: string;
-	pdfId: string;
+	documentId: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 };
-type Pdf = {
+export type Doc = {
 	userId: string;
 	title: string;
 	id: string;
@@ -26,12 +26,12 @@ type Pdf = {
 
 const ChatAi = ({
 	chat,
-	pdfUrl,
-	pdf,
+	docUrl,
+	doc,
 }: {
 	chat: Chat;
-	pdfUrl?: string;
-	pdf: Pdf;
+	docUrl?: string;
+	doc: Doc;
 }) => {
 	const { data: messages, refetch } = api.chat.getMessages.useQuery({
 		chatId: chat.id,
@@ -41,14 +41,14 @@ const ChatAi = ({
 	const hasFetched = useRef(false);
 
 	useEffect(() => {
-		if (pdfUrl && messages?.length === 0) {
+		if (docUrl && messages?.length === 0) {
 			hasFetched.current = true;
 			fetch("/api/ai/summary", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					pdfId: pdf.id,
-					pdfUrl,
+					documentId: doc.id,
+					docUrl,
 				}),
 			}).then(async (res) => {
 				const reader = res.body?.getReader();

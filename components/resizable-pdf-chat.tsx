@@ -7,35 +7,28 @@ import {
 import ChatAi from "./chat-ai";
 import dynamic from "next/dynamic";
 const ReactPdf = dynamic(() => import("./react-pdf"), { ssr: false });
-
-type Chat = {
-	id: string;
-	title: string;
-	userId: string;
-	pdfId: string;
-	createdAt: Date;
-	updatedAt: Date;
-};
-type Pdf = {
-	userId: string;
-	title: string;
-	id: string;
-	createdAt: Date;
-	updatedAt: Date;
-	fileKey: string;
-	fileSize: number | null;
-	pageCount: number | null;
-};
+import type { Doc, Chat } from "./chat-ai";
 
 const ResizablePdfChat = ({
-	pdf,
+	doc,
 	chat,
-	pdfUrl,
+	docUrl,
 }: {
-	pdf: Pdf;
+	doc: Doc;
 	chat: Chat;
-	pdfUrl?: string;
+	docUrl?: string;
 }) => {
+	if (!docUrl) {
+		return (
+			<div className="flex h-full">
+				<ChatAi
+					chat={chat}
+					docUrl={docUrl}
+					doc={doc}
+				/>
+			</div>
+		);
+	}
 	return (
 		<ResizablePanelGroup
 			orientation="horizontal"
@@ -45,14 +38,18 @@ const ResizablePdfChat = ({
 				defaultSize={50}
 				className="h-full overflow-hidden"
 			>
-				<ReactPdf pdfUrl={pdfUrl || ""} />
+				<ReactPdf docUrl={docUrl || ""} />
 			</ResizablePanel>
 			<ResizableHandle withHandle />
 			<ResizablePanel
 				defaultSize={50}
 				className="h-full overflow-hidden"
 			>
-				<ChatAi chat={chat} pdfUrl={pdfUrl} pdf={pdf} />
+				<ChatAi
+					chat={chat}
+					docUrl={docUrl}
+					doc={doc}
+				/>
 			</ResizablePanel>
 		</ResizablePanelGroup>
 	);
