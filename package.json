@@ -12,6 +12,7 @@
     "@aws-sdk/client-s3": "^3.1006.0",
     "@aws-sdk/s3-request-presigner": "^3.1007.0",
     "@base-ui/react": "^1.2.0",
+    "@firecrawl/anydoc": "^0.1.8",
     "@google/genai": "^1.45.0",
     "@langchain/community": "^1.1.23",
     "@langchain/core": "^1.1.32",

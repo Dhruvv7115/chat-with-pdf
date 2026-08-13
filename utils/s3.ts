@@ -1,3 +1,4 @@
+import { FileType } from "@/lib/generated/prisma/enums";
 import {
 	S3Client,
 	PutObjectCommand,
@@ -5,6 +6,7 @@ import {
 	DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { formatFromBytes } from "@firecrawl/anydoc";
 
 const s3 = new S3Client({
 	region: "ap-south-1",
@@ -90,4 +92,37 @@ const deleteFile = async (key: string) => {
 	);
 };
 
-export { uploadFile, getFileUrl, deleteFile, uploadUserImage };
+// to get file buffer
+const getFileBufferFromS3 = async function (key: string): Promise<Buffer> {
+	const response = await s3.send(
+		new GetObjectCommand({ Bucket: process.env.AWS_BUCKET_NAME!, Key: key }),
+	);
+	const bytes = await response.Body!.transformToByteArray();
+	return Buffer.from(bytes);
+};
+
+// to get file type
+async function detectFileType(buffer: Buffer): Promise<FileType> {
+	const format = formatFromBytes(buffer); // reads file signature, not the name
+
+	const map: Record<string, FileType> = {
+		Pdf: "PDF",
+		Docx: "DOCX",
+		Doc: "DOCX",
+		Csv: "TXT",
+		// map anydoc's Format enum values to yours as needed
+	};
+
+	const mapped = format ? map[format] : undefined;
+	if (!mapped) throw new Error(`Unsupported or undetected file type`);
+	return mapped;
+}
+
+export {
+	uploadFile,
+	getFileUrl,
+	deleteFile,
+	uploadUserImage,
+	getFileBufferFromS3,
+	detectFileType,
+};
