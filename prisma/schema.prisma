@@ -25,26 +25,35 @@ model User {
   emailVerified DateTime?
   password      String?
 
-  pdfs         Pdf[]
+  documents    Document[]
   chats        Chat[]
   subscription Subscription?
 }
 
-model Pdf {
+enum FileType {
+  PDF
+  DOCX
+  MARKDOWN
+  TXT
+  IMAGE
+}
+
+model Document {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   title     String
-  fileKey   String @unique
+  fileKey   String   @unique
+  fileType  FileType
   fileSize  Int?
-  pageCount Int?
+  pageCount Int?     // nullable, only meaningful for PDF/DOCX
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  chats         Chat[]
-  pdfEmbeddings PdfEmbedding[]
+  chats              Chat[]
+  documentEmbeddings DocumentEmbedding[]
 }
 
 model Chat {
@@ -58,8 +67,8 @@ model Chat {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  pdf   Pdf    @relation(fields: [pdfId], references: [id], onDelete: Cascade)
-  pdfId String
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String?
 }
 
 enum Role {
@@ -79,12 +88,12 @@ model Message {
   chatId String
 }
 
-model PdfEmbedding {
+model DocumentEmbedding {
   id        String                      @id @default(cuid())
-  pdfId     String
+  documentId     String
   content   String
   embedding Unsupported("vector(768)")?
-  pdf       Pdf                         @relation(fields: [pdfId], references: [id])
+  document       Document                         @relation(fields: [documentId], references: [id])
 }
 
 model Subscription {

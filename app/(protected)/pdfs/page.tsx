@@ -92,7 +92,7 @@ export default function PdfsPage() {
 	);
 
 	return (
-		<div className="p-6 max-w-7xl mx-auto space-y-6 w-full min-h-full">
+		<div className="p-6 mx-auto space-y-6 w-full min-h-full">
 			{/* Page Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
 				<div>
@@ -143,7 +143,7 @@ export default function PdfsPage() {
 
 			{/* Loading Skeleton */}
 			{isLoading && (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
 					{[1, 2, 3, 4, 5, 6].map((i) => (
 						<div
 							key={i}
@@ -201,7 +201,7 @@ export default function PdfsPage() {
 
 			{/* PDF Grid View */}
 			{!isLoading && filteredPdfs && filteredPdfs.length > 0 && (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 					{filteredPdfs.map((pdf) => (
 						<div
 							key={pdf.id}
@@ -275,13 +275,14 @@ export default function PdfsPage() {
 							</div>
 
 							{/* Iframe Presigned URL Preview Container */}
-							<div className="relative w-full h-[320px] bg-neutral-900/5 dark:bg-neutral-950 flex flex-col justify-center items-center overflow-hidden border-b">
+							<div className="relative w-full h-50 bg-neutral-900/5 dark:bg-neutral-950 flex flex-col justify-center items-center overflow-hidden">
 								{pdf.url ? (
 									<>
 										<iframe
 											src={`${pdf.url}#toolbar=0&navpanes=0`}
 											title={pdf.title}
-											className="w-full h-full border-0"
+											className="w-full h-full"
+											
 										/>
 										<button
 											onClick={() => setPreviewPdf({ title: pdf.title, url: pdf.url })}
