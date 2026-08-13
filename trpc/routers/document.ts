@@ -1,6 +1,6 @@
 import z from "zod";
 import { protectedProcedure, createTRPCRouter } from "../init";
-import { deleteFile, getFileUrl, uploadFile } from "@/utils/s3";
+import { deleteFile, detectFileType, getFileBufferFromS3, getFileUrl, uploadFile } from "@/utils/s3";
 import { client } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
 
@@ -22,9 +22,7 @@ async function getPdfsUploadedThisMonth(userId: string) {
 }
 
 // Helper function to check if user can upload more PDFs
-async function canUploadPdf(
-	userId: string,
-): Promise<{
+async function canUploadPdf(userId: string): Promise<{
 	canUpload: boolean;
 	uploaded: number;
 	limit: number;
@@ -83,11 +81,15 @@ export const pdfRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ input, ctx }) => {
-			const { key, title, fileType, fileSize, pageCount } = input;
+			const {
+				key,
+				title,
+				fileType: clientFileType,
+				fileSize,
+				pageCount,
+			} = input;
 
-			// Check if user can upload
 			const { canUpload, uploaded, limit } = await canUploadPdf(ctx.userId);
-
 			if (!canUpload) {
 				throw new TRPCError({
 					code: "BAD_REQUEST",
@@ -95,12 +97,31 @@ export const pdfRouter = createTRPCRouter({
 				});
 			}
 
+			// Fetch the actual bytes from S3 to verify real file type
+			const buffer = await getFileBufferFromS3(key); // your existing S3 fetch util, or write one
+			const detectedFileType = await detectFileType(buffer); // the formatFromBytes wrapper from before
+
+			if (!detectedFileType) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message:
+						"Could not determine file type — the file may be corrupted or unsupported.",
+				});
+			}
+
+			// Optional: warn/log if client and server disagree, but trust the server's detection
+			if (detectedFileType !== clientFileType) {
+				console.warn(
+					`fileType mismatch for ${key}: client said ${clientFileType}, detected ${detectedFileType}`,
+				);
+			}
+
 			const doc = await client.document.create({
 				data: {
 					fileKey: key,
 					title,
 					userId: ctx.userId,
-					fileType,
+					fileType: detectedFileType, // trust the server-verified value, not the client's
 					fileSize,
 					pageCount,
 				},

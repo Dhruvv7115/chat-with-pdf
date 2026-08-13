@@ -7,7 +7,7 @@ export const chatRouter = createTRPCRouter({
 		.input(
 			z.object({
 				title: z.string(),
-				docId: z.string(),
+				docId: z.string().optional(),
 			}),
 		)
 		.mutation(async ({ input, ctx }) => {
