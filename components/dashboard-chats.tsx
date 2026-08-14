@@ -85,7 +85,7 @@ export default function DashboardChats() {
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-medium truncate">{chat.title}</p>
 										<p className="text-xs text-muted-foreground truncate">
-											{chat.pdfId ? `PDF chat` : "General chat"}
+											{chat.documentId ? `Document chat` : "General chat"}
 										</p>
 									</div>
 									<span className="text-xs text-muted-foreground shrink-0">

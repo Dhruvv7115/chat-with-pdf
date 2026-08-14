@@ -22,10 +22,10 @@ export default function DashboardPdfs() {
 		<div className="border border-border rounded-xl p-5 bg-background">
 			<div className="flex items-center justify-between mb-4">
 				<h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-					Recent PDFs
+					Recent Documents
 				</h2>
 				<Link
-					href="/pdfs"
+					href="/docs"
 					className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
 				>
 					View all
@@ -54,12 +54,12 @@ export default function DashboardPdfs() {
 					<div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
 						<IconFileDescription className="text-neutral-300" />
 					</div>
-					<p className="text-sm text-muted-foreground">No PDFs uploaded yet</p>
+					<p className="text-sm text-muted-foreground">No documents uploaded yet</p>
 					<Link
-						href="/upload"
+						href="/chat"
 						className="mt-2 text-xs text-blue-500 hover:underline"
 					>
-						Upload your first PDF
+						Upload your first document
 					</Link>
 				</div>
 			)}

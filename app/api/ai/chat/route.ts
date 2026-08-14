@@ -11,26 +11,24 @@ export async function POST(req: NextRequest) {
 			where: { chatId },
 			orderBy: { createdAt: "desc" },
 			take: 4,
-			include: {
-				chat: {
-					select: {
-						pdfId: true,
-					},
-				},
-			},
 		});
-		// console.log(messages);
 	} catch (error) {
 		console.error("Error fetching messages");
 		throw new Error("Error fetching messages");
 	}
+
+	const chat = await client.chat.findUnique({
+		where: { id: chatId },
+		select: { documentId: true },
+	});
+
 	const queryEmbedding = await generateQueryEmbedding(
 		messages[messages.length - 1].content,
 	);
 	// console.log("queryEmbedding:", queryEmbedding);
 	const results = await similaritySearch(
 		queryEmbedding,
-		messages[0]?.chat?.pdfId ?? "",
+		chat?.documentId ?? "",
 		5,
 	);
 	// console.log("results:", results);
