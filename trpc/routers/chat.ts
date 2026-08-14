@@ -21,6 +21,34 @@ export const chatRouter = createTRPCRouter({
 			});
 			return chat;
 		}),
+	getOrCreateChat: protectedProcedure
+		.input(
+			z.object({
+				title: z.string(),
+				docId: z.string(),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const { title, docId } = input;
+			const existingChat = await client.chat.findFirst({
+				where: {
+					documentId: docId,
+					userId: ctx.userId,
+				},
+				orderBy: { createdAt: "desc" },
+			});
+			if (existingChat) {
+				return existingChat;
+			}
+			const newChat = await client.chat.create({
+				data: {
+					title,
+					documentId: docId,
+					userId: ctx.userId,
+				},
+			});
+			return newChat;
+		}),
 	getChats: protectedProcedure.query(async ({ ctx }) => {
 		return client.chat.findMany({
 			where: { userId: ctx.userId },

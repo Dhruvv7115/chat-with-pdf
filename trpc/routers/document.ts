@@ -151,7 +151,14 @@ export const pdfRouter = createTRPCRouter({
 			await client.document.delete({ where: { fileKey: input.key } });
 		}),
 
-	// Get recent user PDFs (limited)
+	// Get recent user documents (limited)
+	getUserDocs: protectedProcedure.query(async ({ ctx }) => {
+		return client.document.findMany({
+			where: { userId: ctx.userId },
+			orderBy: { createdAt: "desc" },
+			take: 3,
+		});
+	}),
 	getUserPdfs: protectedProcedure.query(async ({ ctx }) => {
 		return client.document.findMany({
 			where: { userId: ctx.userId },
@@ -160,7 +167,34 @@ export const pdfRouter = createTRPCRouter({
 		});
 	}),
 
-	// Get all user's PDFs with presigned S3 URLs
+	// Get all user's documents with presigned S3 URLs
+	getAllUserDocsWithUrls: protectedProcedure.query(async ({ ctx }) => {
+		const docs = await client.document.findMany({
+			where: { userId: ctx.userId },
+			orderBy: { createdAt: "desc" },
+		});
+
+		const docsWithUrls = await Promise.all(
+			docs.map(async (doc) => {
+				let url = "";
+				try {
+					url = await getFileUrl(doc.fileKey);
+				} catch (err) {
+					console.error(
+						"Error generating presigned URL for key:",
+						doc.fileKey,
+						err,
+					);
+				}
+				return {
+					...doc,
+					url,
+				};
+			}),
+		);
+
+		return docsWithUrls;
+	}),
 	getAllUserPdfsWithUrls: protectedProcedure.query(async ({ ctx }) => {
 		const pdfs = await client.document.findMany({
 			where: { userId: ctx.userId },
