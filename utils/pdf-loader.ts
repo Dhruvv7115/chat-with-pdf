@@ -1,8 +1,8 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { generateEmbedding, summarizePdf } from "./gemini";
+import { generateEmbedding, summarizeDocument } from "./gemini";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { client } from "@/lib/prisma";
-import cuid from "cuid";
+import { toDocument, toMarkdown, toMarkdownBytes } from "@firecrawl/anydoc";
 
 export async function loadPdfText(pdfUrl: string) {
 	const response = await fetch(pdfUrl);
@@ -13,7 +13,7 @@ export async function loadPdfText(pdfUrl: string) {
 	return pdf;
 }
 
-export async function indexPdf(pdfUrl: string, pdfId: string) {
+export async function indexDocument(pdfUrl: string, pdfId: string) {
 	const docs = await loadPdfText(pdfUrl);
 	const content = docs
 		.map((doc, index) => `--- PAGE ${index + 1} ---\n${doc.pageContent}`)
@@ -42,7 +42,6 @@ export async function indexPdf(pdfUrl: string, pdfId: string) {
 			try {
 				const embedding = await client.documentEmbedding.create({
 					data: {
-						id: cuid(),
 						documentId: pdfId,
 						content: batch[i],
 					},
@@ -62,7 +61,7 @@ export async function indexPdf(pdfUrl: string, pdfId: string) {
 		allEmbeddings.push(...batchEmbeddings);
 	}
 
-	return summarizePdf(content);
+	return summarizeDocument(content);
 }
 
 export async function chunkPdf(document: string) {

@@ -1,5 +1,5 @@
 import { client } from "@/lib/prisma";
-import { indexPdf } from "@/utils/pdf-loader";
+import { indexDocument } from "@/utils/pdf-loader";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 		// for now you could just return without calling indexPdf
 		return new Response("", { status: 200 });
 	}
-	const summary = await indexPdf(docUrl, documentId);
+	const summary = await indexDocument(docUrl, documentId);
 
 	const stream = new ReadableStream({
 		async start(controller) {
