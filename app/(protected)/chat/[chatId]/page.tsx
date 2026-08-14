@@ -21,7 +21,7 @@ const page = async ({ params }: Props) => {
 	}
 
 	return (
-		<div className="h-full overflow-hidden">
+		<div className="h-full overflow-hidden bg-muted">
 			<ResizablePdfChat
 				doc={doc}
 				docUrl={docUrl}

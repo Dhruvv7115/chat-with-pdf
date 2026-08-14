@@ -22,27 +22,24 @@ export async function POST(req: NextRequest) {
 		select: { documentId: true },
 	});
 
-	const queryEmbedding = await generateQueryEmbedding(
-		messages[messages.length - 1].content,
-	);
-	// console.log("queryEmbedding:", queryEmbedding);
-	const results = await similaritySearch(
-		queryEmbedding,
-		chat?.documentId ?? "",
-		5,
-	);
-	// console.log("results:", results);
+	let context = "";
 
-	const context = results
-		.filter((r) => r.similarity > 0.5) // tune this threshold
-		.map((r) => r.content)
-		.join("\n\n");
+	// Only do retrieval if this chat actually has a linked document
+	if (chat?.documentId) {
+		const queryEmbedding = await generateQueryEmbedding(
+			messages[messages.length - 1].content,
+		);
+		const results = await similaritySearch(queryEmbedding, chat.documentId, 5);
+
+		context = results
+			.filter((r) => r.similarity > 0.5)
+			.map((r) => r.content)
+			.join("\n\n");
+	}
 
 	const formattedMessages: {
 		role: "user" | "model";
-		parts: {
-			text: string;
-		}[];
+		parts: { text: string }[];
 	}[] = messages
 		.slice(0, messages.length - 1)
 		.reverse()
@@ -51,20 +48,14 @@ export async function POST(req: NextRequest) {
 			parts: [{ text: message.content.slice(0, 200) + "..." }],
 		}));
 
-	console.log(formattedMessages);
-
 	const response = await generateAnswer(
 		messages[messages.length - 1].content,
-		context,
+		context, // empty string for doc-less chats — generateAnswer needs to handle this gracefully
 		formattedMessages,
 	);
 
 	const stream = new ReadableStream({
 		async start(controller) {
-			// push chunks here
-			// controller.enqueue("hello ");
-			// controller.enqueue("world");
-			// controller.close();
 			for await (const chunk of response) {
 				controller.enqueue(chunk.text);
 			}
