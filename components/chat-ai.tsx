@@ -31,7 +31,7 @@ const ChatAi = ({
 }: {
 	chat: Chat;
 	docUrl?: string;
-	doc: Doc;
+	doc?: Doc;
 }) => {
 	const { data: messages, refetch } = api.chat.getMessages.useQuery({
 		chatId: chat.id,
@@ -41,7 +41,7 @@ const ChatAi = ({
 	const hasFetched = useRef(false);
 
 	useEffect(() => {
-		if (docUrl && messages?.length === 0) {
+		if (docUrl && messages?.length === 0 && doc) {
 			hasFetched.current = true;
 			fetch("/api/ai/summary", {
 				method: "POST",

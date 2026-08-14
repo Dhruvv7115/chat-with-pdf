@@ -14,7 +14,7 @@ const ResizablePdfChat = ({
 	chat,
 	docUrl,
 }: {
-	doc: Doc;
+	doc?: Doc;
 	chat: Chat;
 	docUrl?: string;
 }) => {
