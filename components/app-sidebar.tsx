@@ -12,7 +12,7 @@ import Link from "next/link";
 import {
 	Bot,
 	CreditCard,
-	FileText,
+	Files,
 	GalleryVerticalEndIcon,
 	LayoutDashboard,
 	Settings,
@@ -28,7 +28,7 @@ const sidebarContents = {
 	group1: [
 		{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 		{ name: "Chat", href: "/chat", icon: Bot },
-		{ name: "PDFs", href: "/pdfs", icon: FileText },
+		{ name: "Documents", href: "/docs", icon: Files },
 		{ name: "Billings", href: "/billings", icon: CreditCard },
 		{ name: "Settings", href: "/settings", icon: Settings },
 	],
@@ -38,7 +38,7 @@ const sidebarContents = {
 const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
-	const { data: recentPdfs } = api.pdf.getUserPdfs.useQuery();
+	const { data: recentDocs } = api.pdf.getUserDocs.useQuery();
 	const [hovered, setHovered] = useState<string>("");
 
 	return (
@@ -95,17 +95,17 @@ const AppSidebar = () => {
 					</SidebarGroupContent>
 				</SidebarGroup>
 				<SidebarGroup id="group-2">
-					<SidebarGroupLabel>Recent PDFs</SidebarGroupLabel>
+					<SidebarGroupLabel>Recent Documents</SidebarGroupLabel>
 					<SidebarGroupContent className="flex flex-col gap-2 my-2">
-						{recentPdfs?.map((pdf) => (
+						{recentDocs?.map((doc) => (
 							<Link
-								key={pdf.id}
-								href={"/chat/" + pdf.id}
+								key={doc.id}
+								href={"/chat/" + doc.id}
 								className="rounded-lg hover:bg-accent px-2 py-1"
 							>
-								{pdf.title.length > 20
-									? pdf.title.slice(0, 20) + "..."
-									: pdf.title}
+								{doc.title.length > 20
+									? doc.title.slice(0, 20) + "..."
+									: doc.title}
 							</Link>
 						))}
 					</SidebarGroupContent>
