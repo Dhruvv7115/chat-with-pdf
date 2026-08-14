@@ -40,17 +40,17 @@ export async function indexPdf(pdfUrl: string, pdfId: string) {
 		);
 		for (let i = 0; i < batch.length; i++) {
 			try {
-				const embedding = await client.pdfEmbedding.create({
+				const embedding = await client.documentEmbedding.create({
 					data: {
 						id: cuid(),
-						pdfId,
+						documentId: pdfId,
 						content: batch[i],
 					},
 				});
 				const vectorString = `[${batchEmbeddings[i].join(",")}]`;
 
 				await client.$executeRaw`
-					UPDATE "PdfEmbedding"
+					UPDATE "DocumentEmbedding"
 					SET embedding = ${vectorString}::vector
 					WHERE id = ${embedding.id}
 				`;

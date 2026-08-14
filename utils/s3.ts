@@ -6,7 +6,8 @@ import {
 	DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { formatFromBytes } from "@firecrawl/anydoc";
+//@ts-ignore
+import { formatFromBytes } from "@firecrawl/anydoc-darwin-arm64";
 
 const s3 = new S3Client({
 	region: "ap-south-1",
