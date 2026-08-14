@@ -108,40 +108,45 @@ export async function generateAnswer(
 		parts: { text: string }[];
 	}[],
 ) {
+	const hasContext = context.trim().length > 0;
+
 	try {
 		const response = await client.models.generateContentStream({
 			model: "gemini-2.5-flash",
 			config: {
-				systemInstruction: `You are a helpful assistant for answering questions about a PDF document.
+				systemInstruction: hasContext
+					? `You are a helpful assistant for answering questions about a document.
 
-				Rules:
-				- Answer questions directly and conversationally, never mention "the context" or "the PDF" in your response
-				- If the answer is fully available, just answer it
-				- If the topic is related to the PDF but needs general knowledge to fully answer, use your own knowledge to fill the gaps and give a complete answer
-				- Only if the question is completely unrelated to the PDF, respond with: "This PDF doesn't have information about that topic."
-				- Never start responses with phrases like "Based on the provided context..." or "According to the PDF..."
-				- Be concise and natural`,
+					Rules:
+					- Answer questions directly and conversationally, never mention "the context" or "the document" in your response
+					- If the answer is fully available, just answer it
+					- If related but needs general knowledge to fully answer, fill gaps with your own knowledge
+					- Only if completely unrelated, respond with: "This document doesn't have information about that topic."
+					- Never start with "Based on the provided context..." or "According to the document..."
+					- Be concise and natural`
+					: `You are a helpful, friendly assistant. Have a normal conversation and answer questions accurately and concisely.`,
 			},
 			contents: [
-				{
-					role: "user",
-					parts: [
-						{
-							text: `Here is the relevant context from the PDF:\n\n${context}`,
-						},
-					],
-				},
-				{
-					role: "model",
-					parts: [{ text: "Understood, I'll answer based on this context." }],
-				},
+				...(hasContext
+					? [
+							{
+								role: "user" as const,
+								parts: [
+									{
+										text: `Here is the relevant context from the document:\n\n${context}`,
+									},
+								],
+							},
+							{
+								role: "model" as const,
+								parts: [
+									{ text: "Understood, I'll answer based on this context." },
+								],
+							},
+						]
+					: []),
 				...formattedMessages,
-
-				// current message
-				{
-					role: "user",
-					parts: [{ text: question }],
-				},
+				{ role: "user", parts: [{ text: question }] },
 			],
 		});
 
