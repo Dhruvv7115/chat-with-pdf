@@ -35,7 +35,7 @@ enum FileType {
   DOCX
   MARKDOWN
   TXT
-  IMAGE
+  CSV
 }
 
 model Document {
