@@ -5,9 +5,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import {
 	Pagination,
 	PaginationContent,
-	PaginationEllipsis,
 	PaginationItem,
-	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
