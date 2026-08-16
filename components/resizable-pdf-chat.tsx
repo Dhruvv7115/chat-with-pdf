@@ -43,7 +43,10 @@ const ResizablePdfChat = ({
 				{doc?.fileType === FileType.PDF ? (
 					<ReactPdf docUrl={docUrl || ""} />
 				) : (
-					<MarkdownViewer docUrl={docUrl || ""} />
+					<MarkdownViewer
+						docUrl={docUrl || ""}
+						doc={doc}
+					/>
 				)}
 			</ResizablePanel>
 			<ResizableHandle withHandle />

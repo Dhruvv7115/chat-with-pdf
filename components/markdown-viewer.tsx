@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Doc } from "./chat-ai";
 
-const MarkdownViewer = ({ docUrl }: { docUrl: string }) => {
+const MarkdownViewer = ({ docUrl, doc }: { docUrl: string; doc: Doc }) => {
 	const [markdown, setMarkdown] = useState<string>("");
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -12,7 +13,7 @@ const MarkdownViewer = ({ docUrl }: { docUrl: string }) => {
 			try {
 				setLoading(true);
 				const res = await fetch(
-					`/api/documents/preview?url=${encodeURIComponent(docUrl)}`,
+					`/api/documents/preview?url=${encodeURIComponent(docUrl)}&fileType=${doc.fileType}`,
 				);
 				if (!res.ok) throw new Error("Failed to load preview");
 				const { markdown } = await res.json();
