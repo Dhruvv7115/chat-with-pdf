@@ -1,6 +1,12 @@
 import z from "zod";
 import { protectedProcedure, createTRPCRouter } from "../init";
-import { deleteFile, detectFileType, getFileBufferFromS3, getFileUrl, uploadFile } from "@/utils/s3";
+import {
+	deleteFile,
+	detectFileType,
+	getFileBufferFromS3,
+	getFileUrl,
+	uploadFile,
+} from "@/utils/s3";
 import { client } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
 
@@ -75,7 +81,7 @@ export const pdfRouter = createTRPCRouter({
 			z.object({
 				key: z.string(),
 				title: z.string(),
-				fileType: z.enum(["PDF", "DOCX", "MARKDOWN", "TXT", "IMAGE"]),
+				fileType: z.enum(["PDF", "DOCX", "MARKDOWN", "TXT", "CSV"]),
 				fileSize: z.number().optional(),
 				pageCount: z.number().optional(),
 			}),
@@ -97,36 +103,47 @@ export const pdfRouter = createTRPCRouter({
 				});
 			}
 
-			// Fetch the actual bytes from S3 to verify real file type
-			const buffer = await getFileBufferFromS3(key); // your existing S3 fetch util, or write one
-			const detectedFileType = await detectFileType(buffer); // the formatFromBytes wrapper from before
+			try {
+				// Fetch the actual bytes from S3 to verify real file type
+				const buffer = await getFileBufferFromS3(key); // your existing S3 fetch util, or write one
+				const extension = key.split(".").pop()?.toLowerCase();
+				const detectedFileType = await detectFileType(buffer, extension);
 
-			if (!detectedFileType) {
+				if (!detectedFileType) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message:
+							"Could not determine file type — the file may be corrupted or unsupported.",
+					});
+				}
+
+				// Optional: warn/log if client and server disagree, but trust the server's detection
+				if (detectedFileType !== clientFileType) {
+					console.warn(
+						`fileType mismatch for ${key}: client said ${clientFileType}, detected ${detectedFileType}`,
+					);
+				}
+
+				const doc = await client.document.create({
+					data: {
+						fileKey: key,
+						title,
+						userId: ctx.userId,
+						fileType: detectedFileType, // trust the server-verified value, not the client's
+						fileSize,
+						pageCount,
+					},
+				});
+				return doc;
+			} catch (error) {
+				console.log(error);
+				await deleteFile(key);
 				throw new TRPCError({
 					code: "BAD_REQUEST",
 					message:
 						"Could not determine file type — the file may be corrupted or unsupported.",
 				});
 			}
-
-			// Optional: warn/log if client and server disagree, but trust the server's detection
-			if (detectedFileType !== clientFileType) {
-				console.warn(
-					`fileType mismatch for ${key}: client said ${clientFileType}, detected ${detectedFileType}`,
-				);
-			}
-
-			const doc = await client.document.create({
-				data: {
-					fileKey: key,
-					title,
-					userId: ctx.userId,
-					fileType: detectedFileType, // trust the server-verified value, not the client's
-					fileSize,
-					pageCount,
-				},
-			});
-			return doc;
 		}),
 
 	// Get file URL

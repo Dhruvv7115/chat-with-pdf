@@ -2,7 +2,8 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { generateEmbedding, summarizeDocument } from "./gemini";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { client } from "@/lib/prisma";
-import { toDocument, toMarkdown, toMarkdownBytes } from "@firecrawl/anydoc";
+import { toMarkdownBytes } from "@firecrawl/anydoc";
+import { FileType } from "@/lib/generated/prisma/enums";
 
 export async function loadPdfText(pdfUrl: string) {
 	const response = await fetch(pdfUrl);
@@ -13,16 +14,50 @@ export async function loadPdfText(pdfUrl: string) {
 	return pdf;
 }
 
-export async function indexDocument(pdfUrl: string, pdfId: string) {
-	const docs = await loadPdfText(pdfUrl);
-	const content = docs
-		.map((doc, index) => `--- PAGE ${index + 1} ---\n${doc.pageContent}`)
-		.join("\n\n");
+export async function extractText(
+	fileUrl: string,
+	docType: FileType,
+): Promise<string> {
+	const response = await fetch(fileUrl);
+	const arrayBuffer = await response.arrayBuffer();
+	const bytes = new Uint8Array(arrayBuffer);
 
-	const contentForChunking = docs.map((doc) => doc.pageContent).join("\n\n");
+	if (docType === FileType.TXT || docType === FileType.MARKDOWN) {
+		return new TextDecoder("utf-8").decode(bytes);
+	}
+
+	const formatMap: Record<string, string> = {
+		[FileType.DOCX]: "docx",
+		[FileType.CSV]: "csv", // needs its own enum value — see note below
+	};
+	const formatHint = formatMap[docType];
+	// @ts-expect-error — anydoc's Format type is a const enum but accepts these string literal values at runtime
+	const markdown = await toMarkdownBytes(bytes, formatHint);
+	return markdown;
+}
+
+export async function indexDocument(
+	docUrl: string,
+	docId: string,
+	docType: FileType,
+) {
+	let content: string;
+	let contentForChunking: string;
+
+	if (docType === FileType.PDF) {
+		const docs = await loadPdfText(docUrl);
+		content = docs
+			.map((doc, index) => `--- PAGE ${index + 1} ---\n${doc.pageContent}`)
+			.join("\n\n");
+		contentForChunking = docs.map((doc) => doc.pageContent).join("\n\n");
+	} else {
+		const markdown = await extractText(docUrl, docType);
+		content = markdown;
+		contentForChunking = markdown;
+	}
+
 	const chunks = await chunkPdf(contentForChunking);
 
-	// We are batching the chunks so that we dont hit the api rate limits, for now a batch of 5 (a single batch would execute parallely -> 5 chunks)
 	const batches: string[][] = [];
 	chunks.forEach((chunk, index) => {
 		const batchIndex = Math.floor(index / 5);
@@ -42,7 +77,7 @@ export async function indexDocument(pdfUrl: string, pdfId: string) {
 			try {
 				const embedding = await client.documentEmbedding.create({
 					data: {
-						documentId: pdfId,
+						documentId: docId,
 						content: batch[i],
 					},
 				});
@@ -55,7 +90,7 @@ export async function indexDocument(pdfUrl: string, pdfId: string) {
 				`;
 			} catch (error) {
 				console.log("error:", error);
-				throw new Error("Error indexing PDF");
+				throw new Error("Error indexing document");
 			}
 		}
 		allEmbeddings.push(...batchEmbeddings);

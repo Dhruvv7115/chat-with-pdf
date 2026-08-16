@@ -6,8 +6,7 @@ import {
 	DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-//@ts-ignore
-import { formatFromBytes } from "@firecrawl/anydoc-darwin-arm64";
+import { formatFromBytes } from "@firecrawl/anydoc";
 
 const s3 = new S3Client({
 	region: "ap-south-1",
@@ -103,20 +102,31 @@ const getFileBufferFromS3 = async function (key: string): Promise<Buffer> {
 };
 
 // to get file type
-async function detectFileType(buffer: Buffer): Promise<FileType> {
-	const format = formatFromBytes(buffer); // reads file signature, not the name
+async function detectFileType(
+	buffer: Buffer,
+	fallbackExtension?: string,
+): Promise<FileType> {
+	const format = formatFromBytes(buffer);
+	console.log("format:", format);
 
 	const map: Record<string, FileType> = {
-		Pdf: "PDF",
-		Docx: "DOCX",
-		Doc: "DOCX",
-		Csv: "TXT",
-		// map anydoc's Format enum values to yours as needed
+		pdf: "PDF",
+		docx: "DOCX",
+		doc: "DOCX",
 	};
 
-	const mapped = format ? map[format] : undefined;
-	if (!mapped) throw new Error(`Unsupported or undetected file type`);
-	return mapped;
+	if (format && map[format]) {
+		return map[format];
+	}
+
+	// Fallback: formatFromBytes can't detect TXT/MARKDOWN (no byte signature),
+	// so use the file extension instead for these
+	if (fallbackExtension === "txt") return "TXT";
+	if (fallbackExtension === "md" || fallbackExtension === "markdown")
+		return "MARKDOWN";
+	if (fallbackExtension === "csv") return "CSV";
+
+	throw new Error("Unsupported or undetected file type");
 }
 
 export {
