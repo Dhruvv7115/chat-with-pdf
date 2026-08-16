@@ -1,9 +1,23 @@
+import { authOptions } from "@/lib/auth";
 import { client } from "@/lib/prisma";
 import { generateAnswer, generateQueryEmbedding } from "@/utils/gemini";
 import { similaritySearch } from "@/utils/rag";
-import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+	const session = await getServerSession(authOptions);
+	if (!session?.user?.id) {
+		return new Response("Unauthorized", { status: 401 });
+	}
+
+	const allowed = await checkRateLimit(session.user.id);
+	if (!allowed) {
+		return NextResponse.json(
+			{ error: "You're sending messages too quickly. Please slow down." },
+			{ status: 429 },
+		);
+	}
 	const { chatId } = await req.json();
 	let messages;
 	try {
@@ -65,4 +79,18 @@ export async function POST(req: NextRequest) {
 	return new Response(stream, {
 		headers: { "Content-Type": "text/plain" },
 	});
+}
+
+async function checkRateLimit(userId: string): Promise<boolean> {
+	const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+
+	const recentCount = await client.message.count({
+		where: {
+			role: "USER",
+			createdAt: { gte: oneMinuteAgo },
+			chat: { userId },
+		},
+	});
+
+	return recentCount < 10; // e.g. max 10 messages per minute
 }
