@@ -5,6 +5,7 @@ import ChatInput from "./chat-input";
 import { api } from "@/trpc/client";
 import { Loader2 } from "lucide-react";
 import { FileType } from "@/lib/generated/prisma/enums";
+import ThinkingIndicator from "./thinking-indicator";
 
 export type Chat = {
 	id: string;
@@ -167,6 +168,11 @@ const ChatAi = ({
 	}, [messages]);
 
 	const [aiResponse, setAiResponse] = useState<string>("");
+	const showThinking =
+		!error &&
+		!aiResponse &&
+		(messages?.length === 0 ||
+			messages?.[messages.length - 1]?.role === "USER");
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -177,11 +183,6 @@ const ChatAi = ({
 	return (
 		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
 			<div className="overflow-y-auto h-full w-full mx-auto max-w-4xl scrollbar-none">
-				{messages?.length === 0 && !error && (
-					<div className="flex items-center justify-center h-full w-full">
-						<Loader2 className="animate-spin w-20 h-20 text-neutral-400" />
-					</div>
-				)}
 				{error && (
 					<div className="flex flex-col items-center justify-center h-full w-full gap-3">
 						<p className="text-red-500 text-sm">{error}</p>
@@ -222,6 +223,7 @@ const ChatAi = ({
 						}}
 					/>
 				)}
+				{showThinking && <ThinkingIndicator />}
 				<div ref={bottomRef} />
 			</div>
 			<div className="px-6 py-2 max-w-4xl mx-auto w-full">
