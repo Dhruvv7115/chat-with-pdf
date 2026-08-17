@@ -61,31 +61,38 @@ function getFileTypeConfig(fileType?: string) {
 		case "PDF":
 			return {
 				label: "PDF",
-				color: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
+				color:
+					"bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
 				icon: FileText,
 				badgeColor: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300",
 			};
 		case "DOCX":
 			return {
 				label: "DOCX",
-				color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
+				color:
+					"bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
 				icon: FileCode2,
-				badgeColor: "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
+				badgeColor:
+					"bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
 			};
 		case "MARKDOWN":
 		case "MD":
 			return {
 				label: "MARKDOWN",
-				color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
+				color:
+					"bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
 				icon: FileCode,
-				badgeColor: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
+				badgeColor:
+					"bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
 			};
 		default:
 			return {
 				label: fileType || "DOCUMENT",
-				color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
+				color:
+					"bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
 				icon: FileTypeIcon,
-				badgeColor: "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
+				badgeColor:
+					"bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
 			};
 	}
 }
@@ -95,7 +102,11 @@ export default function DocsPage() {
 	const utils = api.useUtils();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState<FileCategory>("ALL");
-	const [previewDoc, setPreviewDoc] = useState<{ title: string; url: string; fileType?: string } | null>(null);
+	const [previewDoc, setPreviewDoc] = useState<{
+		title: string;
+		url: string;
+		fileType?: string;
+	} | null>(null);
 
 	const { data: docs, isLoading } = api.pdf.getAllUserDocsWithUrls.useQuery();
 
@@ -135,7 +146,9 @@ export default function DocsPage() {
 			pdf: docs.filter((d) => d.fileType === "PDF").length,
 			docx: docs.filter((d) => d.fileType === "DOCX").length,
 			markdown: docs.filter((d) => d.fileType === "MARKDOWN").length,
-			other: docs.filter((d) => !["PDF", "DOCX", "MARKDOWN"].includes(d.fileType)).length,
+			other: docs.filter(
+				(d) => !["PDF", "DOCX", "MARKDOWN"].includes(d.fileType),
+			).length,
 		};
 	}, [docs]);
 
@@ -143,14 +156,17 @@ export default function DocsPage() {
 	const filteredDocs = useMemo(() => {
 		if (!docs) return [];
 		return docs.filter((doc) => {
-			const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+			const matchesSearch = doc.title
+				.toLowerCase()
+				.includes(searchQuery.toLowerCase());
 			if (!matchesSearch) return false;
 
 			if (activeCategory === "ALL") return true;
 			if (activeCategory === "PDF") return doc.fileType === "PDF";
 			if (activeCategory === "DOCX") return doc.fileType === "DOCX";
 			if (activeCategory === "MARKDOWN") return doc.fileType === "MARKDOWN";
-			if (activeCategory === "OTHER") return !["PDF", "DOCX", "MARKDOWN"].includes(doc.fileType);
+			if (activeCategory === "OTHER")
+				return !["PDF", "DOCX", "MARKDOWN"].includes(doc.fileType);
 			return true;
 		});
 	}, [docs, searchQuery, activeCategory]);
@@ -160,7 +176,15 @@ export default function DocsPage() {
 		{ id: "PDF", label: "PDF Documents", count: counts.pdf },
 		{ id: "DOCX", label: "Word (DOCX)", count: counts.docx },
 		{ id: "MARKDOWN", label: "Markdown (MD)", count: counts.markdown },
-		...(counts.other > 0 ? [{ id: "OTHER" as FileCategory, label: "Other Files", count: counts.other }] : []),
+		...(counts.other > 0
+			? [
+					{
+						id: "OTHER" as FileCategory,
+						label: "Other Files",
+						count: counts.other,
+					},
+				]
+			: []),
 	];
 
 	return (
@@ -173,13 +197,17 @@ export default function DocsPage() {
 							Uploaded Documents
 						</h1>
 						{docs && (
-							<Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-semibold">
+							<Badge
+								variant="secondary"
+								className="px-2.5 py-0.5 text-xs font-semibold"
+							>
 								{docs.length} {docs.length === 1 ? "document" : "documents"}
 							</Badge>
 						)}
 					</div>
 					<p className="text-sm text-muted-foreground mt-1">
-						View, preview with presigned URLs, chat with, and manage your separated PDF, Word, and Markdown documents.
+						View, preview with presigned URLs, chat with, and manage your
+						separated PDF, Word, and Markdown documents.
 					</p>
 				</div>
 
@@ -270,9 +298,12 @@ export default function DocsPage() {
 					<div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
 						<Files className="h-8 w-8" />
 					</div>
-					<h3 className="text-lg font-semibold text-foreground">No documents uploaded yet</h3>
+					<h3 className="text-lg font-semibold text-foreground">
+						No documents uploaded yet
+					</h3>
 					<p className="text-sm text-muted-foreground max-w-sm mt-1 mb-6">
-						Upload your PDF, Word, or Markdown documents to preview them here and start asking AI questions about them.
+						Upload your PDF, Word, or Markdown documents to preview them here
+						and start asking AI questions about them.
 					</p>
 					<Link href="/chat">
 						<Button className="gap-2">
@@ -326,7 +357,12 @@ export default function DocsPage() {
 								<div className="p-4 border-b bg-muted/30 space-y-2">
 									<div className="flex items-start justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
-											<div className={cn("p-1.5 rounded border shrink-0", typeConfig.color)}>
+											<div
+												className={cn(
+													"p-1.5 rounded border shrink-0",
+													typeConfig.color,
+												)}
+											>
 												<TypeIcon className="h-4 w-4" />
 											</div>
 											<h2
@@ -352,13 +388,16 @@ export default function DocsPage() {
 												<AlertDialogHeader>
 													<AlertDialogTitle>Delete Document</AlertDialogTitle>
 													<AlertDialogDescription>
-														Are you sure you want to delete &quot;{doc.title}&quot;? This action cannot be undone.
+														Are you sure you want to delete &quot;{doc.title}
+														&quot;? This action cannot be undone.
 													</AlertDialogDescription>
 												</AlertDialogHeader>
 												<AlertDialogFooter>
 													<AlertDialogCancel>Cancel</AlertDialogCancel>
 													<AlertDialogAction
-														onClick={() => deleteDocMutation.mutate({ key: doc.fileKey })}
+														onClick={() =>
+															deleteDocMutation.mutate({ key: doc.fileKey })
+														}
 														className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 													>
 														Delete
@@ -370,7 +409,12 @@ export default function DocsPage() {
 
 									{/* Metadata Badges & Type Tag */}
 									<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
-										<span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", typeConfig.badgeColor)}>
+										<span
+											className={cn(
+												"px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+												typeConfig.badgeColor,
+											)}
+										>
 											{typeConfig.label}
 										</span>
 										<span className="flex items-center gap-1 text-[11px]">
@@ -393,16 +437,22 @@ export default function DocsPage() {
 								</div>
 
 								{/* Iframe Presigned URL Preview Container */}
-								<div className="relative w-full h-[320px] bg-neutral-900/5 dark:bg-neutral-950 flex flex-col justify-center items-center overflow-hidden border-b">
+								<div className="relative w-full h-80 bg-neutral-900/5 dark:bg-neutral-950 flex flex-col justify-center items-center overflow-hidden border-b">
 									{doc.url ? (
 										<>
 											<iframe
 												src={iframeSrc}
 												title={doc.title}
-												className="w-full h-full border-0"
+												className="w-full h-full border-0 pointer-events-none"
 											/>
 											<button
-												onClick={() => setPreviewDoc({ title: doc.title, url: doc.url, fileType: doc.fileType })}
+												onClick={() =>
+													setPreviewDoc({
+														title: doc.title,
+														url: doc.url,
+														fileType: doc.fileType,
+													})
+												}
 												className="absolute top-2 right-2 p-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity shadow"
 												title="Expand preview"
 											>
@@ -461,7 +511,7 @@ export default function DocsPage() {
 								variant="outline"
 								size="sm"
 								onClick={() => window.open(previewDoc.url, "_blank")}
-								className="text-white border-white/20 hover:bg-white/10 gap-1.5"
+								className="text-black dark:text-white border-white/20 dark:border-black/20 hover:bg-white/80 dark:hover:bg-black/10 gap-1.5 cursor-pointer transition-all duration-300"
 							>
 								<ExternalLink className="h-4 w-4" />
 								Open original

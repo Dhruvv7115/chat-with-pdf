@@ -38,7 +38,7 @@ const sidebarContents = {
 const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
-	const { data: recentDocs } = api.pdf.getUserDocs.useQuery();
+	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 3 });
 	const [hovered, setHovered] = useState<string>("");
 
 	return (
@@ -81,7 +81,7 @@ const AppSidebar = () => {
 										}}
 									/>
 								)}
-								<item.icon className="size-5" />
+								<item.icon className="size-5 stroke-[1.5]" />
 								<motion.span
 									animate={{
 										x: hovered === item.name && location !== item.href ? 4 : 0,
@@ -97,15 +97,15 @@ const AppSidebar = () => {
 				<SidebarGroup id="group-2">
 					<SidebarGroupLabel>Recent Documents</SidebarGroupLabel>
 					<SidebarGroupContent className="flex flex-col gap-2 my-2">
-						{recentDocs?.map((doc) => (
+						{recentChats?.map((chat) => (
 							<Link
-								key={doc.id}
-								href={"/chat/" + doc.id}
+								key={chat.id}
+								href={`/chat/${chat.id}`}
 								className="rounded-lg hover:bg-accent px-2 py-1"
 							>
-								{doc.title.length > 20
-									? doc.title.slice(0, 20) + "..."
-									: doc.title}
+								{chat.title.length > 20
+									? chat.title.slice(0, 20) + "..."
+									: chat.title}
 							</Link>
 						))}
 					</SidebarGroupContent>
