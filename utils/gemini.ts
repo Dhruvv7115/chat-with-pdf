@@ -1,13 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
 const client = new GoogleGenAI({
-	apiKey: process.env.GOOGLE_API_KEY!,
+	apiKey: process.env.GEMINI_API_KEY!,
 });
+
 
 export async function summarizeDocument(content: string) {
 	try {
 		const response = await client.models.generateContentStream({
-			model: "gemini-2.5-flash",
+			model: "gemini-3.5-flash-lite",
 			contents: content,
 			config: {
 				systemInstruction: `
@@ -112,7 +113,7 @@ export async function generateAnswer(
 
 	try {
 		const response = await client.models.generateContentStream({
-			model: "gemini-2.5-flash",
+			model: "gemini-3.5-flash-lite",
 			config: {
 				systemInstruction: hasContext
 					? `You are a helpful assistant for answering questions about a document.

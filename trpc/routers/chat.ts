@@ -49,12 +49,28 @@ export const chatRouter = createTRPCRouter({
 			});
 			return newChat;
 		}),
-	getChats: protectedProcedure.query(async ({ ctx }) => {
+	getChats: protectedProcedure.query(async ({ ctx, input }) => {
 		return client.chat.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
 		});
 	}),
+	getUserChats: protectedProcedure
+		.input(z.object({ limit: z.number() }))
+		.query(async ({ ctx, input }) => {
+			const { limit } = input;
+			return client.chat.findMany({
+				where: { userId: ctx.userId },
+				orderBy: { createdAt: "desc" },
+				take: limit,
+				select: {
+					id: true,
+					title: true,
+					createdAt: true,
+				},
+			});
+		}),
+
 	deleteChat: protectedProcedure
 		.input(
 			z.object({
