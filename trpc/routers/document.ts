@@ -180,7 +180,6 @@ export const pdfRouter = createTRPCRouter({
 		return client.document.findMany({
 			where: { userId: ctx.userId },
 			orderBy: { createdAt: "desc" },
-			take: 3,
 		});
 	}),
 
