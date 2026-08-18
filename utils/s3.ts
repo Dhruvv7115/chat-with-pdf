@@ -9,10 +9,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { formatFromBytes } from "@firecrawl/anydoc";
 
 const s3 = new S3Client({
-	region: "ap-south-1",
+	region: "auto",
+	endpoint: process.env.R2_ENDPOINT!,
 	credentials: {
-		accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+		accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+		secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
 	},
 });
 
@@ -39,7 +40,7 @@ const uploadFile = async (
 	const url = await getSignedUrl(
 		s3,
 		new PutObjectCommand({
-			Bucket: process.env.AWS_BUCKET_NAME!,
+			Bucket: process.env.R2_BUCKET_NAME!,
 			Key: key,
 			ContentType: file.type,
 		}),
@@ -65,7 +66,7 @@ const uploadUserImage = async (
 	const url = await getSignedUrl(
 		s3,
 		new PutObjectCommand({
-			Bucket: process.env.AWS_BUCKET_NAME!,
+			Bucket: process.env.R2_BUCKET_NAME!,
 			Key: key,
 			ContentType: file.type,
 		}),
@@ -77,7 +78,7 @@ const uploadUserImage = async (
 
 const getFileUrl = async (key: string) => {
 	const command = new GetObjectCommand({
-		Bucket: process.env.AWS_BUCKET_NAME!,
+		Bucket: process.env.R2_BUCKET_NAME!,
 		Key: key,
 	});
 	return getSignedUrl(s3, command, { expiresIn: 3600 });
@@ -86,7 +87,7 @@ const getFileUrl = async (key: string) => {
 const deleteFile = async (key: string) => {
 	await s3.send(
 		new DeleteObjectCommand({
-			Bucket: process.env.AWS_BUCKET_NAME!,
+			Bucket: process.env.R2_BUCKET_NAME!,
 			Key: key,
 		}),
 	);
@@ -95,7 +96,7 @@ const deleteFile = async (key: string) => {
 // to get file buffer
 const getFileBufferFromS3 = async function (key: string): Promise<Buffer> {
 	const response = await s3.send(
-		new GetObjectCommand({ Bucket: process.env.AWS_BUCKET_NAME!, Key: key }),
+		new GetObjectCommand({ Bucket: process.env.R2_BUCKET_NAME!, Key: key }),
 	);
 	const bytes = await response.Body!.transformToByteArray();
 	return Buffer.from(bytes);
