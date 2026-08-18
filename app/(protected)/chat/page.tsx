@@ -135,7 +135,13 @@ const ChatPage = () => {
 				</Alert>
 			)}
 
-			<div className="flex gap-2 w-full max-w-4xl mx-auto">
+			{/* ── Mobile: just the chat input with a + upload button ── */}
+			<div className="flex md:hidden w-full max-w-xl mx-auto">
+				<ChatStartInput onFileUpload={handlePdfUpload} />
+			</div>
+
+			{/* ── md+: side-by-side drop zone + chat input ── */}
+			<div className="hidden md:flex gap-2 w-full max-w-4xl mx-auto">
 				<FileUploadDemo onUpload={handlePdfUpload} />
 				<ChatStartInput />
 			</div>

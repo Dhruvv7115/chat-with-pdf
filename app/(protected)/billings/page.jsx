@@ -57,7 +57,7 @@ export default function BillingPage() {
 	}, [searchParams]);
 
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="bg-background">
 			<div className="mx-auto px-6 py-8 space-y-8">
 				{/* Header */}
 				<div className="mb-8">

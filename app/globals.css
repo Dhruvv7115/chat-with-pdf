@@ -128,4 +128,8 @@
 
 body{
   overflow: hidden;
+  ::selection {
+    background-color: oklch(64.8% 0.2 131.684); /* Changes highlight background */
+    color: #ffffff;            /* Changes highlighted text color */
+  }
 }
