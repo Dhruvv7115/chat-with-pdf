@@ -93,7 +93,7 @@ model DocumentEmbedding {
   documentId String
   content    String
   embedding  Unsupported("vector(768)")?
-  document   Document                    @relation(fields: [documentId], references: [id])
+  document   Document                    @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 model Subscription {
