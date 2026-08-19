@@ -27,6 +27,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { api } from "@/trpc/client";
+import { commonDotStyles } from "../billings/page";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 function getInitials(firstName?: string | null, lastName?: string | null) {
 	return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
@@ -116,272 +119,393 @@ export default function SettingsPage() {
 	}, [userAvatar]);
 
 	return (
-		<div className="mx-auto p-6 flex flex-col gap-4">
-			<div className="mb-2">
-				<h1 className="text-2xl font-bold text-accent-foreground">Settings</h1>
-				<p className="text-sm text-muted-foreground">
-					Manage your account preferences
-				</p>
-			</div>
-
-			{/* ── Profile ── */}
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle>Profile</CardTitle>
-					<CardDescription>Edit your profile</CardDescription>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-6">
-					{/* Avatar row */}
-					<div className="flex items-center gap-4">
-						<Avatar className="w-20 h-20">
-							<AvatarImage
-								src={
-									userAvatar.trim() !== ""
-										? userAvatar
-										: (user?.avatar ?? undefined)
-								}
-							/>
-							<AvatarFallback>
-								{getInitials(firstName, lastName)}
-							</AvatarFallback>
-						</Avatar>
-						<div>
-							<p className="text-sm font-medium">
-								{profile?.firstName} {profile?.lastName}{" "}
-								{!profile?.firstName && !profile?.lastName && user?.name}
-							</p>
-							<p className="text-xs text-muted-foreground mb-2">
-								{user?.email}
-							</p>
-							<Button
-								variant="outline"
-								size="sm"
-								className="text-xs h-7 relative"
-							>
-								<input
-									type="file"
-									accept="image/*"
-									className="inset-0 absolute opacity-0 border"
-									onChange={(e) => {
-										const file = e.target.files?.[0];
-										if (file) {
-											setUserAvatarFile(file);
-											setUserAvatar(URL.createObjectURL(file)); // temporary local URL
-										}
-									}}
-								/>
-								Change avatar
-							</Button>
-						</div>
-					</div>
-
-					{/* Name fields */}
-					<div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-xs">First name</Label>
-							<Input
-								value={firstName}
-								onChange={(e) => setFirstName(e.target.value)}
-								placeholder="John"
-							/>
-						</div>
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-xs">Last name</Label>
-							<Input
-								value={lastName}
-								onChange={(e) => setLastName(e.target.value)}
-								placeholder="Doe"
-							/>
-						</div>
-					</div>
-
-					<div className="flex justify-end">
-						<Button onClick={handleSaveProfile}>Save changes</Button>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* ── Password ── */}
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm font-medium">Password</CardTitle>
-					<CardDescription>Reset your password</CardDescription>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-3">
-					<div className="flex flex-col gap-1.5">
-						<Label className="text-xs">Current password</Label>
-						<Input
-							type="password"
-							value={currentPassword}
-							onChange={(e) => setCurrentPassword(e.target.value)}
-							placeholder="••••••••"
-						/>
-					</div>
-					<div className="flex flex-col gap-1.5">
-						<Label className="text-xs">New password</Label>
-						<Input
-							type="password"
-							value={newPassword}
-							onChange={(e) => setNewPassword(e.target.value)}
-							placeholder="••••••••"
-						/>
-					</div>
-					<div className="flex flex-col gap-1.5">
-						<Label className="text-xs">Confirm new password</Label>
-						<Input
-							type="password"
-							value={confirmPassword}
-							onChange={(e) => setConfirmPassword(e.target.value)}
-							placeholder="••••••••"
-						/>
-					</div>
-
-					<div className="flex justify-end">
-						<Button
-							size="sm"
-							onClick={handleUpdatePassword}
-						>
-							Update password
-						</Button>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* ── Connected accounts ── */}
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm font-medium">
-						Connected accounts
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-2">
-					{/* Google */}
-					<div className="flex items-center justify-between px-3 py-2.5 border rounded-lg">
-						<div className="flex items-center gap-2.5">
-							<GoogleIcon />
-							<span className="text-sm">Google</span>
-						</div>
-						<div className="flex items-center gap-2">
-							<span className="text-xs px-2 py-0.5 rounded-md bg-green-50 text-green-700 border border-green-200">
-								Connected
-							</span>
-							<Button
-								variant="outline"
-								size="sm"
-								className="text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/5"
-							>
-								Disconnect
-							</Button>
-						</div>
-					</div>
-
-					{/* GitHub */}
-					<div className="flex items-center justify-between px-3 py-2.5 border rounded-lg">
-						<div className="flex items-center gap-2.5">
-							<GithubIcon />
-							<span className="text-sm">GitHub</span>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							className="text-xs h-7"
-						>
-							Connect
-						</Button>
-					</div>
-				</CardContent>
-			</Card>
-
-			{/* ── Danger zone ── */}
-			<Card className="border-destructive/40">
-				<CardHeader className="pb-3">
-					<CardTitle className="text-sm font-medium text-destructive">
-						Danger zone
-					</CardTitle>
-					<p className="text-xs text-muted-foreground">
-						These actions are permanent and cannot be undone.
+		<div className="bg-background">
+			<div className="mx-auto px-6 py-8 space-y-8">
+				{/* Header */}
+				<div className="mb-8">
+					<h1 className="text-2xl font-bold text-accent-foreground">
+						Settings
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						Manage your account preferences
 					</p>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-2">
-					{/* Delete all PDFs */}
-					<div className="flex items-center justify-between px-3 py-2.5 border rounded-lg">
-						<div>
-							<p className="text-sm font-medium">Delete all PDFs</p>
-							<p className="text-xs text-muted-foreground">
-								Remove all uploaded PDFs and their chats
-							</p>
-						</div>
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
-								<Button
-									variant="outline"
-									size="sm"
-									className="text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/5"
-								>
-									Delete all
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Delete all PDFs?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This will permanently delete all your uploaded PDFs and
-										their chat histories. This action cannot be undone.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										onClick={handleDeleteAllPdfs}
-										className="bg-destructive hover:bg-destructive/90"
-									>
-										Delete all
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-					</div>
+				</div>
 
-					{/* Delete account */}
-					<div className="flex items-center justify-between px-3 py-2.5 border rounded-lg">
-						<div>
-							<p className="text-sm font-medium">Delete account</p>
-							<p className="text-xs text-muted-foreground">
-								Permanently delete your account and all data
-							</p>
-						</div>
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
+				{/* Profile */}
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)} />
+
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base font-medium">Profile</CardTitle>
+							<CardDescription>
+								Manage your personal information and profile picture
+							</CardDescription>
+						</CardHeader>
+
+						<CardContent className="space-y-6">
+							{/* Avatar */}
+							<div className="flex items-center gap-4">
+								<Avatar className="w-16 h-16">
+									<AvatarImage
+										src={
+											userAvatar.trim() !== ""
+												? userAvatar
+												: (user?.avatar ?? undefined)
+										}
+									/>
+									<AvatarFallback className="text-lg">
+										{getInitials(firstName, lastName)}
+									</AvatarFallback>
+								</Avatar>
+
+								<div>
+									<p className="text-sm font-medium">
+										{profile?.firstName} {profile?.lastName}{" "}
+										{!profile?.firstName && !profile?.lastName && user?.name}
+									</p>
+
+									<p className="text-xs text-muted-foreground mb-2">
+										{user?.email}
+									</p>
+
+									<Button
+										variant="outline"
+										size="sm"
+										className="text-xs h-7 relative"
+									>
+										<input
+											type="file"
+											accept="image/*"
+											className="inset-0 absolute opacity-0 cursor-pointer"
+											onChange={(e) => {
+												const file = e.target.files?.[0];
+
+												if (file) {
+													setUserAvatarFile(file);
+													setUserAvatar(URL.createObjectURL(file));
+												}
+											}}
+										/>
+										Change avatar
+									</Button>
+								</div>
+							</div>
+
+							<Separator />
+
+							{/* Name */}
+							<div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+								<div className="flex flex-col gap-1.5">
+									<Label className="text-xs">First name</Label>
+
+									<Input
+										value={firstName}
+										onChange={(e) => setFirstName(e.target.value)}
+										placeholder="John"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<Label className="text-xs">Last name</Label>
+
+									<Input
+										value={lastName}
+										onChange={(e) => setLastName(e.target.value)}
+										placeholder="Doe"
+									/>
+								</div>
+							</div>
+
+							<div className="flex justify-end">
+								<Button onClick={handleSaveProfile}>Save changes</Button>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Password */}
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)} />
+
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base font-medium">Password</CardTitle>
+
+							<CardDescription>
+								Change your password to keep your account secure
+							</CardDescription>
+						</CardHeader>
+
+						<CardContent className="space-y-4">
+							<div className="grid md:grid-cols-3 gap-4">
+								<div className="flex flex-col gap-1.5">
+									<Label className="text-xs">Current password</Label>
+
+									<Input
+										type="password"
+										value={currentPassword}
+										onChange={(e) => setCurrentPassword(e.target.value)}
+										placeholder="••••••••"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<Label className="text-xs">New password</Label>
+
+									<Input
+										type="password"
+										value={newPassword}
+										onChange={(e) => setNewPassword(e.target.value)}
+										placeholder="••••••••"
+									/>
+								</div>
+
+								<div className="flex flex-col gap-1.5">
+									<Label className="text-xs">Confirm new password</Label>
+
+									<Input
+										type="password"
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+										placeholder="••••••••"
+									/>
+								</div>
+							</div>
+
+							<div className="flex justify-end pt-1">
+								<Button
+									size="sm"
+									onClick={handleUpdatePassword}
+								>
+									Update password
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Connected accounts */}
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)} />
+					<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)} />
+
+					<Card>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base font-medium">
+								Connected accounts
+							</CardTitle>
+
+							<CardDescription>
+								Manage the accounts connected to your account
+							</CardDescription>
+						</CardHeader>
+
+						<CardContent className="space-y-3">
+							{/* Google */}
+							<div className="flex items-center justify-between rounded-lg border px-4 py-3">
+								<div className="flex items-center gap-3">
+									<div className="flex h-8 w-8 items-center justify-center">
+										<GoogleIcon />
+									</div>
+
+									<div>
+										<p className="text-sm font-medium">Google</p>
+
+										<p className="text-xs text-muted-foreground">
+											Connected account
+										</p>
+									</div>
+								</div>
+
+								<div className="flex items-center gap-2">
+									<span className="rounded-md border border-green-200 bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400">
+										Connected
+									</span>
+
+									<Button
+										variant="outline"
+										size="sm"
+										className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
+									>
+										Disconnect
+									</Button>
+								</div>
+							</div>
+
+							{/* GitHub */}
+							<div className="flex items-center justify-between rounded-lg border px-4 py-3">
+								<div className="flex items-center gap-3">
+									<div className="flex h-8 w-8 items-center justify-center">
+										<GithubIcon />
+									</div>
+
+									<div>
+										<p className="text-sm font-medium">GitHub</p>
+
+										<p className="text-xs text-muted-foreground">
+											Connect your GitHub account
+										</p>
+									</div>
+								</div>
+
 								<Button
 									variant="outline"
 									size="sm"
-									className="text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/5"
+									className="h-7 text-xs"
 								>
-									Delete account
+									Connect
 								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Delete your account?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This will permanently delete your account, all uploaded
-										PDFs, and all chat histories. This action cannot be undone.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction
-										onClick={handleDeleteAccount}
-										className="bg-destructive hover:bg-destructive/90"
-									>
-										Delete account
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-					</div>
-				</CardContent>
-			</Card>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+
+				{/* Danger zone */}
+				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-destructive/30 lg:p-6 md:p-4 p-2 relative">
+					<span
+						className={cn(
+							"-top-0.5 -left-0.5",
+							"bg-destructive",
+							commonDotStyles,
+						)}
+					/>
+					<span
+						className={cn(
+							"-top-0.5 -right-0.5",
+							"bg-destructive",
+							commonDotStyles,
+						)}
+					/>
+					<span
+						className={cn(
+							"-bottom-0.5 -left-0.5",
+							"bg-destructive",
+							commonDotStyles,
+						)}
+					/>
+					<span
+						className={cn(
+							"-bottom-0.5 -right-0.5",
+							"bg-destructive",
+							commonDotStyles,
+						)}
+					/>
+
+					<Card className="border-destructive/30">
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base font-medium text-destructive">
+								Danger zone
+							</CardTitle>
+
+							<CardDescription>
+								These actions are permanent and cannot be undone.
+							</CardDescription>
+						</CardHeader>
+
+						<CardContent className="space-y-3">
+							{/* Delete PDFs */}
+							<div className="flex items-center justify-between gap-4 rounded-lg border border-destructive/20 px-4 py-3">
+								<div>
+									<p className="text-sm font-medium">Delete all PDFs</p>
+
+									<p className="text-xs text-muted-foreground">
+										Remove all uploaded PDFs and their chat histories
+									</p>
+								</div>
+
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="outline"
+											size="sm"
+											className="h-7 shrink-0 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
+										>
+											Delete all
+										</Button>
+									</AlertDialogTrigger>
+
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Delete all PDFs?</AlertDialogTitle>
+
+											<AlertDialogDescription>
+												This will permanently delete all your uploaded PDFs and
+												their chat histories. This action cannot be undone.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+
+											<AlertDialogAction
+												onClick={handleDeleteAllPdfs}
+												className="bg-destructive hover:bg-destructive/90"
+											>
+												Delete all
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</div>
+
+							{/* Delete account */}
+							<div className="flex items-center justify-between gap-4 rounded-lg border border-destructive/20 px-4 py-3">
+								<div>
+									<p className="text-sm font-medium">Delete account</p>
+
+									<p className="text-xs text-muted-foreground">
+										Permanently delete your account and all data
+									</p>
+								</div>
+
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="outline"
+											size="sm"
+											className="h-7 shrink-0 text-xs text-destructive border-destructive/30 hover:bg-destructive/5"
+										>
+											Delete account
+										</Button>
+									</AlertDialogTrigger>
+
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Delete your account?</AlertDialogTitle>
+
+											<AlertDialogDescription>
+												This will permanently delete your account, all uploaded
+												PDFs, and all chat histories. This action cannot be
+												undone.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+
+											<AlertDialogAction
+												onClick={handleDeleteAccount}
+												className="bg-destructive hover:bg-destructive/90"
+											>
+												Delete account
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</div>
 		</div>
 	);
 }

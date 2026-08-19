@@ -2,6 +2,8 @@ import { Role } from "@/lib/generated/prisma/enums";
 import { Check, Copy, Loader2, Square, Volume2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { customComponents } from "@/components/markdown/markdown-components";
 
 type Message = {
 	id: string;
@@ -53,7 +55,7 @@ const AiMessage = ({ message }: { message: Message }) => {
 		const utterance = new SpeechSynthesisUtterance(cleanText);
 
 		const voices = window.speechSynthesis.getVoices();
-		const chosenVoice = voices.find((v) => v.name === "Samantha"); 
+		const chosenVoice = voices.find((v) => v.name === "Samantha");
 		if (chosenVoice) utterance.voice = chosenVoice;
 
 		utterance.rate = 1;
@@ -79,11 +81,37 @@ const AiMessage = ({ message }: { message: Message }) => {
 			window.speechSynthesis.cancel();
 		};
 	}, []);
+	function formatMessageDate(dateString: string) {
+		const date = new Date(dateString);
+		const now = new Date();
+
+		const diffMs = now.getTime() - date.getTime();
+
+		const minutes = Math.floor(diffMs / (1000 * 60));
+		const hours = Math.floor(diffMs / (1000 * 60 * 60));
+		const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+		if (minutes < 1) return "just now";
+		if (minutes < 60) return `${minutes}m ago`;
+		if (hours < 24) return `${hours}h ago`;
+		if (days < 7) return `${days}d ago`;
+
+		return date.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+		});
+	}
 
 	return (
 		<div className="flex items-center justify-start gap-4 w-full h-fit mb-4">
-			<div className="rounded-lg lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full prose prose-lime prose-sm prose-li:marker:text-black/50 dark:prose-invert relative group">
-				<ReactMarkdown>{message.content}</ReactMarkdown>
+			<div className="rounded-lg lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full prose prose-lime lg:prose-base prose-sm prose-li:marker:text-black/50 dark:prose-invert prose-td:py-2 prose-td:px-4 prose-th:py-2 prose-th:px-4 relative group font-literata">
+				<ReactMarkdown
+					remarkPlugins={[remarkGfm]}
+					
+					components={customComponents}
+				>
+					{message.content}
+				</ReactMarkdown>
 
 				<div className="flex items-center gap-2">
 					{/* Copy button */}
@@ -129,6 +157,9 @@ const AiMessage = ({ message }: { message: Message }) => {
 							<Volume2 size={12} />
 						)}
 					</button>
+					<span className="flex group-hover:opacity-100 opacity-0 items-center justify-center text-xs text-gray-500 hover:text-gray-600 transition-colors bg-transparent border-0 cursor-pointer rounded-md disabled:cursor-not-allowed">
+						{formatMessageDate(message.createdAt)}
+					</span>
 				</div>
 			</div>
 		</div>
