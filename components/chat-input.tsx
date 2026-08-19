@@ -1,55 +1,29 @@
 // chat-input.tsx
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupButton,
 	InputGroupTextarea,
 } from "@/components/ui/input-group";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Plus } from "lucide-react";
 import { api } from "@/trpc/client";
 
 const ChatInput = ({
 	chatId,
 	setAiResponse,
+	onFileUpload,
 }: {
 	chatId: string;
 	setAiResponse: React.Dispatch<React.SetStateAction<string>>;
+	onFileUpload?: (files: File[]) => void;
 }) => {
 	const utils = api.useUtils();
 	const [question, setQuestion] = useState("");
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const createMessage = api.message.createMessage.useMutation({
-		onMutate: async (newMessage) => {
-			await utils.chat.getMessages.cancel({ chatId });
-			const previousMessages = utils.chat.getMessages.getData({ chatId });
-
-			utils.chat.getMessages.setData({ chatId }, (old) => [
-				...(old ?? []),
-				{
-					id: `temp-${Date.now()}`,
-					chatId,
-					role: newMessage.role,
-					content: newMessage.content,
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				},
-			]);
-
-			return { previousMessages };
-		},
-		onError: (err, newMessage, context) => {
-			utils.chat.getMessages.setData({ chatId }, context?.previousMessages);
-		},
-		onSettled: () => {
+		onSuccess: () => {
 			utils.chat.getMessages.invalidate({ chatId });
 		},
 	});
@@ -61,31 +35,56 @@ const ChatInput = ({
 			content: question,
 			role: "USER",
 		});
-		setQuestion(""); // clear input immediately too
+		setQuestion("");
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			handleSend();
+		}
 	};
 
 	return (
 		<InputGroup className="p-2">
+			{/* Hidden file input — only rendered when onFileUpload is provided */}
+			{onFileUpload && (
+				<input
+					ref={fileInputRef}
+					type="file"
+					accept=".pdf,.docx,.doc,.md,.markdown,.txt,.csv"
+					className="hidden"
+					onChange={(e) => {
+						const files = Array.from(e.target.files ?? []);
+						if (files.length) onFileUpload(files);
+						e.target.value = ""; // reset so same file can be re-selected
+					}}
+				/>
+			)}
+
 			<InputGroupTextarea
-				id="block-end-textarea"
-				placeholder="Ask to start a chat..."
+				id="chat-input-textarea"
+				placeholder="Ask anything…"
 				disabled={createMessage.isPending}
 				value={question}
 				onChange={(e) => setQuestion(e.target.value)}
+				onKeyDown={handleKeyDown}
 			/>
+
 			<InputGroupAddon align="block-end">
-				<Select>
-					<SelectTrigger className="w-24">
-						<SelectValue placeholder="Model" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectGroup>
-							<SelectItem value="light">Light</SelectItem>
-							<SelectItem value="dark">Dark</SelectItem>
-							<SelectItem value="system">System</SelectItem>
-						</SelectGroup>
-					</SelectContent>
-				</Select>
+				{/* Plus / upload button — only shown when a handler is provided */}
+				{onFileUpload && (
+					<InputGroupButton
+						variant="ghost"
+						size="sm"
+						className="rounded-full p-2"
+						title="Upload a file"
+						onClick={() => fileInputRef.current?.click()}
+					>
+						<Plus size={18} />
+					</InputGroupButton>
+				)}
+
 				<InputGroupButton
 					variant="ghost"
 					size="sm"
