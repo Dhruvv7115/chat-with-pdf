@@ -6,6 +6,7 @@ import { api } from "@/trpc/client";
 import { Loader2 } from "lucide-react";
 import { FileType } from "@/lib/generated/prisma/enums";
 import ThinkingIndicator from "./thinking-indicator";
+import { LoaderThree } from "./ui/loader";
 
 export type Chat = {
 	id: string;
@@ -36,7 +37,11 @@ const ChatAi = ({
 	docUrl?: string;
 	doc?: Doc | null;
 }) => {
-	const { data: messages, refetch } = api.chat.getMessages.useQuery({
+	const {
+		data: messages,
+		isLoading,
+		refetch,
+	} = api.chat.getMessages.useQuery({
 		chatId: chat.id,
 	});
 	const utils = api.useUtils();
@@ -112,7 +117,6 @@ const ChatAi = ({
 					});
 					aiSummaryRef.current = "";
 					setAiResponse("");
-					refetch();
 				})
 				.catch((err) => {
 					console.error(err);
@@ -162,7 +166,6 @@ const ChatAi = ({
 				});
 				aiSummaryRef.current = "";
 				setAiResponse("");
-				refetch();
 			});
 		}
 	}, [messages]);
@@ -170,9 +173,9 @@ const ChatAi = ({
 	const [aiResponse, setAiResponse] = useState<string>("");
 	const showThinking =
 		!error &&
+		!isLoading &&
 		!aiResponse &&
-		(messages?.length === 0 ||
-			messages?.[messages.length - 1]?.role === "USER");
+		messages?.[messages.length - 1]?.role === "USER";
 
 	const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -183,7 +186,17 @@ const ChatAi = ({
 	return (
 		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
 			<div className="overflow-y-auto h-full w-full mx-auto max-w-4xl scrollbar-none">
-				{error && (
+				{messages?.length === 0 && !error && !isLoading && (
+					<div className="flex items-center justify-center h-full w-full">
+						<LoaderThree />
+					</div>
+				)}
+				{isLoading && (
+					<div className="flex items-center justify-center h-full w-full">
+						<Loader2 className="animate-spin w-8 h-8 text-neutral-400" />
+					</div>
+				)}
+				{!isLoading && error && (
 					<div className="flex flex-col items-center justify-center h-full w-full gap-3">
 						<p className="text-red-500 text-sm">{error}</p>
 						<button
@@ -198,19 +211,20 @@ const ChatAi = ({
 						</button>
 					</div>
 				)}
-				{messages?.map((message) => {
-					return message.role === "USER" ? (
-						<UserMessage
-							key={message.id}
-							message={message}
-						/>
-					) : (
-						<AiMessage
-							key={message.id}
-							message={message}
-						/>
-					);
-				})}
+				{!isLoading &&
+					messages?.map((message) => {
+						return message.role === "USER" ? (
+							<UserMessage
+								key={message.id}
+								message={message}
+							/>
+						) : (
+							<AiMessage
+								key={message.id}
+								message={message}
+							/>
+						);
+					})}
 				{!!aiResponse && (
 					<AiMessage
 						message={{
