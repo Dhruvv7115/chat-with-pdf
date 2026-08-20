@@ -23,6 +23,7 @@ import { NavUser } from "./nav-user";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/client";
 import { motion } from "motion/react";
+import { ThemeToggle } from "./theme-toggle";
 
 const sidebarContents = {
 	group1: [
@@ -112,13 +113,18 @@ const AppSidebar = () => {
 				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser
-					user={{
-						name: data?.user?.name ?? "John Doe",
-						email: data?.user?.email ?? "0Hc0R@example.com",
-						avatar: data?.user?.avatar ?? "",
-					}}
-				/>
+				<div className="flex items-center gap-2 pr-2">
+					<div className="flex-1">
+						<NavUser
+							user={{
+								name: data?.user?.name ?? "John Doe",
+								email: data?.user?.email ?? "0Hc0R@example.com",
+								avatar: data?.user?.avatar ?? "",
+							}}
+						/>
+					</div>
+					<ThemeToggle />
+				</div>
 			</SidebarFooter>
 		</Sidebar>
 	);
