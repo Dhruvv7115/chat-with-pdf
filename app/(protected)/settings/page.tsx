@@ -119,8 +119,8 @@ export default function SettingsPage() {
 	}, [userAvatar]);
 
 	return (
-		<div className="bg-background">
-			<div className="mx-auto px-6 py-8 space-y-8">
+		<div className="bg-sidebar">
+			<div className="mx-auto px-6 py-6 space-y-8">
 				{/* Header */}
 				<div className="mb-8">
 					<h1 className="text-2xl font-bold text-accent-foreground">

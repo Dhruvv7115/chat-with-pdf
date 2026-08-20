@@ -188,7 +188,7 @@ export default function DocsPage() {
 	];
 
 	return (
-		<div className="p-6 mx-auto space-y-6 w-full min-h-full">
+		<div className="p-6 mx-auto space-y-6 w-full min-h-full bg-sidebar">
 			{/* Page Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
 				<div>

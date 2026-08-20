@@ -51,7 +51,7 @@ const DashboardPage = () => {
 	};
 
 	return (
-		<div className="bg-background">
+		<div className="bg-sidebar h-full">
 			<div className="mx-auto px-6 py-8">
 				{/* Header */}
 				<div className="mb-8">

@@ -94,7 +94,7 @@ const ChatPage = () => {
 	};
 
 	return (
-		<main className="p-4 flex flex-col items-center justify-start gap-6 w-full h-full">
+		<main className="p-4 flex flex-col items-center justify-start gap-6 w-full h-full bg-sidebar">
 			<div className="mb-6">
 				<h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance text-foreground mb-1">
 					Chat With Any PDF

@@ -45,6 +45,8 @@ export default function BillingPage() {
 	const { data: invoices = [], isLoading: invoicesLoading } =
 		api.subscription.getInvoices.useQuery();
 
+	const { data: currentPlan } = api.subscription.getCurrentPlan.useQuery();
+
 	console.log(searchParams.get("success"));
 
 	useEffect(() => {
@@ -57,8 +59,8 @@ export default function BillingPage() {
 	}, [searchParams]);
 
 	return (
-		<div className="bg-background">
-			<div className="mx-auto px-6 py-8 space-y-8">
+		<div className="bg-sidebar">
+			<div className="mx-auto px-6 py-6 space-y-8">
 				{/* Header */}
 				<div className="mb-8">
 					<h1 className="text-2xl font-bold text-accent-foreground">
@@ -82,7 +84,7 @@ export default function BillingPage() {
 							<CardTitle className="text-base font-medium">
 								Current plan
 							</CardTitle>
-							<CardDescription>You are on the Free plan</CardDescription>
+							<CardDescription>{currentPlan && `You are on the ${currentPlan} plan`}</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							<div className="flex items-center justify-between">
@@ -91,14 +93,14 @@ export default function BillingPage() {
 										<Zap className="w-4 h-4 text-primary" />
 									</div>
 									<div>
-										<p className="text-sm font-medium">Free</p>
+										<p className="text-sm font-medium">{currentPlan ?? ""}</p>
 										<p className="text-xs text-muted-foreground">
-											5 Docs + 50 messages / month
+											{currentPlan === "Free" ? `5 Docs + 50 messages / month` : `Unlimited Docs + messages / month`}
 										</p>
 									</div>
 								</div>
 								<div className="text-right">
-									<p className="text-sm font-medium">₹0.00 / month</p>
+									<p className="text-sm font-medium">{currentPlan === "Free" ? "₹0/month" : "₹1000/month"}</p>
 									<Badge
 										variant="secondary"
 										className="text-xs mt-1"
