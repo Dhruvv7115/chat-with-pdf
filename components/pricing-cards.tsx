@@ -12,7 +12,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PLANS } from "@/lib/plans";
 
-import { commonDotStyles } from "./page";
+import { commonDotStyles } from "@/lib/styles";
 import { api } from "@/trpc/client";
 export default function PricingCards({
 	loading,
