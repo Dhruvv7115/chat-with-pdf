@@ -3,6 +3,11 @@ import { Check, Copy, Loader2, Square, Volume2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import remarkBreaks from "remark-breaks";
+import remarkEmoji from "remark-emoji";
+import rehypeExternalLinks from "rehype-external-links";
 import { customComponents } from "@/components/markdown/markdown-components";
 
 type Message = {
@@ -103,17 +108,17 @@ const AiMessage = ({ message }: { message: Message }) => {
 	}
 
 	return (
-		<div className="flex items-center justify-start gap-4 w-full h-fit mb-4">
-			<div className="rounded-lg lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full prose prose-lime lg:prose-base prose-sm prose-li:marker:text-black/50 dark:prose-invert prose-td:py-2 prose-td:px-4 prose-th:py-2 prose-th:px-4 relative group font-literata">
+		<div className="flex items-center justify-center gap-4 w-full h-fit mb-4">
+			<div className="lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full  relative group typeset typeset-chat w-full">
 				<ReactMarkdown
-					remarkPlugins={[remarkGfm]}
-					
+					remarkPlugins={[remarkGfm, remarkMath, remarkBreaks, remarkEmoji]}
+					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}
 					components={customComponents}
 				>
 					{message.content}
 				</ReactMarkdown>
 
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 mt-1.5">
 					{/* Copy button */}
 					<button
 						onClick={handleCopyAll}
