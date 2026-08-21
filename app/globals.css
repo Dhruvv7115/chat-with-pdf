@@ -195,6 +195,11 @@
 .token.important,
 .token.variable { color: #986801; }
 
+.katex, .katex-display{
+  font-size: 1.2em !important;
+  margin: initial !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -207,7 +212,7 @@
 body{
   overflow: hidden;
   ::selection {
-    background-color: oklch(89.2% 0.058 10.001);
+    background-color: oklch(92.4% 0.12 95.746);
     color: #000;           
   }
 }
