@@ -168,6 +168,28 @@ const PreferencesSection = () => {
 							}
 						/>
 					</div>
+
+					{/* Custom Persona */}
+					<div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
+						<div className="flex-1 mr-4">
+							<p className="text-sm font-medium">Custom Persona</p>
+							<p className="text-xs text-muted-foreground">
+								Instruct the AI to adopt a specific role or style (e.g. "Sarcastic Developer", "Physics Professor")
+							</p>
+						</div>
+
+						<input
+							type="text"
+							value={preferences.persona ?? ""}
+							onChange={(e) =>
+								updatePreferences({
+									persona: e.target.value,
+								})
+							}
+							placeholder="Enter a custom persona..."
+							className="w-48 h-8 px-3 rounded-md border border-input bg-transparent text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+						/>
+					</div>
 				</CardContent>
 			</Card>
 		</div>

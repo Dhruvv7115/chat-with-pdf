@@ -10,6 +10,7 @@ export type Preferences = {
 	responseStyle: ResponseStyle;
 	autoScroll: boolean;
 	readAloud: boolean;
+	persona: string;
 };
 
 const STORAGE_KEY = "chatwithpdf:preferences";
@@ -19,6 +20,7 @@ export const defaultPreferences: Preferences = {
 	responseStyle: "balanced",
 	autoScroll: true,
 	readAloud: false,
+	persona: "",
 };
 
 function loadPreferences(): Preferences {
