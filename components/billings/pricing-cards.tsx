@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLANS } from "@/lib/plans";
+import { PLANS } from "@/lib/constants/plans";
 
 import { commonDotStyles } from "@/lib/styles";
 import { api } from "@/trpc/client";
