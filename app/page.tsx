@@ -16,7 +16,7 @@ export default async function Page() {
 					size="lg"
 					className="bg-blend-color bg-linear-to-br from-teal-200 to-lime-500 mt-2 px-6 py-4 hover:from-lime-200 hover:to-teal-500 cursor-pointer"
 				>
-				  Get Started Today
+					Get Started Today
 					<LogIn className="w-4 h-4 ml-2" />
 				</Button>
 			</Link>

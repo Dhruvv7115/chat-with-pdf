@@ -1,7 +1,6 @@
 import CodeBlockHeader from "@/components/markdown/code-block-header";
 import { extractTextFromCode } from "@/utils/markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-// Modern dark style option from Prism module line
 import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 export const customComponents = {
@@ -26,26 +25,26 @@ export const customComponents = {
 
 	p: (props: any) => (
 		<p
-			className="mb-4 text-foreground/90 leading-relaxed"
+			className="mb-2 text-foreground/90"
 			{...props}
 		/>
 	),
 
 	ul: (props: any) => (
 		<ul
-			className="list-disc pl-6 mb-4 space-y-1 marker:text-primary"
+			className="list-disc pl-6 mb-4 space-y-1"
 			{...props}
 		/>
 	),
 	ol: (props: any) => (
 		<ol
-			className="list-decimal pl-6 mb-4 space-y-1 marker:text-primary marker:font-medium"
+			className="list-decimal pl-6 mb-4 space-y-1"
 			{...props}
 		/>
 	),
 	li: (props: any) => (
 		<li
-			className="text-foreground/90 leading-relaxed"
+			className="text-foreground leading-relaxed"
 			{...props}
 		/>
 	),
@@ -53,7 +52,7 @@ export const customComponents = {
 	a: (props: any) => (
 		<a
 			target="_blank"
-			// rel="noopener noreferrer"
+			rel="noopener noreferrer"
 			className="text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary transition-colors"
 			{...props}
 		/>
@@ -90,19 +89,20 @@ export const customComponents = {
 		const isInline = !props.className?.includes("language-");
 		const className = props.className || "";
 		const match = className.match(/language-(\w+)/);
-		const language = match ? match[1] : null;
+
 		return isInline ? (
 			<code
-				className="bg-muted text-primary px-1.5 py-0.5 rounded font-jet-mono border border-border"
 				{...props}
-			/>
+				className="bg-neutral-200/80 text-black dark:text-white dark:bg-neutral-800/80 font-medium px-1 py-0.5 rounded-sm font-jet-mono before:content-none after:content-none"
+			>
+				{props.children}
+			</code>
 		) : (
 			<SyntaxHighlighter
-				useInlineStyles={false} // 👈 CRITICAL: Strips static inline styles
-				language={match[1]}
+				useInlineStyles={false}
+				language={match?.[1] ?? "text"}
 				PreTag="div"
-				className="p-4 leading-relaxed overflow-x-auto text-neutral-800 dark:text-neutral-200"
-				{...props}
+				className="p-2 leading-relaxed overflow-x-auto text-neutral-800 dark:text-neutral-200"
 				codeTagProps={{
 					className: "font-jet-mono",
 				}}

@@ -21,23 +21,17 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import {
-	CheckCircle2,
 	CreditCard,
 	Download,
-	FileText,
-	Sparkles,
 	Zap,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
 import { cn } from "@/lib/utils";
-import PricingCards from "./pricing-cards";
+import PricingCards from "@/components/pricing-cards";
 import { api } from "@/trpc/client";
-
-export const commonDotStyles =
-	"absolute w-1 h-1 rounded-full bg-neutral-600 dark:bg-neutral-400 animate-pulse";
+import { commonDotStyles } from "@/lib/styles";
 
 export default function BillingPage() {
 	const searchParams = useSearchParams();
