@@ -85,14 +85,32 @@ export const chatRouter = createTRPCRouter({
 		.input(
 			z.object({
 				chatId: z.string(),
+				cursor: z.string().optional(),
+				limit: z.number().min(1).max(50).default(20),
 			}),
 		)
-		.query(async ({ input, ctx }) => {
-			const { chatId } = input;
+		.query(async ({ input }) => {
+			const { chatId, cursor, limit } = input;
+
 			const messages = await client.message.findMany({
 				where: { chatId },
-				orderBy: { createdAt: "asc" },
+				orderBy: { createdAt: "desc" },
+				take: limit + 1,
+				...(cursor && {
+					cursor: { id: cursor },
+				}),
 			});
-			return messages;
+			
+			let nextCursor: string | undefined;
+			
+			if (messages.length > limit) {
+				const nextItem = messages.pop();
+				nextCursor = nextItem!.id;
+			}
+
+			return {
+				messages: messages.reverse(),
+				nextCursor,
+			};
 		}),
 });

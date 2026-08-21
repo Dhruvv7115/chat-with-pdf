@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { Role } from "@/lib/generated/prisma/enums";
+import { Bubble, BubbleContent } from "./ui/bubble";
 type Message = {
 	id: string;
 	role: Role;
@@ -16,9 +17,9 @@ const UserMessage = ({ message }: { message: Message }) => {
 
 	return (
 		<div className="flex items-center justify-end gap-4 w-full max-w-full h-fit mb-4 pr-4">
-			<div className="bg-primary rounded-lg w-fit max-w-[80%] flex items-center justify-center py-2 px-4 text-sm text-secondary">
-				{message.content}
-			</div>
+			<Bubble>
+				<BubbleContent>{message.content}</BubbleContent>
+			</Bubble>
 		</div>
 	);
 };

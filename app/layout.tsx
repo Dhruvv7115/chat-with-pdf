@@ -5,7 +5,7 @@ import { Geist, Geist_Mono, Inter, Literata, JetBrains_Mono } from "next/font/go
 import { Providers } from "./providers";
 import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 const literata = Literata({
 	subsets: ["latin"],
@@ -14,11 +14,11 @@ const literata = Literata({
 
 const jetBrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
-	variable: "--font-jet-brains-mono",
+	variable: "--font-jetbrains-mono",
 });
 
 const geistSans = Geist({
-	variable: "--font-geist-sans",
+	variable: "--font-geist",
 	subsets: ["latin"],
 });
 
