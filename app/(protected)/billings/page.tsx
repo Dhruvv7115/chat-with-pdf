@@ -1,48 +1,26 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableFooter,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
-	CreditCard,
-	Download,
-	Zap,
-} from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import PricingCards from "@/components/pricing-cards";
-import { api } from "@/trpc/client";
-import { commonDotStyles } from "@/lib/styles";
+import PricingCards from "@/components/billings/pricing-cards";
+import CurrentPlanSummary from "@/components/billings/current-plan";
+import InvoiceHistory from "@/components/billings/invoice-history";
 
 export default function BillingPage() {
 	const searchParams = useSearchParams();
 	const [loading, setLoading] = useState(false);
-	const { data: invoices = [], isLoading: invoicesLoading } =
-		api.subscription.getInvoices.useQuery();
-
-	const { data: currentPlan } = api.subscription.getCurrentPlan.useQuery();
-
-	console.log(searchParams.get("success"));
-
+	const handleCheckout = async () => {
+		setLoading(true);
+		try {
+			const res = await fetch("/api/checkout_sessions", { method: "POST" });
+			const { url } = await res.json();
+			return redirect(url);
+		} finally {
+			setLoading(false);
+			return;
+		}
+	};
 	useEffect(() => {
 		if (searchParams.get("success")) {
 			toast.success("You're now on the Pro plan!");
@@ -66,179 +44,17 @@ export default function BillingPage() {
 				</div>
 
 				{/* Current plan summary */}
-				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
-					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>
-					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)}></span>
-					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
-					<span
-						className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}
-					></span>
-					<Card>
-						<CardHeader className="pb-3">
-							<CardTitle className="text-base font-medium">
-								Current plan
-							</CardTitle>
-							<CardDescription>{currentPlan && `You are on the ${currentPlan} plan`}</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-3">
-									<div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-										<Zap className="w-4 h-4 text-primary" />
-									</div>
-									<div>
-										<p className="text-sm font-medium">{currentPlan ?? ""}</p>
-										<p className="text-xs text-muted-foreground">
-											{currentPlan === "Free" ? `5 Docs + 50 messages / month` : `Unlimited Docs + messages / month`}
-										</p>
-									</div>
-								</div>
-								<div className="text-right">
-									<p className="text-sm font-medium">{currentPlan === "Free" ? "₹0/month" : "₹1000/month"}</p>
-									<Badge
-										variant="secondary"
-										className="text-xs mt-1"
-									>
-										Active
-									</Badge>
-								</div>
-							</div>
+				<CurrentPlanSummary />
 
-							<Separator />
-
-							<div className="flex items-center gap-3">
-								<CreditCard className="w-4 h-4 text-muted-foreground" />
-								<p className="text-sm text-muted-foreground">
-									Visa ending in{" "}
-									<span className="font-medium text-foreground">4242</span>
-								</p>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="ml-auto h-7 text-xs"
-								>
-									Update card
-								</Button>
-							</div>
-
-							<div className="flex gap-2 pt-1">
-								<Button
-									variant="outline"
-									size="sm"
-								>
-									Cancel plan
-								</Button>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
 				{/* Plans */}
 				<PricingCards
 					loading={loading}
 					setLoading={setLoading}
+					handleCheckout={handleCheckout}
 				/>
 
 				{/* Invoice history */}
-				<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
-					<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>
-					<span className={cn("-top-0.5 -right-0.5", commonDotStyles)}></span>
-					<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
-					<span
-						className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}
-					></span>
-					<div>
-						<h2 className="text-sm font-medium mb-3">Invoice history</h2>
-						<Card>
-							<Table>
-								<TableCaption>A list of your recent invoices.</TableCaption>
-								<TableHeader>
-									<TableRow>
-										<TableHead className="w-25">Invoice</TableHead>
-										<TableHead>Date</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Method</TableHead>
-										<TableHead className="text-right">Amount</TableHead>
-										<TableHead className="text-right">Action</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{invoicesLoading ? (
-										<TableRow>
-											<TableCell
-												colSpan={6}
-												className="text-center py-8"
-											>
-												Loading invoices...
-											</TableCell>
-										</TableRow>
-									) : invoices.length === 0 ? (
-										<TableRow>
-											<TableCell
-												colSpan={6}
-												className="text-center py-8 text-muted-foreground"
-											>
-												No invoices yet
-											</TableCell>
-										</TableRow>
-									) : (
-										invoices.map((invoice) => (
-											<TableRow key={invoice.id}>
-												<TableCell className="font-medium">
-													{invoice.invoice}
-												</TableCell>
-												<TableCell>{invoice.date}</TableCell>
-												<TableCell>
-													<Badge
-														variant={
-															invoice.paymentStatus === "Paid"
-																? "default"
-																: "secondary"
-														}
-													>
-														{invoice.paymentStatus}
-													</Badge>
-												</TableCell>
-												<TableCell>{invoice.paymentMethod}</TableCell>
-												<TableCell className="text-right">
-													{invoice.totalAmount}
-												</TableCell>
-												<TableCell className="text-right">
-													{invoice.pdfUrl && (
-														<a
-															href={invoice.pdfUrl}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="text-primary hover:underline flex items-center gap-1 justify-end"
-														>
-															<Download className="w-4 h-4" />
-														</a>
-													)}
-												</TableCell>
-											</TableRow>
-										))
-									)}
-								</TableBody>
-								<TableFooter>
-									<TableRow>
-										<TableCell colSpan={4}>Total</TableCell>
-										<TableCell className="text-right">
-											₹
-											{invoices
-												.reduce((sum, inv) => {
-													const amount = parseFloat(
-														inv.totalAmount.replace("₹", ""),
-													);
-													return sum + (isNaN(amount) ? 0 : amount);
-												}, 0)
-												.toFixed(2)}
-										</TableCell>
-										<TableCell />
-									</TableRow>
-								</TableFooter>
-							</Table>
-						</Card>
-					</div>
-				</div>
+				<InvoiceHistory />
 			</div>
 		</div>
 	);
