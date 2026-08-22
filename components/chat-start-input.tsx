@@ -75,7 +75,7 @@ const ChatStartInput = ({
 			<InputGroupTextarea
 				id="chat-start-textarea"
 				placeholder="Ask to start a chat..."
-				className="text-lg!"
+				className="text-lg! max-h-80 overflow-y-auto scrollbar-thumb-lime-600 scrollbar-thin"
 				value={input}
 				onChange={(e) => setInput(e.target.value)}
 				onKeyDown={handleKeyDown}

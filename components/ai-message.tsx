@@ -1,6 +1,6 @@
 import { Role } from "@/lib/generated/prisma/enums";
 import { Check, Copy, Loader2, Square, Volume2 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -79,13 +79,6 @@ const AiMessage = ({ message }: { message: Message }) => {
 		utteranceRef.current = null;
 		setTtsState("idle");
 	};
-
-	useEffect(() => {
-		// stop speaking if the component unmounts mid-playback
-		return () => {
-			window.speechSynthesis.cancel();
-		};
-	}, []);
 	function formatMessageDate(dateString: string) {
 		const date = new Date(dateString);
 		const now = new Date();
@@ -109,16 +102,16 @@ const AiMessage = ({ message }: { message: Message }) => {
 
 	return (
 		<div className="flex items-center justify-center gap-4 w-full h-fit mb-4">
-			<div className="lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full  relative group typeset typeset-chat w-full">
+			<div className="lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full">
 				<ReactMarkdown
 					remarkPlugins={[remarkGfm, remarkMath, remarkBreaks, remarkEmoji]}
 					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}
-					components={customComponents}
+					// components={customComponents}
 				>
 					{message.content}
 				</ReactMarkdown>
 
-				<div className="flex items-center gap-2 mt-1.5">
+				<div className="flex items-center gap-2">
 					{/* Copy button */}
 					<button
 						onClick={handleCopyAll}

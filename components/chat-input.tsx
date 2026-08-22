@@ -15,7 +15,7 @@ const ChatInput = ({
 	onFileUpload,
 }: {
 	chatId: string;
-	setAiResponse: React.Dispatch<React.SetStateAction<string>>;
+	setAiResponse?: React.Dispatch<React.SetStateAction<string>>;
 	onFileUpload?: (files: File[]) => void;
 }) => {
 	const utils = api.useUtils();
@@ -28,26 +28,27 @@ const ChatInput = ({
 		},
 	});
 
-	const handleSend = () => {
-		if (!question.trim()) return;
-		createMessage.mutate({
-			chatId,
-			content: question,
-			role: "USER",
-		});
+	const handleSend = async () => {
+		if (!question.trim() || createMessage.isPending) return;
+		const content = question;
 		setQuestion("");
+		try {
+			await createMessage.mutateAsync({ chatId, content, role: "USER" });
+		} catch {
+			setQuestion(content); // restore on failure so the user doesn't lose their draft
+		}
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
-			handleSend();
+			if (!createMessage.isPending) handleSend();
 		}
 	};
+	
 
 	return (
-		<InputGroup className="p-2">
-			{/* Hidden file input — only rendered when onFileUpload is provided */}
+		<InputGroup className="p-2 rounded-4xl">
 			{onFileUpload && (
 				<input
 					ref={fileInputRef}
@@ -57,7 +58,7 @@ const ChatInput = ({
 					onChange={(e) => {
 						const files = Array.from(e.target.files ?? []);
 						if (files.length) onFileUpload(files);
-						e.target.value = ""; // reset so same file can be re-selected
+						e.target.value = "";
 					}}
 				/>
 			)}
@@ -65,6 +66,7 @@ const ChatInput = ({
 			<InputGroupTextarea
 				id="chat-input-textarea"
 				placeholder="Ask anything…"
+				className="min-w-0 max-h-[min(40vh,12rem)] overflow-y-auto wrap-break-word text-base!"
 				disabled={createMessage.isPending}
 				value={question}
 				onChange={(e) => setQuestion(e.target.value)}
@@ -72,7 +74,6 @@ const ChatInput = ({
 			/>
 
 			<InputGroupAddon align="block-end">
-				{/* Plus / upload button — only shown when a handler is provided */}
 				{onFileUpload && (
 					<InputGroupButton
 						variant="ghost"
@@ -86,10 +87,10 @@ const ChatInput = ({
 				)}
 
 				<InputGroupButton
-					variant="ghost"
+					variant="default"
 					size="sm"
 					className="ml-auto rounded-full p-2"
-					disabled={createMessage.isPending}
+					disabled={createMessage.isPending || !question.trim()}
 					onClick={handleSend}
 				>
 					<ArrowUp />
