@@ -32,7 +32,7 @@ const MarkdownViewer = ({ docUrl, doc }: { docUrl: string; doc: Doc }) => {
 	if (error) return <div className="p-8 text-red-500">{error}</div>;
 
 	return (
-		<div className="h-full overflow-y-auto p-8 prose dark:prose-invert max-w-none">
+		<div className="h-full overflow-y-auto p-8 typeset typeset-docs max-w-none">
 			<ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
 		</div>
 	);

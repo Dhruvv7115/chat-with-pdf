@@ -16,24 +16,58 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	import.meta.url,
 ).toString();
 
+const RESIZE_SETTLE_MS = 150;
+
 const ReactPdf = ({ docUrl }: { docUrl: string }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [containerWidth, setContainerWidth] = useState<number>();
+
+	// liveWidth updates on every resize tick — used only for the CSS scale factor
+	const [liveWidth, setLiveWidth] = useState<number>();
+	// renderWidth only updates after resize settles — this is what actually
+	// gets passed to <Page>, triggering a real re-render/re-rasterization
+	const [renderWidth, setRenderWidth] = useState<number>();
+
 	const [numPages, setNumPages] = useState<number>();
 	const [pageNumber, setPageNumber] = useState(1);
 	const [showPagination, setShowPagination] = useState<boolean>(false);
 
 	useEffect(() => {
+		let timeoutId: ReturnType<typeof setTimeout>;
+
 		const observer = new ResizeObserver((entries) => {
-			setContainerWidth(entries[0].contentRect.width);
+			const width = entries[0].contentRect.width;
+
+			// update instantly for smooth CSS-scaled visual tracking
+			setLiveWidth(width);
+
+			// only commit a real re-render once movement stops
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
+				setRenderWidth(width);
+			}, RESIZE_SETTLE_MS);
 		});
 
-		if (containerRef.current) {
-			observer.observe(containerRef.current);
-		}
+		if (containerRef.current) observer.observe(containerRef.current);
 
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			clearTimeout(timeoutId);
+		};
 	}, []);
+
+	// on first mount, renderWidth needs an initial value too — sync it once
+	useEffect(() => {
+		if (liveWidth && renderWidth === undefined) {
+			setRenderWidth(liveWidth);
+		}
+	}, [liveWidth, renderWidth]);
+
+	const pageWidth = renderWidth ? renderWidth - 32 : undefined;
+
+	// scale factor: how much bigger/smaller the live container is vs.
+	// the width the canvas was actually rendered at
+	const scale =
+		pageWidth && liveWidth && renderWidth ? (liveWidth - 32) / pageWidth : 1;
 
 	return (
 		<div
@@ -42,15 +76,23 @@ const ReactPdf = ({ docUrl }: { docUrl: string }) => {
 			onMouseEnter={() => setShowPagination(true)}
 			onMouseLeave={() => setShowPagination(false)}
 		>
-			<Document
-				file={docUrl ?? ""}
-				onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+			<div
+				style={{
+					transform: `scale(${scale})`,
+					transformOrigin: "top center",
+				}}
 			>
-				<Page
-					pageNumber={pageNumber}
-					width={containerWidth ? containerWidth - 32 : undefined}
-				/>
-			</Document>
+				<Document
+					file={docUrl ?? ""}
+					onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+				>
+					<Page
+						pageNumber={pageNumber}
+						width={pageWidth}
+					/>
+				</Document>
+			</div>
+
 			<Pagination
 				className={cn(
 					"sticky bottom-8 z-50 bg-white dark:bg-neutral-900 w-fit p-1 rounded-xl shadow-2xl border border-neutral-300 dark:border-neutral-800",
