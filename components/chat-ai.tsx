@@ -1,12 +1,26 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import AiMessage from "./ai-message";
 import UserMessage from "./user-message";
 import ChatInput from "./chat-input";
 import { api } from "@/trpc/client";
-import { Loader2 } from "lucide-react";
 import { FileType } from "@/lib/generated/prisma/enums";
+import {
+	MessageScroller,
+	MessageScrollerButton,
+	MessageScrollerContent,
+	MessageScrollerItem,
+	MessageScrollerProvider,
+	MessageScrollerViewport,
+} from "@/components/ui/message-scroller";
+import { usePreferences } from "@/hooks/use-preferences";
+import { Bubble, BubbleContent } from "./ui/bubble";
 import ThinkingIndicator from "./thinking-indicator";
-import { LoaderThree } from "./ui/loader";
 
 export type Chat = {
 	id: string;
@@ -16,6 +30,7 @@ export type Chat = {
 	createdAt: Date;
 	updatedAt: Date;
 };
+
 export type Doc = {
 	userId: string;
 	title: string;
@@ -28,6 +43,15 @@ export type Doc = {
 	pageCount: number | null;
 };
 
+interface Message {
+	id: string;
+	role: "USER" | "ASSISTANT";
+	content: string;
+	createdAt: string;
+	updatedAt: string;
+	chatId: string;
+}
+
 const ChatAi = ({
 	chat,
 	docUrl,
@@ -37,60 +61,57 @@ const ChatAi = ({
 	docUrl?: string;
 	doc?: Doc | null;
 }) => {
-	const {
-		data: messages,
-		isLoading,
-		refetch,
-	} = api.chat.getMessages.useQuery({
-		chatId: chat.id,
-	});
+	const { preferences } = usePreferences();
 	const utils = api.useUtils();
+
+	const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+		api.chat.getMessages.useInfiniteQuery(
+			{ chatId: chat.id, limit: 10 },
+			{ getNextPageParam: (lastPage) => lastPage.nextCursor },
+		);
+
 	const createMessage = api.message.createMessage.useMutation({
-		onMutate: async (newMessage) => {
-			await utils.chat.getMessages.cancel({ chatId: chat.id });
-			const previousMessages = utils.chat.getMessages.getData({
-				chatId: chat.id,
-			});
-
-			utils.chat.getMessages.setData({ chatId: chat.id }, (old) => [
-				...(old ?? []),
-				{
-					id: `temp-${Date.now()}`,
-					chatId: chat.id,
-					role: newMessage.role,
-					content: newMessage.content,
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				},
-			]);
-
-			return { previousMessages };
-		},
-		onError: (err, newMessage, context) => {
-			// roll back on failure
-			utils.chat.getMessages.setData(
-				{ chatId: chat.id },
-				context?.previousMessages,
-			);
-		},
-		onSettled: () => {
+		onSuccess: () => {
 			utils.chat.getMessages.invalidate({ chatId: chat.id });
 		},
 	});
-	const aiSummaryRef = useRef("");
-	const hasFetched = useRef(false);
-	const [error, setError] = useState<string | null>(null);
-	const respondedToMessageId = useRef<string | null>(null);
 
+	// Stable reference — only changes when `data` actually changes.
+	const messages: Message[] = useMemo(
+		() =>
+			data?.pages
+				.slice()
+				.reverse()
+				.flatMap((page) => page.messages) ?? [],
+		[data],
+	);
+
+	// Local-only streaming state — never merged into the query cache.
+	const [streamingMessage, setStreamingMessage] = useState<{
+		id: string;
+		content: string;
+	} | null>(null);
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [error, setError] = useState<string>("");
+
+	// Guards against the effect firing more than once for the same trigger,
+	// regardless of how many times `messages`/`preferences` re-render.
+	const respondedToMessageId = useRef<string | null>(null);
+	const hasFetchedSummary = useRef(false);
+
+	const justFinishedStreaming = useRef(false);
 	useEffect(() => {
-		if (!messages) return; // still loading, don't do anything yet
+		if (isLoading) return;
 
 		const lastMessage = messages[messages.length - 1];
 
-		// Case 1: Doc-based chat, first ever message — generate the auto-summary
-		if (doc && docUrl && messages.length === 0 && !hasFetched.current) {
-			hasFetched.current = true;
-			setError(null);
+		// Case 1: chat has a doc and no messages yet — generate a summary.
+		if (doc && docUrl && messages.length === 0 && !hasFetchedSummary.current) {
+			hasFetchedSummary.current = true;
+			setIsStreaming(true);
+			setError("");
+			setStreamingMessage({ id: "streaming-response", content: "" });
+
 			fetch("/api/ai/summary", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -98,153 +119,198 @@ const ChatAi = ({
 			})
 				.then(async (res) => {
 					if (!res.ok) {
-						const data = await res.json().catch(() => ({}));
-						throw new Error(data.error || "Failed to process document");
+						const body = await res.json().catch(() => ({}));
+						throw new Error(body.error || "Failed to process document");
 					}
 					const reader = res.body?.getReader();
-					const decoder = new TextDecoder();
+					if (!reader) return;
+					const decoder = new TextDecoder("utf-8");
+					let content = "";
+
 					while (true) {
-						const { done, value } = await reader!.read();
+						const { value, done } = await reader.read();
 						if (done) break;
-						const text = decoder.decode(value);
-						setAiResponse((p) => p + text);
-						aiSummaryRef.current += text;
+						const chunk = decoder.decode(value);
+						content += chunk;
+						setStreamingMessage((prev) => ({
+							id: "streaming-response",
+							content: (prev?.content ?? "") + chunk,
+						}));
 					}
+
 					await createMessage.mutateAsync({
 						chatId: chat.id,
-						content: aiSummaryRef.current,
+						content,
 						role: "ASSISTANT",
 					});
-					aiSummaryRef.current = "";
-					setAiResponse("");
+					setIsStreaming(false);
+					justFinishedStreaming.current = true;
 				})
 				.catch((err) => {
 					console.error(err);
+					hasFetchedSummary.current = false; // allow retry
 					setError(
 						err.message || "Something went wrong processing this document.",
 					);
-					hasFetched.current = false; // allow retry
+					setIsStreaming(false);
+					setStreamingMessage(null);
 				});
 			return;
 		}
 
-		// Case 2: doc-less chat with no messages yet — nothing to respond to, wait for user input
-		if (messages.length === 0) {
-			return;
-		}
+		// Case 2: no doc, no messages — nothing to do yet.
+		if (!doc && messages.length === 0) return;
 
-		// Case 3: there's at least one message, and the last one is from the user —
-		// this applies to BOTH doc and doc-less chats identically, since /api/ai/chat
-		// should already branch internally on whether chat.documentId exists (RAG vs plain)
+		// Case 3: respond to a new user message, once.
 		if (
-			lastMessage?.role === "USER" &&
-			lastMessage.id !== respondedToMessageId.current &&
-			!lastMessage.id.startsWith("temp-") // skip optimistic placeholder, wait for real id
+			messages.length !== 0 &&
+			lastMessage.role === "USER" &&
+			respondedToMessageId.current !== lastMessage.id
 		) {
 			respondedToMessageId.current = lastMessage.id;
+			setIsStreaming(true);
+			setError("");
+			setStreamingMessage({ id: "streaming-response", content: "" });
+
 			fetch("/api/ai/chat", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					chatId: chat.id,
-					messageId: lastMessage.id,
-				}),
-			}).then(async (res) => {
-				const reader = res.body?.getReader();
-				const decoder = new TextDecoder();
-				while (true) {
-					const { done, value } = await reader!.read();
-					if (done) break;
-					const text = decoder.decode(value);
-					setAiResponse((p) => p + text);
-					aiSummaryRef.current += text;
-				}
-				await createMessage.mutateAsync({
-					chatId: chat.id,
-					content: aiSummaryRef.current,
-					role: "ASSISTANT",
+				body: JSON.stringify({ preferences, chatId: chat.id }),
+			})
+				.then(async (res) => {
+					if (!res.ok) {
+						const body = await res.json().catch(() => ({}));
+						throw new Error(body.error || "Failed to generate a response.");
+					}
+					const reader = res.body?.getReader();
+					if (!reader) return;
+					const decoder = new TextDecoder("utf-8");
+					let content = "";
+
+					while (true) {
+						const { value, done } = await reader.read();
+						if (done) break;
+						const chunk = decoder.decode(value);
+						content += chunk;
+						setStreamingMessage((prev) => ({
+							id: "streaming-response",
+							content: (prev?.content ?? "") + chunk,
+						}));
+					}
+
+					await createMessage.mutateAsync({
+						chatId: chat.id,
+						content,
+						role: "ASSISTANT",
+					});
+					setIsStreaming(false);
+					justFinishedStreaming.current = true;
+				})
+				.catch((err) => {
+					console.error(err);
+					respondedToMessageId.current = null; // allow retry
+					setError(err.message || "Failed to generate a response.");
+					setIsStreaming(false);
+					setStreamingMessage(null);
 				});
-				aiSummaryRef.current = "";
-				setAiResponse("");
-			});
+		}
+	}, [messages, isLoading, preferences, doc, docUrl]);
+
+	useEffect(() => {
+		if (!justFinishedStreaming.current) return;
+		const lastMessage = messages[messages.length - 1];
+		if (lastMessage?.role === "ASSISTANT") {
+			setStreamingMessage(null);
+			justFinishedStreaming.current = false;
 		}
 	}, [messages]);
 
-	const [aiResponse, setAiResponse] = useState<string>("");
-	const showThinking =
-		!error &&
-		!isLoading &&
-		!aiResponse &&
-		messages?.[messages.length - 1]?.role === "USER";
-
-	const bottomRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages, aiResponse]);
+	// Merge streaming message in for render only — never touches query cache.
+	const displayMessages = streamingMessage
+		? [
+				...messages,
+				{
+					id: streamingMessage.id,
+					role: "ASSISTANT" as const,
+					content: streamingMessage.content,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+					chatId: chat.id,
+				},
+			]
+		: messages;
 
 	return (
-		<div className="flex flex-col w-full h-full overflow-y-hidden justify-between py-4">
-			<div className="overflow-y-auto h-full w-full mx-auto max-w-4xl scrollbar-none">
-				{messages?.length === 0 && !error && !isLoading && (
-					<div className="flex items-center justify-center h-full w-full">
-						<LoaderThree />
-					</div>
-				)}
-				{isLoading && (
-					<div className="flex items-center justify-center h-full w-full">
-						<Loader2 className="animate-spin w-8 h-8 text-neutral-400" />
-					</div>
-				)}
-				{!isLoading && error && (
-					<div className="flex flex-col items-center justify-center h-full w-full gap-3">
-						<p className="text-red-500 text-sm">{error}</p>
-						<button
-							onClick={() => {
-								setError(null);
-								hasFetched.current = false;
-								refetch();
-							}}
-							className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
-						>
-							Try again
-						</button>
-					</div>
-				)}
-				{!isLoading &&
-					messages?.map((message) => {
-						return message.role === "USER" ? (
-							<UserMessage
-								key={message.id}
-								message={message}
-							/>
-						) : (
-							<AiMessage
-								key={message.id}
-								message={message}
-							/>
-						);
-					})}
-				{!!aiResponse && (
-					<AiMessage
-						message={{
-							id: "ai-response",
-							role: "ASSISTANT",
-							content: aiResponse,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-							chatId: chat.id,
-						}}
-					/>
-				)}
-				{showThinking && <ThinkingIndicator />}
-				<div ref={bottomRef} />
-			</div>
-			<div className="px-6 py-2 max-w-4xl mx-auto w-full">
-				<ChatInput
-					chatId={chat.id}
-					setAiResponse={setAiResponse}
-				/>
+		<div className="flex h-full w-full flex-col items-center justify-between">
+			<MessageScrollerProvider
+				autoScroll
+				defaultScrollPosition="end"
+			>
+				<MessageScroller className="w-full flex-1">
+					<MessageScrollerViewport className="scrollbar-none">
+						<MessageScrollerContent className="mx-auto max-w-4xl">
+							{hasNextPage && (
+								<MessageScrollerItem>
+									<div className="flex justify-center py-3">
+										<button
+											onClick={() => fetchNextPage()}
+											disabled={isFetchingNextPage}
+											className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+										>
+											{isFetchingNextPage
+												? "Loading older messages..."
+												: "Load older messages"}
+										</button>
+									</div>
+								</MessageScrollerItem>
+							)}
+
+							{!isLoading &&
+								displayMessages.map((message) => (
+									<MessageScrollerItem
+										key={message.id}
+										messageId={message.id}
+									>
+										{message.role === "USER" ? (
+											<UserMessage message={message} />
+										) : (
+											<AiMessage message={message} />
+										)}
+									</MessageScrollerItem>
+								))}
+
+							{isStreaming && !streamingMessage?.content && (
+								<MessageScrollerItem messageId="thinking">
+									<ThinkingIndicator />
+								</MessageScrollerItem>
+							)}
+
+							{error && (
+								<MessageScrollerItem messageId="error">
+									<div className="flex flex-col items-center justify-center gap-3 py-8">
+										<p className="text-sm text-red-500">{error}</p>
+										<button
+											onClick={() => {
+												setError("");
+												hasFetchedSummary.current = false;
+												respondedToMessageId.current = null;
+												utils.chat.getMessages.invalidate({ chatId: chat.id });
+											}}
+											className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
+										>
+											Try again
+										</button>
+									</div>
+								</MessageScrollerItem>
+							)}
+						</MessageScrollerContent>
+					</MessageScrollerViewport>
+					<MessageScrollerButton variant="default" />
+				</MessageScroller>
+			</MessageScrollerProvider>
+
+			<div className="w-full max-w-4xl p-4">
+				<ChatInput chatId={chat.id} />
 			</div>
 		</div>
 	);
