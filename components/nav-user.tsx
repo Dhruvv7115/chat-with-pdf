@@ -25,6 +25,8 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 export function NavUser({
 	user,
@@ -53,8 +55,8 @@ export function NavUser({
 									referrerPolicy="no-referrer"
 								/>
 								<AvatarFallback className="rounded-lg">
-                  {user.name[0]}
-                </AvatarFallback>
+									{user.name[0]}
+								</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-medium">{user.name}</span>
@@ -86,28 +88,30 @@ export function NavUser({
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<Sparkles />
-								Upgrade to Pro
-							</DropdownMenuItem>
+							<Link href="/billings">
+								<DropdownMenuItem>
+									<Sparkles />
+									Upgrade to Pro
+								</DropdownMenuItem>
+							</Link>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							<DropdownMenuItem>
-								<BadgeCheck />
-								Account
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<CreditCard />
-								Billing
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<Bell />
-								Notifications
-							</DropdownMenuItem>
+							<Link href="/settings">
+								<DropdownMenuItem>
+									<BadgeCheck />
+									Account
+								</DropdownMenuItem>
+							</Link>
+							<Link href="/billings">
+								<DropdownMenuItem>
+									<CreditCard />
+									Billing
+								</DropdownMenuItem>
+							</Link>
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
-						<DropdownMenuItem>
+						<DropdownMenuItem onClick={() => signOut}>
 							<LogOut />
 							Log out
 						</DropdownMenuItem>

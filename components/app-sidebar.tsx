@@ -51,7 +51,7 @@ const AppSidebar = () => {
 						className="flex items-center gap-2 font-bold text-lg"
 					>
 						<div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-							<GalleryVerticalEndIcon className="size-5" />
+							<GalleryVerticalEndIcon className="size-5 stroke-1.5" />
 						</div>
 						ChatWithPDF
 					</Link>
@@ -117,13 +117,13 @@ const AppSidebar = () => {
 					<div className="flex-1">
 						<NavUser
 							user={{
-								name: data?.user?.name ?? "John Doe",
-								email: data?.user?.email ?? "0Hc0R@example.com",
+								name: data?.user?.name ?? "",
+								email: data?.user?.email ?? "",
 								avatar: data?.user?.avatar ?? "",
 							}}
 						/>
 					</div>
-					<ThemeToggle />
+					{/* <ThemeToggle /> */}
 				</div>
 			</SidebarFooter>
 		</Sidebar>
