@@ -1,6 +1,9 @@
 import ResizablePdfChat from "@/components/resizable-pdf-chat";
+import { Button } from "@/components/ui/button";
+import { authOptions } from "@/lib/auth";
 import { client } from "@/lib/prisma";
 import { getFileUrl } from "@/utils/s3";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 type Props = {
@@ -9,6 +12,10 @@ type Props = {
 
 const page = async ({ params }: Props) => {
 	const { chatId } = await params;
+	const session = await getServerSession(authOptions);
+	if (!session?.user?.id) {
+		return redirect("/");
+	}
 	const chat = await client.chat.findUnique({ where: { id: chatId } });
 	if (!chat) return redirect("/chat");
 	let doc;
@@ -19,6 +26,8 @@ const page = async ({ params }: Props) => {
 			docUrl = await getFileUrl(doc.fileKey);
 		}
 	}
+
+	if (session.user.id !== chat.userId) return redirect("/chat");
 
 	return (
 		<div className="h-full bg-sidebar">

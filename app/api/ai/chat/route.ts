@@ -18,7 +18,22 @@ export async function POST(req: NextRequest) {
 			{ status: 429 },
 		);
 	}
-	const { chatId } = await req.json();
+
+	const { chatId, preferences } = await req.json();
+
+	// Ownership check — make sure this chat belongs to the requesting user
+	const chat = await client.chat.findUnique({
+		where: { id: chatId },
+		select: { documentId: true, userId: true },
+	});
+
+	if (!chat) {
+		return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+	}
+	if (chat.userId !== session.user.id) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+	}
+
 	let messages;
 	try {
 		messages = await client.message.findMany({
@@ -28,21 +43,25 @@ export async function POST(req: NextRequest) {
 		});
 	} catch (error) {
 		console.error("Error fetching messages");
-		throw new Error("Error fetching messages");
+		return NextResponse.json(
+			{ error: "Error fetching messages" },
+			{ status: 500 },
+		);
 	}
 
-	const chat = await client.chat.findUnique({
-		where: { id: chatId },
-		select: { documentId: true },
-	});
+	// Guard against empty history
+	if (!messages.length) {
+		return NextResponse.json(
+			{ error: "No messages found for this chat" },
+			{ status: 400 },
+		);
+	}
 
 	let context = "";
+	const latestMessage = messages[0];
 
-	// Only do retrieval if this chat actually has a linked document
-	if (chat?.documentId) {
-		const queryEmbedding = await generateQueryEmbedding(
-			messages[messages.length - 1].content,
-		);
+	if (chat.documentId) {
+		const queryEmbedding = await generateQueryEmbedding(latestMessage.content);
 		const results = await similaritySearch(queryEmbedding, chat.documentId, 5);
 
 		context = results
@@ -55,27 +74,42 @@ export async function POST(req: NextRequest) {
 		role: "user" | "model";
 		parts: { text: string }[];
 	}[] = messages
-		.slice(0, messages.length - 1)
+		.slice(1, messages.length)
 		.reverse()
 		.map((message) => ({
 			role: message.role === "USER" ? "user" : "model",
-			parts: [{ text: message.content.slice(0, 200) + "..." }],
+			parts: [
+				{
+					text:
+						message.content.length > 200
+							? message.content.slice(0, 200) + "..."
+							: message.content,
+				},
+			],
 		}));
 
 	const response = await generateAnswer(
-		messages[messages.length - 1].content,
-		context, // empty string for doc-less chats — generateAnswer needs to handle this gracefully
+		latestMessage.content,
+		context,
 		formattedMessages,
+		preferences,
 	);
 
+	const encoder = new TextEncoder();
 	const stream = new ReadableStream({
 		async start(controller) {
-			for await (const chunk of response) {
-				controller.enqueue(chunk.text);
+			try {
+				for await (const chunk of response) {
+					controller.enqueue(encoder.encode(chunk.text ?? ""));
+				}
+				controller.close();
+			} catch (error) {
+				console.error("Stream error:", error);
+				controller.error(error);
 			}
-			controller.close();
 		},
 	});
+
 	return new Response(stream, {
 		headers: { "Content-Type": "text/plain" },
 	});
@@ -92,5 +126,5 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 		},
 	});
 
-	return recentCount < 10; // e.g. max 10 messages per minute
+	return recentCount < 10;
 }

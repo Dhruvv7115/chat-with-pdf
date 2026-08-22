@@ -1,5 +1,7 @@
+import { authOptions } from "@/lib/auth";
 import { client } from "@/lib/prisma";
 import { indexDocument } from "@/utils/pdf-loader";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -18,12 +20,22 @@ export async function POST(req: NextRequest) {
 		);
 	}
 
+	const session = await getServerSession(authOptions);
+	if (!session?.user?.id) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
 	try {
 		const doc = await client.document.findUnique({ where: { id: documentId } });
 		if (!doc) {
 			return NextResponse.json(
 				{ error: "Document not found" },
 				{ status: 404 },
+			);
+		}
+		if (doc.userId !== session.user.id) {
+			return NextResponse.json(
+				{ error: "Unauthorized to access this document" },
+				{ status: 403 },
 			);
 		}
 
