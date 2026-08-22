@@ -1,9 +1,16 @@
+"use server";
+
+import {
+	AI_DOC_CHAT_PROMPT,
+	AI_NORMAL_CHAT_PROMPT,
+	AI_SUMMARY_PROMPT,
+} from "@/lib/constants/prompts";
 import { GoogleGenAI } from "@google/genai";
+import { Preferences } from "@/hooks/use-preferences";
 
 const client = new GoogleGenAI({
 	apiKey: process.env.GEMINI_API_KEY!,
 });
-
 
 export async function summarizeDocument(content: string) {
 	try {
@@ -11,43 +18,7 @@ export async function summarizeDocument(content: string) {
 			model: "gemini-3.5-flash-lite",
 			contents: content,
 			config: {
-				systemInstruction: `
-				  You are an expert document analyst. Provide a clear and structured summary of the provided document.
-
-					Your response must follow this format:
-
-					**Document Type:** (e.g. Resume, Research Paper, Study Guide, Contract, Spreadsheet, Presentation)
-
-					**Overview:**
-					2-3 sentences describing what the document is about and its purpose.
-
-					**Key Highlights:**
-					- 4-6 bullet points covering the most important information
-					- Be specific — include names, numbers, and facts where relevant
-
-					**Takeaway:**
-					One sentence on the single most important thing to know about this document.
-
-					Guidelines:
-					- Never add information not present in the document
-					- Keep it concise but informative
-					- Explain technical concepts in plain English
-
-					Example for a resume:
-					**Document Type:** Resume
-
-					**Overview:**
-					This is a resume for a senior software engineer with 5 years of experience at top tech companies. The candidate is targeting senior engineering roles with a strong focus on backend development.
-
-					**Key Highlights:**
-					- Experience at Google, Amazon, and Microsoft
-					- Proficient in Python, Java, and TypeScript
-					- Led a team of 6 engineers, shipping a product used by 2M users
-					- BS in Computer Science from UC Berkeley
-
-					**Takeaway:**
-					A strong senior engineering profile with proven impact at top-tier companies.
-				`,
+				systemInstruction: AI_SUMMARY_PROMPT,
 			},
 		});
 
@@ -108,24 +79,57 @@ export async function generateAnswer(
 		role: "user" | "model";
 		parts: { text: string }[];
 	}[],
+	preferences?: Preferences,
 ) {
 	const hasContext = context.trim().length > 0;
+	let systemInstruction = hasContext
+		? AI_DOC_CHAT_PROMPT
+		: AI_NORMAL_CHAT_PROMPT;
+
+	console.log("user preferences: ", preferences);
+
+	if (preferences) {
+		const { language, responseStyle, persona } = preferences;
+
+		// 1. Language
+		if (language === "hi") {
+			systemInstruction +=
+				"\n\nIMPORTANT: You must write your response in Hindi (हिंदी).";
+		} else {
+			systemInstruction +=
+				"\n\nIMPORTANT: You must write your response in English.";
+		}
+
+		// 2. Response Style
+		if (responseStyle === "concise") {
+			systemInstruction +=
+				"\n\nIMPORTANT: Keep your answer extremely brief and concise. Limit to 1-2 sentences maximum.";
+		} else if (responseStyle === "detailed") {
+			systemInstruction +=
+				"\n\nIMPORTANT: Provide a detailed and comprehensive explanation.";
+		} else {
+			systemInstruction +=
+				"\n\nIMPORTANT: Keep your response balanced (informative but direct).";
+		}
+
+		// 3. Custom Persona
+		if (persona && persona.trim().length > 0) {
+			systemInstruction += `\n\nIMPORTANT: Adopt this custom persona/character for your response: "${persona.trim()}". Maintain this style throughout.`;
+		}
+	}
 
 	try {
+		console.log("========== GENERATE ANSWER ==========");
+		console.log("QUESTION:", question);
+		console.log("HAS CONTEXT:", hasContext);
+		console.log("CONTEXT:", context);
+		console.log("SYSTEM:", systemInstruction);
+		console.log("MESSAGES:", JSON.stringify(formattedMessages, null, 2));
+		console.log("====================================");
 		const response = await client.models.generateContentStream({
 			model: "gemini-3.5-flash-lite",
 			config: {
-				systemInstruction: hasContext
-					? `You are a helpful assistant for answering questions about a document.
-
-					Rules:
-					- Answer questions directly and conversationally, never mention "the context" or "the document" in your response
-					- If the answer is fully available, just answer it
-					- If related but needs general knowledge to fully answer, fill gaps with your own knowledge
-					- Only if completely unrelated, respond with: "This document doesn't have information about that topic."
-					- Never start with "Based on the provided context..." or "According to the document..."
-					- Be concise and natural`
-					: `You are a helpful, friendly assistant. Have a normal conversation and answer questions accurately and concisely.`,
+				systemInstruction,
 			},
 			contents: [
 				...(hasContext
