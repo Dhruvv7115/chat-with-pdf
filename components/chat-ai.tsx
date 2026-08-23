@@ -243,11 +243,11 @@ const ChatAi = ({
 	return (
 		<div className="flex h-full w-full flex-col items-center justify-between">
 			<MessageScrollerProvider
-				autoScroll
+				autoScroll={preferences.autoScroll}
 				defaultScrollPosition="end"
 			>
 				<MessageScroller className="w-full flex-1">
-					<MessageScrollerViewport className="scrollbar-none">
+					<MessageScrollerViewport>
 						<MessageScrollerContent className="mx-auto max-w-4xl">
 							{hasNextPage && (
 								<MessageScrollerItem>

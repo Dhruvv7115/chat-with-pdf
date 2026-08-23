@@ -102,11 +102,11 @@ const AiMessage = ({ message }: { message: Message }) => {
 
 	return (
 		<div className="flex items-center justify-center gap-4 w-full h-fit mb-4">
-			<div className="lg:px-12 md:px-6 sm:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full">
+			<div className="md:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full">
 				<ReactMarkdown
 					remarkPlugins={[remarkGfm, remarkMath, remarkBreaks, remarkEmoji]}
 					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}
-					// components={customComponents}
+					components={customComponents}
 				>
 					{message.content}
 				</ReactMarkdown>

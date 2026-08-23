@@ -16,12 +16,13 @@ const UserMessage = ({ message }: { message: Message }) => {
 	const user = session.user;
 
 	return (
-		<div className="flex items-center justify-end gap-4 w-full max-w-full h-fit mb-4 pr-4">
+		<div className="flex items-center justify-end gap-4 w-full max-w-full h-fit mb-4 md:px-4 px-2">
 			<Bubble>
 				<BubbleContent>{message.content}</BubbleContent>
 			</Bubble>
 		</div>
 	);
+
 };
 
 export default UserMessage;
