@@ -19,7 +19,6 @@ import ChatLinkItem from "./chat-link-item";
 const ChatList = () => {
 	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 15 });
 	const pathname = usePathname();
-	const [hovered, setHovered] = useState<string>("");
 
 	return (
 		<SidebarGroup className="overflow-y-auto scrollbar-none pt-6 mask-alpha mask-t-from-90% mask-t-to-100%">
@@ -46,8 +45,6 @@ const ChatList = () => {
 										key={chat.id}
 										chat={chat}
 										isActive={pathname === `/chat/${chat.id}`}
-										hoveredGlobal={hovered} // Your existing parent state
-										setHoveredGlobal={setHovered} // Your existing parent setter
 									/>
 								))}
 							</div>

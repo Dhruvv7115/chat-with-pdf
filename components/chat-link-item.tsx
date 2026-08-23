@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -10,16 +9,9 @@ interface Props {
 		createdAt: string;
 	};
 	isActive: boolean;
-	hoveredGlobal: string;
-	setHoveredGlobal: (id: string) => void;
 }
 
-function ChatLinkItem({
-	chat,
-	isActive,
-	hoveredGlobal,
-	setHoveredGlobal,
-}: Props) {
+function ChatLinkItem({ chat, isActive }: Props) {
 	const [isRowHovered, setIsRowHovered] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const textRef = useRef<HTMLSpanElement>(null);
@@ -45,14 +37,8 @@ function ChatLinkItem({
 	return (
 		<Link
 			href={`/chat/${chat.id}`}
-			onMouseEnter={() => {
-				setHoveredGlobal(chat.id);
-				setIsRowHovered(true);
-			}}
-			onMouseLeave={() => {
-				setHoveredGlobal("");
-				setIsRowHovered(false);
-			}}
+			onMouseEnter={() => setIsRowHovered(true)}
+			onMouseLeave={() => setIsRowHovered(false)}
 			className={cn(
 				"relative flex items-center justify-start rounded-md px-4 py-2 text-sm font-normal w-full overflow-hidden transition-colors duration-200",
 				"text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white",
