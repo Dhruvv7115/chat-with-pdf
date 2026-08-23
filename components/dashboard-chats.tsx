@@ -32,7 +32,7 @@ export default function DashboardChats() {
 					Recent Chats
 				</h2>
 				<Link
-					href="/chat"
+					href="/chats"
 					className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
 				>
 					View all

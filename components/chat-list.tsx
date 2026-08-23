@@ -27,10 +27,12 @@ const ChatList = () => {
 					<SidebarMenuItem>
 						<CollapsibleTrigger asChild>
 							<SidebarMenuButton className="py-2 group/btn">
-								<span className="text-sm font-medium dark:text-neutral-300 text-neutral-600">Recent Chats</span>
+								<span className="text-sm font-medium dark:text-neutral-300 text-neutral-600">
+									Recent Chats
+								</span>
 								<ChevronRight className="opacity-0 transition-all duration-200 group-hover/btn:opacity-100 group-data-[state=open]/collapsible:rotate-90 text-neutral-500 dark:hover:text-neutral-400 hover:text-neutral-600" />
 								<Link
-									href="/chat"
+									href="/chats"
 									className="ml-auto p-1 hover:bg-black/20 rounded cursor-pointer text-neutral-500 dark:hover:text-neutral-300 hover:text-neutral-600"
 								>
 									<ArrowUpRight className="opacity-0 transition-opacity duration-200 group-hover/btn:opacity-100" />

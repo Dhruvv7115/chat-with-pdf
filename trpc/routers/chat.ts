@@ -55,6 +55,26 @@ export const chatRouter = createTRPCRouter({
 			orderBy: { createdAt: "desc" },
 		});
 	}),
+	getAllUserChats: protectedProcedure.query(async ({ ctx }) => {
+		return client.chat.findMany({
+			where: { userId: ctx.userId },
+			orderBy: { updatedAt: "desc" },
+			include: {
+				document: {
+					select: {
+						id: true,
+						title: true,
+						fileType: true,
+					},
+				},
+				_count: {
+					select: {
+						messages: true,
+					},
+				},
+			},
+		});
+	}),
 	getUserChats: protectedProcedure
 		.input(z.object({ limit: z.number() }))
 		.query(async ({ ctx, input }) => {
@@ -100,9 +120,9 @@ export const chatRouter = createTRPCRouter({
 					cursor: { id: cursor },
 				}),
 			});
-			
+
 			let nextCursor: string | undefined;
-			
+
 			if (messages.length > limit) {
 				const nextItem = messages.pop();
 				nextCursor = nextItem!.id;
