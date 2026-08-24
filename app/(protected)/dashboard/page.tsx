@@ -1,10 +1,17 @@
 "use client";
 
-import DashboardChats from "@/components/dashboard-chats";
-import DashboardPdfs from "@/components/dashboard-pdfs";
+import DashboardChats from "@/components/dash/dashboard-chats";
+import DashboardPdfs from "@/components/dash/dashboard-pdfs";
+import DashboardActivityChart from "@/components/dash/activity-chart";
 import { api } from "@/trpc/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+} from "@/components/ui/card";
+import { AlertCircle, FileText, MessageSquare, Clock } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -51,10 +58,10 @@ const DashboardPage = () => {
 	};
 
 	return (
-		<div className="bg-sidebar h-full">
-			<div className="mx-auto px-6 py-8">
+		<div className="bg-sidebar h-full overflow-auto">
+			<div className="mx-auto px-6 py-8 flex flex-col gap-8">
 				{/* Header */}
-				<div className="mb-8">
+				<div>
 					<h1 className="md:text-3xl text-2xl font-bold text-foreground">
 						{getDashboardGreeting()},{" "}
 						<span className="bg-linear-to-br from-lime-600 to-green-600 bg-clip-text text-transparent font-black">
@@ -67,19 +74,15 @@ const DashboardPage = () => {
 				</div>
 
 				{/* Upload quota alert for Hobby users */}
-
 				{quota && !quota.canUpload && !quota.pro && (
-					<Alert
-						variant="destructive"
-						className="mb-6"
-					>
-						<AlertCircle className="h-4 w-4" />
+					<Alert variant="destructive">
+						<AlertCircle className="size-4" />
+						<AlertTitle>Monthly limit reached</AlertTitle>
 						<AlertDescription>
-							<span className="font-medium">Monthly limit reached.</span> You've
-							uploaded {quota.uploaded}/{quota.limit} PDFs.
+							You&apos;ve uploaded {quota.uploaded}/{quota.limit} PDFs.{" "}
 							<Link
 								href="/billings"
-								className="underline font-semibold ml-1"
+								className="underline font-semibold"
 							>
 								Upgrade to Pro
 							</Link>
@@ -88,35 +91,62 @@ const DashboardPage = () => {
 				)}
 
 				{quota && quota.canUpload && !quota.pro && (
-					<Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-						<AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-						<AlertDescription className="text-blue-800 dark:text-blue-200">
-							<span className="font-medium">Hobby plan:</span> {quota.uploaded}/
-							{quota.limit} PDFs uploaded this month
+					<Alert>
+						<AlertCircle className="size-4" />
+						<AlertTitle>Hobby plan</AlertTitle>
+						<AlertDescription>
+							{quota.uploaded}/{quota.limit} PDFs uploaded this month
 						</AlertDescription>
 					</Alert>
 				)}
 
 				{/* Stats */}
-				<div className="grid grid-cols-3 gap-3 mb-8">
-					<div className="bg-muted/50 rounded-lg p-4">
-						<p className="text-xs text-muted-foreground mb-1">
-							Documents uploaded
-						</p>
-						<p className="text-2xl font-medium">{docs?.length ?? 0}</p>
-					</div>
-					<div className="bg-muted/50 rounded-lg p-4">
-						<p className="text-xs text-muted-foreground mb-1">Total chats</p>
-						<p className="text-2xl font-medium">{chats?.length ?? 0}</p>
-					</div>
-					<div className="bg-muted/50 rounded-lg p-4">
-						<p className="text-xs text-muted-foreground mb-1">Last active</p>
-						<p className="text-base font-medium pt-1">{lastActive}</p>
-					</div>
+				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardDescription>Documents uploaded</CardDescription>
+							<FileText className="size-4 text-muted-foreground" />
+						</CardHeader>
+						<CardContent>
+							<p className="text-2xl font-semibold tracking-tight">
+								{docs?.length ?? 0}
+							</p>
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardDescription>Total chats</CardDescription>
+							<MessageSquare className="size-4 text-muted-foreground" />
+						</CardHeader>
+						<CardContent>
+							<p className="text-2xl font-semibold tracking-tight">
+								{chats?.length ?? 0}
+							</p>
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+							<CardDescription>Last active</CardDescription>
+							<Clock className="size-4 text-muted-foreground" />
+						</CardHeader>
+						<CardContent>
+							<p className="text-2xl font-semibold tracking-tight">
+								{lastActive}
+							</p>
+						</CardContent>
+					</Card>
 				</div>
 
+				{/* Activity chart */}
+				<DashboardActivityChart
+					chats={chats}
+					docs={docs}
+				/>
+
 				{/* Main panels */}
-				<div className="grid grid-cols-2 gap-4">
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 					<DashboardPdfs />
 					<DashboardChats />
 				</div>
