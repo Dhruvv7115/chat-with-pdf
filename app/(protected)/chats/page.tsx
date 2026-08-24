@@ -45,7 +45,7 @@ import {
 	CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 type ChatCategory = "ALL" | "DOCS" | "GENERAL";
 
@@ -242,7 +242,10 @@ export default function ChatsPage() {
 				</div>
 
 				<Link href="/chat">
-					<Button className="gap-2 font-medium cursor-pointer" variant="default">
+					<Button
+						className="gap-2 font-medium cursor-pointer"
+						variant="default"
+					>
 						<Plus className="size-4" />
 						New Chat
 					</Button>
@@ -258,14 +261,19 @@ export default function ChatsPage() {
 					<TabsList>
 						{categories.map((cat) => (
 							<TabsTrigger
+								type="button"
 								key={cat.id}
 								value={cat.id}
 								className="gap-2"
 							>
 								{cat.label}
 								<Badge
-									variant={activeCategory === cat.id ? "default" : "secondary"}
-									className="px-1.5 py-0 text-[10px]"
+									className={cn(
+										"px-1.5 py-0.5 rounded-full text-[10px]",
+										activeCategory === cat.id
+											? "bg-primary/10 text-primary font-bold"
+											: "bg-muted-foreground/15 text-muted-foreground",
+									)}
 								>
 									{cat.count}
 								</Badge>
@@ -276,8 +284,9 @@ export default function ChatsPage() {
 
 				<Button
 					variant="outline"
+					size="lg"
 					onClick={() => setCommandOpen(true)}
-					className="w-full md:w-72 justify-between text-muted-foreground font-normal"
+					className="w-full sm:w-80 justify-between text-muted-foreground font-normal"
 				>
 					<span className="flex items-center gap-2">
 						<Search className="size-4" />

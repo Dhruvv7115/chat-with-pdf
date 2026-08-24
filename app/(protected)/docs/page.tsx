@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
 import {
 	FileText,
-	Search,
 	MessageSquare,
 	ExternalLink,
 	Trash2,
 	Maximize2,
 	Plus,
-	X,
 	Calendar,
 	HardDrive,
 	Layers,
@@ -21,10 +19,46 @@ import {
 	FileCode2,
 	Files,
 	FileType as FileTypeIcon,
+	MoreVertical,
+	SearchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import {
+	CommandDialog,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+	CommandShortcut,
+} from "@/components/ui/command";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -36,6 +70,14 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 
 type FileCategory = "ALL" | "PDF" | "DOCX" | "MARKDOWN" | "OTHER";
@@ -56,43 +98,63 @@ function formatBytes(bytes?: number | null) {
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Reads expiry off a presigned URL without a network round-trip.
+// Supports AWS SigV4 (X-Amz-Date + X-Amz-Expires) and generic Unix-timestamp
+// "Expires" params (GCS, some CDNs). Unknown/unparseable formats are treated
+// as "not expired" here — the iframe's onError is the fallback for those.
+function isUrlExpired(url?: string | null): boolean {
+	if (!url) return true;
+	try {
+		const parsed = new URL(url);
+		const amzDate = parsed.searchParams.get("X-Amz-Date");
+		const amzExpires = parsed.searchParams.get("X-Amz-Expires");
+		if (amzDate && amzExpires) {
+			const year = Number(amzDate.slice(0, 4));
+			const month = Number(amzDate.slice(4, 6)) - 1;
+			const day = Number(amzDate.slice(6, 8));
+			const hour = Number(amzDate.slice(9, 11));
+			const minute = Number(amzDate.slice(11, 13));
+			const second = Number(amzDate.slice(13, 15));
+			const issuedAt = Date.UTC(year, month, day, hour, minute, second);
+			const expiresAt = issuedAt + Number(amzExpires) * 1000;
+			return Date.now() >= expiresAt;
+		}
+		const expiresParam = parsed.searchParams.get("Expires");
+		if (expiresParam && !Number.isNaN(Number(expiresParam))) {
+			return Date.now() >= Number(expiresParam) * 1000;
+		}
+	} catch {
+		return false;
+	}
+	return false;
+}
+
 function getFileTypeConfig(fileType?: string) {
 	switch (fileType?.toUpperCase()) {
 		case "PDF":
 			return {
 				label: "PDF",
-				color:
-					"bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
+				tint: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
 				icon: FileText,
-				badgeColor: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300",
 			};
 		case "DOCX":
 			return {
 				label: "DOCX",
-				color:
-					"bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
+				tint: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
 				icon: FileCode2,
-				badgeColor:
-					"bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
 			};
 		case "MARKDOWN":
 		case "MD":
 			return {
 				label: "MARKDOWN",
-				color:
-					"bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
+				tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
 				icon: FileCode,
-				badgeColor:
-					"bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
 			};
 		default:
 			return {
 				label: fileType || "DOCUMENT",
-				color:
-					"bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
+				tint: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
 				icon: FileTypeIcon,
-				badgeColor:
-					"bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
 			};
 	}
 }
@@ -101,12 +163,25 @@ export default function DocsPage() {
 	const router = useRouter();
 	const utils = api.useUtils();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [commandOpen, setCommandOpen] = useState(false);
 	const [activeCategory, setActiveCategory] = useState<FileCategory>("ALL");
 	const [previewDoc, setPreviewDoc] = useState<{
 		title: string;
 		url: string;
 		fileType?: string;
 	} | null>(null);
+	// Doc ids whose iframe failed to load at runtime (e.g. a non-standard
+	// presigned URL that expired but wasn't caught by isUrlExpired).
+	const [failedPreviewIds, setFailedPreviewIds] = useState<Set<string>>(
+		new Set(),
+	);
+	// Forces expiry to be re-evaluated periodically for long-open tabs.
+	const [expiryTick, setExpiryTick] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => setExpiryTick((t) => t + 1), 30_000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const { data: docs, isLoading } = api.pdf.getAllUserDocsWithUrls.useQuery();
 
@@ -138,6 +213,18 @@ export default function DocsPage() {
 		});
 	};
 
+	// ⌘K / Ctrl+K opens the command palette from anywhere on the page
+	useEffect(() => {
+		function handleKeyDown(e: KeyboardEvent) {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+				e.preventDefault();
+				setCommandOpen((open) => !open);
+			}
+		}
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, []);
+
 	// Counts per category
 	const counts = useMemo(() => {
 		if (!docs) return { all: 0, pdf: 0, docx: 0, markdown: 0, other: 0 };
@@ -152,7 +239,7 @@ export default function DocsPage() {
 		};
 	}, [docs]);
 
-	// Filter documents by search and category tab
+	// Grid view: filtered by active tab + last committed search term
 	const filteredDocs = useMemo(() => {
 		if (!docs) return [];
 		return docs.filter((doc) => {
@@ -206,14 +293,13 @@ export default function DocsPage() {
 						)}
 					</div>
 					<p className="text-sm text-muted-foreground mt-1">
-						View, preview with presigned URLs, chat with, and manage your
-						separated PDF, Word, and Markdown documents.
+						View, chat with, and manage your PDF, Word, and Markdown documents.
 					</p>
 				</div>
 
 				<Link href="/chat">
 					<Button className="gap-2 shadow-sm font-medium">
-						<Plus className="h-4 w-4" />
+						<Plus className="size-4" />
 						Upload New Document
 					</Button>
 				</Link>
@@ -221,149 +307,188 @@ export default function DocsPage() {
 
 			{/* Category Filter Tabs & Search Toolbar */}
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-				{/* File Type Tabs */}
-				<div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/60 rounded-xl border">
-					{categories.map((cat) => (
-						<button
-							key={cat.id}
-							onClick={() => setActiveCategory(cat.id)}
-							className={cn(
-								"flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150",
-								activeCategory === cat.id
-									? "bg-background text-foreground shadow-sm font-semibold"
-									: "text-muted-foreground hover:text-foreground hover:bg-background/50",
-							)}
-						>
-							{cat.label}
-							<span
-								className={cn(
-									"px-1.5 py-0.2 rounded-full text-[10px]",
-									activeCategory === cat.id
-										? "bg-primary/10 text-primary font-bold"
-										: "bg-muted-foreground/15 text-muted-foreground",
-								)}
+				<Tabs
+					value={activeCategory}
+					onValueChange={(v) => setActiveCategory(v as FileCategory)}
+				>
+					<TabsList className="h-auto flex-wrap gap-1.5 p-1">
+						{categories.map((cat) => (
+							<TabsTrigger
+								key={cat.id}
+								value={cat.id}
+								className="gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium data-[state=active]:font-semibold"
 							>
-								{cat.count}
-							</span>
-						</button>
-					))}
-				</div>
+								{cat.label}
+								<Badge
+									className={cn(
+										"px-1.5 py-0.5 rounded-full text-[10px]",
+										activeCategory === cat.id
+											? "bg-primary/10 text-primary font-bold"
+											: "bg-muted-foreground/15 text-muted-foreground",
+									)}
+								>
+									{cat.count}
+								</Badge>
+							</TabsTrigger>
+						))}
+					</TabsList>
+				</Tabs>
 
-				{/* Search Input */}
-				<div className="relative w-full md:w-72">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-					<Input
-						type="text"
-						placeholder="Search documents by title..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						className="pl-9 bg-background"
-					/>
-					{searchQuery && (
-						<button
-							onClick={() => setSearchQuery("")}
-							className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-						>
-							<X className="h-3.5 w-3.5" />
-						</button>
-					)}
-				</div>
+				{/* Search trigger — opens the Command palette */}
+				<Button
+					variant="outline"
+					onClick={() => setCommandOpen(true)}
+					className="w-full md:w-72 justify-between text-muted-foreground font-normal bg-background"
+				>
+					<span className="flex items-center gap-2">
+						<SearchIcon className="size-4" />
+						Search documents...
+					</span>
+					<kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+						⌘K
+					</kbd>
+				</Button>
 			</div>
+
+			{/* Command palette: searches across ALL documents regardless of the active tab */}
+			<CommandDialog
+				open={commandOpen}
+				onOpenChange={setCommandOpen}
+			>
+				<CommandInput
+					placeholder="Search documents by title..."
+					value={searchQuery}
+					onValueChange={setSearchQuery}
+				/>
+				<CommandList>
+					<CommandEmpty>No documents found.</CommandEmpty>
+					<CommandGroup heading="Documents">
+						{(docs ?? []).map((doc) => {
+							const typeConfig = getFileTypeConfig(doc.fileType);
+							const TypeIcon = typeConfig.icon;
+							return (
+								<CommandItem
+									key={doc.id}
+									value={doc.title}
+									onSelect={() => {
+										setCommandOpen(false);
+										handleOpenChat(doc.id, doc.title);
+									}}
+									className="gap-2"
+								>
+									<TypeIcon className="size-4 text-muted-foreground" />
+									<span className="truncate">{doc.title}</span>
+									<CommandShortcut>{typeConfig.label}</CommandShortcut>
+								</CommandItem>
+							);
+						})}
+					</CommandGroup>
+				</CommandList>
+			</CommandDialog>
 
 			{/* Loading Skeletons */}
 			{isLoading && (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{[1, 2, 3, 4, 5, 6].map((i) => (
-						<div
+						<Card
 							key={i}
-							className="border rounded-xl p-4 bg-card shadow-sm space-y-4 animate-pulse"
+							className="overflow-hidden py-0"
 						>
-							<div className="flex items-center justify-between">
-								<div className="h-5 bg-muted rounded w-1/2" />
-								<div className="h-4 bg-muted rounded w-1/4" />
-							</div>
-							<div className="h-64 bg-muted rounded-lg w-full" />
-							<div className="flex justify-between items-center pt-2">
-								<div className="h-8 bg-muted rounded w-20" />
-								<div className="h-8 bg-muted rounded w-20" />
-							</div>
-						</div>
+							<CardHeader className="p-4 space-y-2 border-b bg-muted/30">
+								<div className="flex items-center gap-2">
+									<Skeleton className="size-7 rounded" />
+									<Skeleton className="h-4 w-2/3" />
+								</div>
+								<div className="flex gap-2">
+									<Skeleton className="h-4 w-16" />
+									<Skeleton className="h-4 w-20" />
+								</div>
+							</CardHeader>
+							<Skeleton className="h-48 w-full rounded-none" />
+							<CardFooter className="p-3 flex justify-between gap-2">
+								<Skeleton className="h-8 w-24" />
+								<Skeleton className="h-8 w-24" />
+							</CardFooter>
+						</Card>
 					))}
 				</div>
 			)}
 
-			{/* Empty State */}
+			{/* Empty State: no documents at all */}
 			{!isLoading && docs?.length === 0 && (
-				<div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-muted rounded-xl bg-card">
-					<div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 text-primary">
-						<Files className="h-8 w-8" />
-					</div>
-					<h3 className="text-lg font-semibold text-foreground">
-						No documents uploaded yet
-					</h3>
-					<p className="text-sm text-muted-foreground max-w-sm mt-1 mb-6">
-						Upload your PDF, Word, or Markdown documents to preview them here
-						and start asking AI questions about them.
-					</p>
-					<Link href="/chat">
-						<Button className="gap-2">
-							<Plus className="h-4 w-4" />
-							Upload Document Now
-						</Button>
-					</Link>
-				</div>
+				<Empty className="border-2 border-dashed rounded-xl bg-card py-16">
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<Files />
+						</EmptyMedia>
+						<EmptyTitle>No documents uploaded yet</EmptyTitle>
+						<EmptyDescription>
+							Upload your PDF, Word, or Markdown documents to preview them here
+							and start asking AI questions about them.
+						</EmptyDescription>
+					</EmptyHeader>
+					<EmptyContent>
+						<Link href="/chat">
+							<Button className="gap-2">
+								<Plus className="size-4" />
+								Upload Document Now
+							</Button>
+						</Link>
+					</EmptyContent>
+				</Empty>
 			)}
 
-			{/* Search / Tab Empty State */}
+			{/* Empty State: filters produced nothing */}
 			{!isLoading && docs && docs.length > 0 && filteredDocs.length === 0 && (
-				<div className="text-center py-12 border rounded-xl bg-card">
-					<p className="text-muted-foreground">
-						No documents found matching your filter criteria.
-					</p>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => {
-							setSearchQuery("");
-							setActiveCategory("ALL");
-						}}
-						className="mt-2 text-xs"
-					>
-						Clear all filters
-					</Button>
-				</div>
+				<Empty className="border rounded-xl bg-card py-12">
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<SearchIcon />
+						</EmptyMedia>
+						<EmptyTitle>No matching documents</EmptyTitle>
+						<EmptyDescription>
+							Nothing matches your current filters. Try a different search term
+							or tab.
+						</EmptyDescription>
+					</EmptyHeader>
+					<EmptyContent>
+						<Button
+							variant="secondary"
+							size="sm"
+							onClick={() => {
+								setSearchQuery("");
+								setActiveCategory("ALL");
+							}}
+						>
+							Clear all filters
+						</Button>
+					</EmptyContent>
+				</Empty>
 			)}
 
 			{/* Document Grid View */}
-			{!isLoading && filteredDocs && filteredDocs.length > 0 && (
+			{!isLoading && filteredDocs.length > 0 && (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{filteredDocs.map((doc) => {
 						const typeConfig = getFileTypeConfig(doc.fileType);
 						const TypeIcon = typeConfig.icon;
 
-						let iframeSrc = doc.url;
-						if (doc.fileType === "PDF") {
-							iframeSrc = `${doc.url}#toolbar=0&navpanes=0`;
-						} else if (doc.fileType === "DOCX") {
-							iframeSrc = `https://docs.google.com/gview?url=${encodeURIComponent(doc.url)}&embedded=true`;
-						}
-
 						return (
-							<div
+							<Card
 								key={doc.id}
-								className="group relative flex flex-col border border-border/70 hover:border-primary/40 rounded-xl bg-card shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+								className="group py-0 overflow-hidden border-border/70 hover:border-primary/40 hover:shadow-md transition-all duration-200"
 							>
 								{/* Card Header */}
-								<div className="p-4 border-b bg-muted/30 space-y-2">
+								<CardHeader className="p-4 border-b bg-muted/30 space-y-2 gap-0">
 									<div className="flex items-start justify-between gap-2">
 										<div className="flex items-center gap-2 min-w-0">
 											<div
 												className={cn(
 													"p-1.5 rounded border shrink-0",
-													typeConfig.color,
+													typeConfig.tint,
 												)}
 											>
-												<TypeIcon className="h-4 w-4" />
+												<TypeIcon className="size-4" />
 											</div>
 											<h2
 												className="font-semibold text-sm text-foreground truncate"
@@ -373,170 +498,270 @@ export default function DocsPage() {
 											</h2>
 										</div>
 
-										{/* Delete Action */}
-										<AlertDialog>
-											<AlertDialogTrigger asChild>
+										{/* Overflow actions */}
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
 												<Button
 													variant="ghost"
 													size="icon"
-													className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+													className="size-7 text-muted-foreground shrink-0"
 												>
-													<Trash2 className="h-3.5 w-3.5" />
+													<MoreVertical className="size-3.5" />
 												</Button>
-											</AlertDialogTrigger>
-											<AlertDialogContent>
-												<AlertDialogHeader>
-													<AlertDialogTitle>Delete Document</AlertDialogTitle>
-													<AlertDialogDescription>
-														Are you sure you want to delete &quot;{doc.title}
-														&quot;? This action cannot be undone.
-													</AlertDialogDescription>
-												</AlertDialogHeader>
-												<AlertDialogFooter>
-													<AlertDialogCancel>Cancel</AlertDialogCancel>
-													<AlertDialogAction
-														onClick={() =>
-															deleteDocMutation.mutate({ key: doc.fileKey })
-														}
-														className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-													>
-														Delete
-													</AlertDialogAction>
-												</AlertDialogFooter>
-											</AlertDialogContent>
-										</AlertDialog>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent align="end">
+												<DropdownMenuGroup>
+													{doc.url && (
+														<DropdownMenuItem
+															onClick={() => window.open(doc.url, "_blank")}
+														>
+															<ExternalLink />
+															Open original
+														</DropdownMenuItem>
+													)}
+													<AlertDialog>
+														<AlertDialogTrigger asChild>
+															<DropdownMenuItem
+																onSelect={(e) => e.preventDefault()}
+																variant="destructive"
+															>
+																<Trash2 />
+																Delete
+															</DropdownMenuItem>
+														</AlertDialogTrigger>
+														<AlertDialogContent>
+															<AlertDialogHeader>
+																<AlertDialogTitle>
+																	Delete Document
+																</AlertDialogTitle>
+																<AlertDialogDescription>
+																	Are you sure you want to delete &quot;
+																	{doc.title}
+																	&quot;? This action cannot be undone.
+																</AlertDialogDescription>
+															</AlertDialogHeader>
+															<AlertDialogFooter>
+																<AlertDialogCancel>Cancel</AlertDialogCancel>
+																<AlertDialogAction
+																	onClick={() =>
+																		deleteDocMutation.mutate({
+																			key: doc.fileKey,
+																		})
+																	}
+																	className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+																>
+																	Delete
+																</AlertDialogAction>
+															</AlertDialogFooter>
+														</AlertDialogContent>
+													</AlertDialog>
+												</DropdownMenuGroup>
+											</DropdownMenuContent>
+										</DropdownMenu>
 									</div>
 
-									{/* Metadata Badges & Type Tag */}
-									<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
-										<span
+									{/* Metadata */}
+									<div className="flex flex-wrap items-center gap-1.5 pt-1">
+										<Badge
+											variant="outline"
 											className={cn(
-												"px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-												typeConfig.badgeColor,
+												"text-[10px] font-bold uppercase",
+												typeConfig.tint,
 											)}
 										>
 											{typeConfig.label}
-										</span>
-										<span className="flex items-center gap-1 text-[11px]">
-											<Calendar className="h-3 w-3" />
+										</Badge>
+										<Badge
+											variant="outline"
+											className="text-[10px] font-normal gap-1 text-muted-foreground"
+										>
+											<Calendar className="size-3" />
 											{formatDate(doc.createdAt)}
-										</span>
+										</Badge>
 										{doc.fileSize && (
-											<span className="flex items-center gap-1 text-[11px]">
-												<HardDrive className="h-3 w-3" />
+											<Badge
+												variant="outline"
+												className="text-[10px] font-normal gap-1 text-muted-foreground"
+											>
+												<HardDrive className="size-3" />
 												{formatBytes(doc.fileSize)}
-											</span>
+											</Badge>
 										)}
 										{doc.pageCount && (
-											<span className="flex items-center gap-1 text-[11px]">
-												<Layers className="h-3 w-3" />
+											<Badge
+												variant="outline"
+												className="text-[10px] font-normal gap-1 text-muted-foreground"
+											>
+												<Layers className="size-3" />
 												{doc.pageCount} {doc.pageCount === 1 ? "page" : "pages"}
-											</span>
+											</Badge>
 										)}
 									</div>
-								</div>
+								</CardHeader>
 
-								{/* Iframe Presigned URL Preview Container */}
-								<div className="relative w-full h-80 bg-neutral-900/5 dark:bg-neutral-950 flex flex-col justify-center items-center overflow-hidden border-b">
-									{doc.url ? (
-										<>
-											<iframe
-												src={iframeSrc}
-												title={doc.title}
-												className="w-full h-full border-0 pointer-events-none"
-											/>
-											<button
-												onClick={() =>
-													setPreviewDoc({
-														title: doc.title,
-														url: doc.url,
-														fileType: doc.fileType,
-													})
-												}
-												className="absolute top-2 right-2 p-1.5 rounded-md bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity shadow"
-												title="Expand preview"
-											>
-												<Maximize2 className="h-4 w-4" />
-											</button>
-										</>
-									) : (
-										<div className="flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
-											<TypeIcon className="h-10 w-10 mb-2 opacity-40" />
-											<p className="text-xs">Preview unavailable</p>
+								{/* Thumbnail: real presigned-URL preview when the link is still
+								    valid, tinted placeholder when it's expired, missing, or failed
+								    to load at runtime. */}
+								{(() => {
+									// biome-ignore lint: expiryTick is a deliberate re-render trigger
+									void expiryTick;
+									const expired = isUrlExpired(doc.url);
+									const failed = failedPreviewIds.has(doc.id);
+									const showPlaceholder = !doc.url || expired || failed;
+
+									let iframeSrc = doc.url ?? "";
+									if (doc.fileType === "PDF") {
+										iframeSrc = `${doc.url}#toolbar=0&navpanes=0`;
+									} else if (doc.fileType === "DOCX") {
+										iframeSrc = `https://docs.google.com/gview?url=${encodeURIComponent(doc.url ?? "")}&embedded=true`;
+									}
+
+									return (
+										<div className="relative w-full h-48 border-b overflow-hidden bg-muted/20">
+											{showPlaceholder ? (
+												<div
+													className={cn(
+														"w-full h-full flex flex-col justify-center items-center",
+														typeConfig.tint,
+													)}
+												>
+													<TypeIcon className="size-14 opacity-30" />
+													<span className="mt-3 text-xs text-muted-foreground px-4 text-center">
+														{!doc.url
+															? "Preview unavailable"
+															: "Preview link expired — reopen to refresh"}
+													</span>
+												</div>
+											) : (
+												<iframe
+													src={iframeSrc}
+													title={doc.title}
+													className="w-full h-full border-0 pointer-events-none"
+													onError={() =>
+														setFailedPreviewIds((prev) =>
+															new Set(prev).add(doc.id),
+														)
+													}
+												/>
+											)}
+											{doc.url && !showPlaceholder && (
+												<button
+													type="button"
+													onClick={() =>
+														setPreviewDoc({
+															title: doc.title,
+															url: doc.url,
+															fileType: doc.fileType,
+														})
+													}
+													className="absolute inset-0 flex items-end justify-end p-2 bg-transparent group-hover:bg-black/10 transition-colors"
+												>
+													<span className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+														<Maximize2 className="size-3.5" />
+														Expand
+													</span>
+												</button>
+											)}
 										</div>
-									)}
-								</div>
+									);
+								})()}
 
 								{/* Card Footer Actions */}
-								<div className="p-3 bg-card flex items-center justify-between gap-2 mt-auto">
-									{doc.url && (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => window.open(doc.url, "_blank")}
-											className="gap-1.5 text-xs h-8"
-										>
-											<ExternalLink className="h-3.5 w-3.5" />
-											Open Link
-										</Button>
-									)}
+								<CardFooter className="p-3 gap-2">
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												variant="outline"
+												size="icon"
+												onClick={() =>
+													doc.url && window.open(doc.url, "_blank")
+												}
+												disabled={!doc.url}
+												className="size-8"
+											>
+												<ExternalLink className="size-3.5" />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>Open original file</TooltipContent>
+									</Tooltip>
 									<Button
 										size="sm"
 										onClick={() => handleOpenChat(doc.id, doc.title)}
 										disabled={getOrCreateChatMutation.isPending}
-										className="gap-1.5 text-xs h-8 ml-auto font-medium"
+										className="gap-1.5 text-xs h-8 flex-1 font-medium"
 									>
-										<MessageSquare className="h-3.5 w-3.5" />
+										<MessageSquare className="size-3.5" />
 										Chat with Doc
 									</Button>
-								</div>
-							</div>
+								</CardFooter>
+							</Card>
 						);
 					})}
 				</div>
 			)}
 
-			{/* Fullscreen Iframe Modal */}
-			{previewDoc && (
-				<div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col p-4 md:p-8">
-					<div className="flex items-center justify-between pb-4 text-white">
-						<div className="flex items-center gap-2">
-							<Files className="h-5 w-5 text-primary" />
-							<h3 className="font-semibold text-lg truncate max-w-xl">
-								{previewDoc.title}
-							</h3>
-						</div>
-						<div className="flex items-center gap-3">
+			{/* Fullscreen Preview — forced to near-viewport width; the component's
+			    own default (sm:max-w-lg) would otherwise win and squeeze this down. */}
+			<Dialog
+				open={!!previewDoc}
+				onOpenChange={(open) => !open && setPreviewDoc(null)}
+			>
+				<DialogContent className="!max-w-none w-[96vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0">
+					<DialogHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 border-b space-y-0">
+						<DialogTitle className="flex items-center gap-2 truncate pr-8">
+							<Files className="size-4 text-primary shrink-0" />
+							<span className="truncate">{previewDoc?.title}</span>
+						</DialogTitle>
+						{previewDoc?.url && (
 							<Button
 								variant="outline"
 								size="sm"
 								onClick={() => window.open(previewDoc.url, "_blank")}
-								className="text-black dark:text-white border-white/20 dark:border-black/20 hover:bg-white/80 dark:hover:bg-black/10 gap-1.5 cursor-pointer transition-all duration-300"
+								className="gap-1.5 self-start sm:self-auto sm:mr-8"
 							>
-								<ExternalLink className="h-4 w-4" />
+								<ExternalLink className="size-3.5" />
 								Open original
 							</Button>
-							<button
-								onClick={() => setPreviewDoc(null)}
-								className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
-							>
-								<X className="h-6 w-6" />
-							</button>
-						</div>
+						)}
+					</DialogHeader>
+					<div className="flex-1 bg-neutral-900 min-h-0">
+						{previewDoc && isUrlExpired(previewDoc.url) ? (
+							<div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center px-6">
+								<Files className="size-10 text-muted-foreground/50" />
+								<div>
+									<p className="text-sm font-medium text-white">
+										This preview link has expired
+									</p>
+									<p className="text-xs text-muted-foreground mt-1">
+										Close this and reopen the document to get a fresh link.
+									</p>
+								</div>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => setPreviewDoc(null)}
+								>
+									Close
+								</Button>
+							</div>
+						) : (
+							previewDoc?.url && (
+								<iframe
+									src={
+										previewDoc.fileType === "DOCX"
+											? `https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.url)}&embedded=true`
+											: previewDoc.fileType === "PDF"
+												? `${previewDoc.url}#toolbar=0&navpanes=0`
+												: previewDoc.url
+									}
+									title={previewDoc.title}
+									className="w-full h-full border-0"
+								/>
+							)
+						)}
 					</div>
-					<div className="flex-1 w-full h-full rounded-lg overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl">
-						<iframe
-							src={
-								previewDoc.fileType === "DOCX"
-									? `https://docs.google.com/gview?url=${encodeURIComponent(previewDoc.url)}&embedded=true`
-									: previewDoc.url
-							}
-							title={previewDoc.title}
-							className="w-full h-full border-0"
-						/>
-					</div>
-				</div>
-			)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
