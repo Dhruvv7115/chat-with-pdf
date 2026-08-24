@@ -24,6 +24,7 @@ import { useSession } from "next-auth/react";
 import { api } from "@/trpc/client";
 import { motion } from "motion/react";
 import { ThemeToggle } from "./theme-toggle";
+import ChatList from "./chat-list";
 
 const sidebarContents = {
 	group1: [
@@ -39,7 +40,6 @@ const sidebarContents = {
 const AppSidebar = () => {
 	const location = usePathname();
 	const { data } = useSession();
-	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 3 });
 	const [hovered, setHovered] = useState<string>("");
 
 	return (
@@ -57,7 +57,7 @@ const AppSidebar = () => {
 					</Link>
 				</div>
 			</SidebarHeader>
-			<SidebarContent>
+			<SidebarContent className="overflow-hidden">
 				<SidebarGroup id="group-1">
 					<SidebarGroupContent className="flex flex-col">
 						{sidebarContents.group1.map((item) => (
@@ -95,22 +95,7 @@ const AppSidebar = () => {
 						))}
 					</SidebarGroupContent>
 				</SidebarGroup>
-				<SidebarGroup id="group-2">
-					<SidebarGroupLabel>Recent Documents</SidebarGroupLabel>
-					<SidebarGroupContent className="flex flex-col gap-2 my-2">
-						{recentChats?.map((chat) => (
-							<Link
-								key={chat.id}
-								href={`/chat/${chat.id}`}
-								className="rounded-lg hover:bg-accent px-2 py-1"
-							>
-								{chat.title.length > 20
-									? chat.title.slice(0, 20) + "..."
-									: chat.title}
-							</Link>
-						))}
-					</SidebarGroupContent>
-				</SidebarGroup>
+				<ChatList />
 			</SidebarContent>
 			<SidebarFooter>
 				<div className="flex items-center gap-2 pr-2">

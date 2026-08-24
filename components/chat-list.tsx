@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/trpc/client";
@@ -17,12 +16,12 @@ import { usePathname } from "next/navigation";
 import ChatLinkItem from "./chat-link-item";
 
 const ChatList = () => {
-	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 15 });
+	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 20 });
 	const pathname = usePathname();
 
 	return (
 		<SidebarGroup className="overflow-y-auto scrollbar-none pt-6 mask-alpha mask-t-from-90% mask-t-to-100%">
-			<Collapsible className="group/collapsible">
+			<Collapsible className="group/collapsible" defaultOpen>
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<CollapsibleTrigger asChild>
