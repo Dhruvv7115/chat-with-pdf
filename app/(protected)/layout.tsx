@@ -1,24 +1,30 @@
 "use client";
 import AppSidebar from "@/components/app-sidebar";
-import { Separator } from "@/components/ui/separator";
+import ProfileAvatar from "@/components/profile-avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
 	SidebarInset,
 	SidebarProvider,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
-import React from "react";
+import React, { useEffect } from "react";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
+	
 	return (
 		<SidebarProvider>
 			<AppSidebar />
 			<SidebarInset className="h-[calc(100vh-1rem)] flex flex-col overflow-auto">
-				<header className="flex h-16 shrink-0 items-center gap-2 bg-sidebar">
-					<div className="flex items-center gap-2 px-4">
+				<header className="flex items-center justify-between h-16 shrink-0 gap-2 bg-sidebar">
+					<div className="flex items-center gap-2 mx-4">
 						<SidebarTrigger className="-ml-1" />
 					</div>
+					<div className="mx-4 flex items-center justify-center gap-4">
+						<ThemeToggle />
+						<ProfileAvatar />
+					</div>
 				</header>
-				<div className="flex-1 overflow-auto scrollbar-none">{children}</div>
+				<main className="flex-1 overflow-auto scrollbar-none">{children}</main>
 			</SidebarInset>
 		</SidebarProvider>
 	);
