@@ -1,5 +1,5 @@
 "use client";
-import { LoginForm } from "@/components/login-form";
+import { LoginForm } from "@/components/auth/login-form";
 import { GalleryVerticalEndIcon, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

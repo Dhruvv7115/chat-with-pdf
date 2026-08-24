@@ -1,6 +1,6 @@
 "use client";
 
-import { SignupForm } from "@/components/signup-form";
+import { SignupForm } from "@/components/auth/signup-form";
 import { GalleryVerticalEndIcon, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
