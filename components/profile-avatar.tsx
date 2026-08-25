@@ -51,7 +51,9 @@ const ProfileAvatar = () => {
 								src={user.avatar ?? ""}
 								alt={user.name ?? ""}
 							/>
-							<AvatarFallback className="rounded-lg">{user?.name?.[0] ?? "CN"}</AvatarFallback>
+							<AvatarFallback className="rounded-lg">
+								{user?.name?.[0] ?? "CN"}
+							</AvatarFallback>
 						</Avatar>
 						<div className="grid flex-1 text-left text-sm leading-tight">
 							<span className="truncate font-medium">{user.name}</span>
@@ -89,7 +91,7 @@ const ProfileAvatar = () => {
 					</Link>
 				</DropdownMenuGroup>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem onClick={() => signOut}>
+				<DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
 					<LogOut />
 					<span>Log out</span>
 					<DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>

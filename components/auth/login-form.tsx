@@ -41,7 +41,7 @@ export function LoginForm({
 		});
 		toast.success("Logged in successfully");
 		reset();
-		router.push("/");
+		router.push("/dashboard");
 	};
 	return (
 		<form
@@ -129,7 +129,7 @@ export function LoginForm({
 					<Button
 						variant="outline"
 						type="button"
-						onClick={() => signIn("google", { callbackUrl: "/" })}
+						onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
 					>
 						<svg
 							viewBox="-3 0 262 262"
@@ -170,7 +170,7 @@ export function LoginForm({
 					<Button
 						variant="outline"
 						type="button"
-						onClick={() => signIn("github", { callbackUrl: "/" })}
+						onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
 					>
 						<svg
 							viewBox="0 0 20 20"
