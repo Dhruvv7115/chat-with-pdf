@@ -228,9 +228,24 @@
 }
 
 body{
-  overflow: hidden;
+  /* overflow: hidden; */
   ::selection {
     background-color: oklch(92.4% 0.12 95.746);
     color: #000;           
+  }
+}
+
+html, body {
+  overscroll-behavior: none;
+}
+
+@keyframes bounceX {
+  0%, 100% {
+    transform: translateX(-30%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
