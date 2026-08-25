@@ -175,6 +175,11 @@
   .token.regex,
   .token.important,
   .token.variable { color: #9cdcfe; };
+
+  ::selection {
+    background-color: oklch(89.7% 0.196 126.665/0.1);
+    color: oklch(76.8% 0.233 130.85);           
+  }
 }
 
 
@@ -230,8 +235,8 @@
 body{
   /* overflow: hidden; */
   ::selection {
-    background-color: oklch(92.4% 0.12 95.746);
-    color: #000;           
+    background-color: oklch(64.8% 0.2 131.684/0.2);
+    color: oklch(64.8% 0.2 131.684);           
   }
 }
 

@@ -706,7 +706,7 @@ export default function DocsPage() {
 				open={!!previewDoc}
 				onOpenChange={(open) => !open && setPreviewDoc(null)}
 			>
-				<DialogContent className="!max-w-none w-[96vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0">
+				<DialogContent className="max-w-none! w-[96vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0">
 					<DialogHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 border-b space-y-0">
 						<DialogTitle className="flex items-center gap-2 truncate pr-8">
 							<Files className="size-4 text-primary shrink-0" />

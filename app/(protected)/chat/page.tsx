@@ -11,8 +11,13 @@ import { getFileType } from "@/utils/file-type";
 
 const ChatPage = () => {
 	const uploadDoc = api.pdf.getUploadUrl.useMutation();
+	const utils = api.useUtils();
 	const saveDoc = api.pdf.saveDoc.useMutation();
-	const createChat = api.chat.createChat.useMutation();
+	const createChat = api.chat.createChat.useMutation({
+		onSuccess: async () => {
+			await utils.chat.getAllUserChats.invalidate();
+		},
+	});
 	const router = useRouter();
 	const sendMessage = api.message.createMessage.useMutation();
 
