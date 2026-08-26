@@ -8,9 +8,9 @@ export const similaritySearch = async (
 	const embedding = `[${queryEmbedding.join(",")}]`;
 
 	const results = await client.$queryRaw<
-		{ content: string; similarity: number }[]
+		{ content: string; page: number | null; similarity: number }[]
 	>`
-    SELECT content, 1 - (embedding <=> ${embedding}::vector) AS similarity
+    SELECT content, page, 1 - (embedding <=> ${embedding}::vector) AS similarity
     FROM "DocumentEmbedding"
     WHERE "documentId" = ${docId}
     ORDER BY "similarity" DESC 

@@ -4,6 +4,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { client } from "@/lib/prisma";
 import { toMarkdownBytes } from "@firecrawl/anydoc";
 import { FileType } from "@/lib/generated/prisma/enums";
+import { MAX_PDF_CHARS } from "@/lib/constants/chat";
 
 export async function loadPdfText(pdfUrl: string) {
 	const response = await fetch(pdfUrl);
@@ -41,44 +42,71 @@ export async function indexDocument(
 	docId: string,
 	docType: FileType,
 ) {
+	let pageChunks: { content: string; page: number | null }[] = [];
 	let content: string;
-	let contentForChunking: string;
 
 	if (docType === FileType.PDF) {
 		const docs = await loadPdfText(docUrl);
+		const size = docs.reduce((acc, doc) => acc + doc.pageContent.length, 0);
+		console.log(
+			"docs loaded with",
+			docs.length,
+			"pages and",
+			size,
+			"characters",
+		);
+
+		if (size > MAX_PDF_CHARS) {
+			throw new Error(
+				"PDF contains too much text. Please upload a shorter document.",
+			);
+		}
+		if (docs.length === 0) {
+			throw new Error("No pages found in the PDF document.");
+		} 
 		content = docs
 			.map((doc, index) => `--- PAGE ${index + 1} ---\n${doc.pageContent}`)
 			.join("\n\n");
-		contentForChunking = docs.map((doc) => doc.pageContent).join("\n\n");
+		for (let i = 0; i < docs.length; i++) {
+			const splitter = new RecursiveCharacterTextSplitter({
+				chunkSize: 1000,
+				chunkOverlap: 100,
+			});
+			const pageTexts = await splitter.splitText(docs[i].pageContent);
+			pageTexts.forEach((text) =>
+				pageChunks.push({ content: text, page: i + 1 }),
+			);
+		}
 	} else {
 		const markdown = await extractText(docUrl, docType);
 		content = markdown;
-		contentForChunking = markdown;
+		const splitter = new RecursiveCharacterTextSplitter({
+			chunkSize: 1000,
+			chunkOverlap: 100,
+		});
+		const texts = await splitter.splitText(markdown);
+		pageChunks = texts.map((text) => ({ content: text, page: null }));
 	}
 
-	const chunks = await chunkPdf(contentForChunking);
-
-	const batches: string[][] = [];
-	chunks.forEach((chunk, index) => {
+	const batches: { content: string; page: number | null }[][] = [];
+	pageChunks.forEach((chunk, index) => {
 		const batchIndex = Math.floor(index / 5);
-		if (!batches[batchIndex]) {
-			batches[batchIndex] = [];
-		}
+		if (!batches[batchIndex]) batches[batchIndex] = [];
 		batches[batchIndex].push(chunk);
 	});
 
-	const allEmbeddings = [];
 	for (const batch of batches) {
 		console.log("generating embeddings for batch:", batches.indexOf(batch));
 		const batchEmbeddings = await Promise.all(
-			batch.map((chunk) => generateEmbedding(chunk)),
+			batch.map((c) => generateEmbedding(c.content)),
 		);
 		for (let i = 0; i < batch.length; i++) {
 			try {
 				const embedding = await client.documentEmbedding.create({
 					data: {
 						documentId: docId,
-						content: batch[i],
+						content: batch[i].content,
+						page: batch[i].page, // new column
 					},
 				});
 				const vectorString = `[${batchEmbeddings[i].join(",")}]`;
@@ -93,17 +121,7 @@ export async function indexDocument(
 				throw new Error("Error indexing document");
 			}
 		}
-		allEmbeddings.push(...batchEmbeddings);
 	}
 
 	return summarizeDocument(content);
-}
-
-export async function chunkPdf(document: string) {
-	const splitter = new RecursiveCharacterTextSplitter({
-		chunkSize: 1000,
-		chunkOverlap: 200,
-	});
-	const texts = await splitter.splitText(document);
-	return texts;
 }
