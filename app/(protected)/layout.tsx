@@ -7,12 +7,13 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
-import React, { useEffect } from "react";
+import React from "react";
+import LogoutShortcut from "@/components/logout-shortcut";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
-	
 	return (
 		<SidebarProvider>
+			<LogoutShortcut />
 			<AppSidebar />
 			<SidebarInset className="h-[calc(100vh-1rem)] flex flex-col overflow-auto">
 				<header className="flex items-center justify-between h-16 shrink-0 gap-2 bg-sidebar">
