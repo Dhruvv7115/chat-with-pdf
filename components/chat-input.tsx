@@ -48,7 +48,7 @@ const ChatInput = ({
 	
 
 	return (
-		<InputGroup className="p-2 rounded-4xl">
+		<InputGroup className="p-2 rounded-4xl active:ring-1! ring-lime-500/60! dark:ring-primary/40!">
 			{onFileUpload && (
 				<input
 					ref={fileInputRef}

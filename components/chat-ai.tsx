@@ -21,6 +21,7 @@ import {
 import { usePreferences } from "@/hooks/use-preferences";
 import { Bubble, BubbleContent } from "./ui/bubble";
 import ThinkingIndicator from "./thinking-indicator";
+import { toast } from "sonner";
 
 export type Chat = {
 	id: string;
@@ -66,7 +67,7 @@ const ChatAi = ({
 
 	const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
 		api.chat.getMessages.useInfiniteQuery(
-			{ chatId: chat.id, limit: 10 },
+			{ chatId: chat.id, limit: 20 },
 			{ getNextPageParam: (lastPage) => lastPage.nextCursor },
 		);
 
@@ -154,6 +155,7 @@ const ChatAi = ({
 					);
 					setIsStreaming(false);
 					setStreamingMessage(null);
+					toast.error(err.message);
 				});
 			return;
 		}
@@ -212,6 +214,7 @@ const ChatAi = ({
 					setError(err.message || "Failed to generate a response.");
 					setIsStreaming(false);
 					setStreamingMessage(null);
+					toast.error(err.message);
 				});
 		}
 	}, [messages, isLoading, preferences, doc, docUrl]);
