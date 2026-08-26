@@ -1,10 +1,6 @@
 import z from "zod";
 import { protectedProcedure, createTRPCRouter } from "../init";
 import { client } from "@/lib/prisma";
-import { indexDocument } from "@/utils/pdf-loader";
-import { api } from "../client";
-import { generateAnswer, generateQueryEmbedding } from "@/utils/gemini";
-import { similaritySearch } from "@/utils/rag";
 
 export const messageRouter = createTRPCRouter({
 
