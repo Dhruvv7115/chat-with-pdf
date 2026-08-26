@@ -1,7 +1,9 @@
 import { authOptions } from "@/lib/auth";
+import { MAX_HISTORY_MESSAGE_CHARS } from "@/lib/constants/chat";
 import { client } from "@/lib/prisma";
 import { generateAnswer, generateQueryEmbedding } from "@/utils/gemini";
 import { similaritySearch } from "@/utils/rag";
+import { checkRateLimit } from "@/utils/rate-limit";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
 		messages = await client.message.findMany({
 			where: { chatId },
 			orderBy: { createdAt: "desc" },
-			take: 4,
+			take: 6,
 		});
 	} catch (error) {
 		console.error("Error fetching messages");
@@ -66,7 +68,9 @@ export async function POST(req: NextRequest) {
 
 		context = results
 			.filter((r) => r.similarity > 0.5)
-			.map((r) => r.content)
+			.map((r) =>
+				r.page != null ? `[Page ${r.page}]\n${r.content}` : r.content,
+			)
 			.join("\n\n");
 	}
 
@@ -74,15 +78,16 @@ export async function POST(req: NextRequest) {
 		role: "user" | "model";
 		parts: { text: string }[];
 	}[] = messages
-		.slice(1, messages.length)
+		.slice(1)
 		.reverse()
 		.map((message) => ({
 			role: message.role === "USER" ? "user" : "model",
 			parts: [
 				{
 					text:
-						message.content.length > 200
-							? message.content.slice(0, 200) + "..."
+						message.content.length > MAX_HISTORY_MESSAGE_CHARS
+							? message.content.slice(0, MAX_HISTORY_MESSAGE_CHARS) +
+								"\n\n[...truncated]"
 							: message.content,
 				},
 			],
@@ -113,18 +118,4 @@ export async function POST(req: NextRequest) {
 	return new Response(stream, {
 		headers: { "Content-Type": "text/plain" },
 	});
-}
-
-async function checkRateLimit(userId: string): Promise<boolean> {
-	const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-
-	const recentCount = await client.message.count({
-		where: {
-			role: "USER",
-			createdAt: { gte: oneMinuteAgo },
-			chat: { userId },
-		},
-	});
-
-	return recentCount < 10;
 }

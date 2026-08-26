@@ -1,10 +1,23 @@
 import { authOptions } from "@/lib/auth";
 import { client } from "@/lib/prisma";
 import { indexDocument } from "@/utils/pdf-loader";
+import { checkRateLimit } from "@/utils/rate-limit";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+	const session = await getServerSession(authOptions);
+	if (!session?.user?.id) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const allowed = await checkRateLimit(session.user.id);
+	if (!allowed) {
+		return NextResponse.json(
+			{ error: "You're sending messages too quickly. Please slow down." },
+			{ status: 429 },
+		);
+	}
 	let body;
 	try {
 		body = await req.json();
@@ -20,10 +33,6 @@ export async function POST(req: NextRequest) {
 		);
 	}
 
-	const session = await getServerSession(authOptions);
-	if (!session?.user?.id) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
 	try {
 		const doc = await client.document.findUnique({ where: { id: documentId } });
 		if (!doc) {
