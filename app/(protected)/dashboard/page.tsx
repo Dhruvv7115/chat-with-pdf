@@ -1,5 +1,5 @@
 "use client";
-
+import { useState } from "react";
 import DashboardChats from "@/components/dash/dashboard-chats";
 import DashboardPdfs from "@/components/dash/dashboard-pdfs";
 import DashboardActivityChart from "@/components/dash/activity-chart";
@@ -10,10 +10,18 @@ import {
 	CardContent,
 	CardDescription,
 	CardHeader,
+	CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, FileText, MessageSquare, Clock } from "lucide-react";
+import {
+	IconAlertCircle as AlertCircle,
+	IconFileText as FileText,
+	IconMessage as Message,
+	IconClock as Clock,
+	IconArrowUpRight,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 const DashboardPage = () => {
 	const { data: docs } = api.pdf.getUserPdfs.useQuery();
@@ -102,41 +110,23 @@ const DashboardPage = () => {
 
 				{/* Stats */}
 				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-					<Card>
-						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardDescription>Documents uploaded</CardDescription>
-							<FileText className="size-4 text-muted-foreground" />
-						</CardHeader>
-						<CardContent>
-							<p className="text-2xl font-semibold tracking-tight">
-								{docs?.length ?? 0}
-							</p>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardDescription>Total chats</CardDescription>
-							<MessageSquare className="size-4 text-muted-foreground" />
-						</CardHeader>
-						<CardContent>
-							<p className="text-2xl font-semibold tracking-tight">
-								{chats?.length ?? 0}
-							</p>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardDescription>Last active</CardDescription>
-							<Clock className="size-4 text-muted-foreground" />
-						</CardHeader>
-						<CardContent>
-							<p className="text-2xl font-semibold tracking-tight">
-								{lastActive}
-							</p>
-						</CardContent>
-					</Card>
+					<StatCard
+						title="Documents uploaded"
+						value={docs?.length.toString() ?? "0"}
+						href="/docs"
+						icon={<FileText className="size-6 text-muted-foreground" />}
+					/>
+					<StatCard
+						title="Total chats"
+						href="/chats"
+						value={chats?.length.toString() ?? "0"}
+						icon={<Message className="size-6 text-muted-foreground" />}
+					/>
+					<StatCard
+						title="Last active"
+						value={lastActive}
+						icon={<Clock className="size-6 text-muted-foreground" />}
+					/>
 				</div>
 
 				{/* Activity chart */}
@@ -154,5 +144,54 @@ const DashboardPage = () => {
 		</div>
 	);
 };
+
+interface StatCardProps {
+	title: string;
+	value: string;
+	href?: string;
+	icon: React.ReactNode;
+}
+
+function StatCard({ title, value, icon, href }: StatCardProps) {
+	const [hovered, setHovered] = useState(false);
+	return (
+		<Card
+			className={cn(
+				"flex flex-col h-full rounded-3xl p-2",
+				"border border-neutral-100 dark:border-neutral-800",
+				"bg-neutral-200 dark:bg-neutral-800",
+			)}
+		>
+			<CardHeader className="rounded-xl bg-white dark:bg-neutral-900 py-4">
+				<CardContent
+					onMouseEnter={() => setHovered(true)}
+					onMouseLeave={() => setHovered(false)}
+					className="flex flex-row items-center justify-between space-y-0 pb-2 text-muted-foreground"
+				>
+					<CardDescription className="md:text-base text-sm font-semibold">
+						{title}
+					</CardDescription>
+					<span>
+						{!hovered || !href ? (
+							icon
+						) : (
+							<Link
+								href={href}
+								className="hover:bg-muted"
+							>
+								<IconArrowUpRight />
+							</Link>
+						)}
+					</span>
+				</CardContent>
+				<CardContent className="mt-3">
+					<CardTitle className="text-2xl text-accent-foreground font-bold">
+						{value}
+					</CardTitle>
+				</CardContent>
+			</CardHeader>
+		</Card>
+	);
+}
 
 export default DashboardPage;
