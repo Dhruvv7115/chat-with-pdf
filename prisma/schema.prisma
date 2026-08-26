@@ -93,6 +93,7 @@ model DocumentEmbedding {
   documentId String
   content    String
   embedding  Unsupported("vector(768)")?
+  page       Int?
   document   Document                    @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
