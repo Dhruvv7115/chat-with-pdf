@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/client";
@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import ChatRow from "@/components/chat/chat-row";
 
 type ChatCategory = "ALL" | "DOCS" | "GENERAL";
 
@@ -120,26 +121,10 @@ function getFileTypeBadge(fileType?: string) {
 
 export default function ChatsPage() {
 	const router = useRouter();
-	const utils = api.useUtils();
 	const [activeCategory, setActiveCategory] = useState<ChatCategory>("ALL");
-	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const [commandOpen, setCommandOpen] = useState(false);
 
 	const { data: chats, isLoading } = api.chat.getAllUserChats.useQuery();
-
-	const deleteChatMutation = api.chat.deleteChat.useMutation({
-		onSuccess: () => {
-			toast.success("Chat deleted successfully");
-			utils.chat.getAllUserChats.invalidate();
-			utils.chat.getChats.invalidate();
-			utils.chat.getUserChats.invalidate();
-			setDeletingId(null);
-		},
-		onError: (err) => {
-			toast.error(err.message || "Failed to delete chat");
-			setDeletingId(null);
-		},
-	});
 
 	// Cmd+K / Ctrl+K to open the command search dialog
 	useEffect(() => {
@@ -367,147 +352,11 @@ export default function ChatsPage() {
 			{!isLoading && filteredChats.length > 0 && (
 				<div className="flex flex-col gap-2.5">
 					{filteredChats.map((chat) => {
-						const isDocChat = !!chat.documentId;
-						const fileTypeBadge = isDocChat
-							? getFileTypeBadge(chat.document?.fileType)
-							: null;
-						const IconComponent = fileTypeBadge ? fileTypeBadge.icon : Bot;
-
 						return (
-							<Card
+							<ChatRow
+								chat={chat}
 								key={chat.id}
-								onClick={() => router.push(`/chat/${chat.id}`)}
-								className={cn(
-									"group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4",
-									"hover:bg-muted/30 hover:border-primary/40 transition-all duration-200 cursor-pointer",
-								)}
-							>
-								{/* Left: Icon & Info */}
-								<div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-									<div
-										className={cn(
-											"p-2.5 rounded-lg border shrink-0 transition-transform duration-200 group-hover:scale-105",
-											isDocChat && fileTypeBadge
-												? fileTypeBadge.color
-												: "bg-primary/10 text-primary border-primary/20",
-										)}
-									>
-										<IconComponent className="size-5" />
-									</div>
-
-									<div className="min-w-0 flex-1 flex flex-col gap-1">
-										<div className="flex items-center gap-2 flex-wrap">
-											<h3
-												className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors"
-												title={chat.title}
-											>
-												{chat.title}
-											</h3>
-
-											{isDocChat && fileTypeBadge ? (
-												<Badge
-													variant="outline"
-													className={cn(
-														"text-[10px] font-bold uppercase",
-														fileTypeBadge.badgeColor,
-													)}
-												>
-													{fileTypeBadge.label}
-												</Badge>
-											) : (
-												<Badge
-													variant="secondary"
-													className="text-[10px] font-medium"
-												>
-													General
-												</Badge>
-											)}
-										</div>
-
-										<div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-											{isDocChat && chat.document?.title && (
-												<span className="truncate max-w-50 sm:max-w-xs">
-													Doc: {chat.document.title}
-												</span>
-											)}
-
-											<span className="flex items-center gap-1">
-												<MessageSquare className="size-3" />
-												{chat._count?.messages ?? 0}{" "}
-												{(chat._count?.messages ?? 0) === 1
-													? "message"
-													: "messages"}
-											</span>
-
-											<span className="flex items-center gap-1">
-												<Clock className="size-3" />
-												{formatDate(chat.updatedAt)}
-											</span>
-										</div>
-									</div>
-								</div>
-
-								{/* Right: Actions */}
-								<div
-									className="flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50"
-									onClick={(e) => e.stopPropagation()}
-								>
-									{/* Delete Chat Action */}
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
-											<Button
-												variant="ghost"
-												size="icon"
-												className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-												disabled={
-													deleteChatMutation.isPending && deletingId === chat.id
-												}
-											>
-												<Trash2 className="size-4" />
-											</Button>
-										</AlertDialogTrigger>
-										<AlertDialogContent onClick={(e) => e.stopPropagation()}>
-											<AlertDialogHeader>
-												<AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-												<AlertDialogDescription>
-													Are you sure you want to delete &quot;{chat.title}
-													&quot;? All messages in this chat will be permanently
-													removed. This action cannot be undone.
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-											<AlertDialogFooter>
-												<AlertDialogCancel>Cancel</AlertDialogCancel>
-												<AlertDialogAction
-													onClick={() => {
-														setDeletingId(chat.id);
-														deleteChatMutation.mutate({ id: chat.id });
-													}}
-													className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-												>
-													Delete
-												</AlertDialogAction>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
-
-									<Separator
-										orientation="vertical"
-										className="h-6 hidden sm:block"
-									/>
-
-									{/* Open Chat Link */}
-									<Link href={`/chat/${chat.id}`}>
-										<Button
-											variant="secondary"
-											size="sm"
-											className="h-8 gap-1.5 text-xs font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-										>
-											Open
-											<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-										</Button>
-									</Link>
-								</div>
-							</Card>
+							/>
 						);
 					})}
 				</div>
