@@ -49,10 +49,22 @@ const ChatPage = () => {
 				size: file.size,
 			});
 
-			const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
 			// 3. Upload directly to S3
+			const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 			await fetch(url, { method: "PUT", body: file });
+
+			// 3.5. Validate content length/pages before committing any DB records
+			const validationRes = await fetch("/api/documents/validate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ key, fileType }),
+			});
+			const validation = await validationRes.json();
+
+			if (!validation.ok) {
+				toast.error(validation.error);
+				return; // nothing was created — S3 object is orphaned but harmless, see note below
+			}
 
 			// 4. Save PDF to DB
 			const doc = await saveDoc.mutateAsync({
