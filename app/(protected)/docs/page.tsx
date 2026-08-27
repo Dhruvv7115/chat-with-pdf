@@ -24,10 +24,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Card,
-	CardContent,
 	CardFooter,
 	CardHeader,
 } from "@/components/ui/card";
@@ -385,34 +383,6 @@ export default function DocsPage() {
 					</CommandGroup>
 				</CommandList>
 			</CommandDialog>
-
-			{/* Loading Skeletons */}
-			{isLoading && (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{[1, 2, 3, 4, 5, 6].map((i) => (
-						<Card
-							key={i}
-							className="overflow-hidden py-0"
-						>
-							<CardHeader className="p-4 space-y-2 border-b bg-muted/30">
-								<div className="flex items-center gap-2">
-									<Skeleton className="size-7 rounded" />
-									<Skeleton className="h-4 w-2/3" />
-								</div>
-								<div className="flex gap-2">
-									<Skeleton className="h-4 w-16" />
-									<Skeleton className="h-4 w-20" />
-								</div>
-							</CardHeader>
-							<Skeleton className="h-48 w-full rounded-none" />
-							<CardFooter className="p-3 flex justify-between gap-2">
-								<Skeleton className="h-8 w-24" />
-								<Skeleton className="h-8 w-24" />
-							</CardFooter>
-						</Card>
-					))}
-				</div>
-			)}
 
 			{/* Empty State: no documents at all */}
 			{!isLoading && docs?.length === 0 && (
