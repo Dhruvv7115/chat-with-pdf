@@ -38,16 +38,23 @@ enum FileType {
   CSV
 }
 
+enum DocumentStatus {
+  PENDING
+  READY
+  FAILED
+}
+
 model Document {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   title     String
-  fileKey   String   @unique
+  fileKey   String         @unique
   fileType  FileType
   fileSize  Int?
   pageCount Int? // nullable, only meaningful for PDF/DOCX
+  status    DocumentStatus @default(PENDING)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
