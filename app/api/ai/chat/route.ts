@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { MAX_HISTORY_MESSAGE_CHARS } from "@/lib/constants/chat";
+import { MAX_HISTORY_MESSAGE_CHARS } from "@/constants/chat";
 import { client } from "@/lib/prisma";
 import { generateAnswer, generateQueryEmbedding } from "@/utils/gemini";
 import { similaritySearch } from "@/utils/rag";

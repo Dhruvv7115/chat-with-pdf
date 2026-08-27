@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadPdfText, extractText } from "@/utils/pdf-loader"; // whatever you named these
 import { deleteFile, getFileUrl } from "@/utils/s3";
 import { FileType } from "@/lib/generated/prisma/enums";
-import { MAX_PDF_CHARS, MAX_PDF_PAGES } from "@/lib/constants/chat";
+import { MAX_PDF_CHARS, MAX_PDF_PAGES } from "@/constants/chat";
 
 export async function POST(req: NextRequest) {
 	const session = await getServerSession(authOptions);

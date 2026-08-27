@@ -9,14 +9,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLANS } from "@/lib/constants/plans";
+import { PLANS } from "@/constants/plans";
 
 import { commonDotStyles } from "@/lib/styles";
 import { api } from "@/trpc/client";
 export default function PricingCards({
 	loading,
 	setLoading,
-	handleCheckout
+	handleCheckout,
 }: {
 	loading: boolean;
 	setLoading: (l: boolean) => void;
@@ -28,7 +28,7 @@ export default function PricingCards({
 		...plan,
 		current: plan.name === currentPlan,
 	}));
-	
+
 	return (
 		<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
 			<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>

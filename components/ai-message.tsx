@@ -9,6 +9,7 @@ import remarkBreaks from "remark-breaks";
 import remarkEmoji from "remark-emoji";
 import rehypeExternalLinks from "rehype-external-links";
 import { customComponents } from "@/components/markdown/markdown-components";
+import { escapeCurrencyDollars } from "@/lib/currency";
 
 type Message = {
 	id: string;
@@ -108,7 +109,7 @@ const AiMessage = ({ message }: { message: Message }) => {
 					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}
 					components={customComponents}
 				>
-					{message.content}
+					{escapeCurrencyDollars(message.content)}
 				</ReactMarkdown>
 
 				<div className="flex items-center gap-2">
