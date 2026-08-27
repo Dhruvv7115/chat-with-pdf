@@ -4,7 +4,7 @@ import {
 	AI_DOC_CHAT_PROMPT,
 	AI_NORMAL_CHAT_PROMPT,
 	AI_SUMMARY_PROMPT,
-} from "@/lib/constants/prompts";
+} from "@/constants/prompts";
 import { GoogleGenAI } from "@google/genai";
 import { Preferences } from "@/hooks/use-preferences";
 
