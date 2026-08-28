@@ -26,7 +26,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist);
   --font-mono: var(--font-geist-mono);
   --font-jet-mono: var(--font-jetbrains-mono);
   --font-inter: var(--font-inter);
@@ -228,7 +228,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -236,7 +236,7 @@ body{
   /* overflow: hidden; */
   ::selection {
     background-color: oklch(64.8% 0.2 131.684/0.2);
-    color: oklch(64.8% 0.2 131.684);           
+    color: oklch(76.8% 0.233 130.85);           
   }
 }
 

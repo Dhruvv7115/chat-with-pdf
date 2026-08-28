@@ -24,11 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-	Card,
-	CardFooter,
-	CardHeader,
-} from "@/components/ui/card";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Dialog,
@@ -77,6 +73,7 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 type FileCategory = "ALL" | "PDF" | "DOCX" | "MARKDOWN" | "OTHER";
 
@@ -342,9 +339,10 @@ export default function DocsPage() {
 						<SearchIcon className="size-4" />
 						Search documents...
 					</span>
-					<kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-						⌘K
-					</kbd>
+					<KbdGroup>
+						<Kbd>⌘</Kbd>
+						<Kbd>k</Kbd>
+					</KbdGroup>
 				</Button>
 			</div>
 

@@ -12,16 +12,23 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "./ui/collapsible";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import ChatLinkItem from "./chat-link-item";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty";
+import { IconMessage, IconPlus } from "@tabler/icons-react";
+import { Button } from "./ui/button";
 
 const ChatList = () => {
 	const { data: recentChats } = api.chat.getUserChats.useQuery({ limit: 20 });
 	const pathname = usePathname();
+	const router = useRouter();
 
 	return (
 		<SidebarGroup className="overflow-y-auto scrollbar-none pt-6 mask-alpha mask-t-from-90% mask-t-to-100%">
-			<Collapsible className="group/collapsible" defaultOpen>
+			<Collapsible
+				className="group/collapsible"
+				defaultOpen
+			>
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<CollapsibleTrigger asChild>
@@ -41,6 +48,30 @@ const ChatList = () => {
 
 						<CollapsibleContent>
 							<div className="flex flex-col gap-0 w-full">
+								{recentChats?.length === 0 && (
+									<Empty className="border border-neutral-300 dark:border-neutral-700 mt-4">
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<IconMessage className="size-5" />
+											</EmptyMedia>
+											<EmptyTitle>No Recent Chats</EmptyTitle>
+											<EmptyDescription>
+												Start a conversation to see your recent chats here.
+											</EmptyDescription>
+										</EmptyHeader>	
+										<EmptyContent>
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => router.push("/chat")}
+												className="cursor-pointer"
+											>
+												<IconPlus className="size-3 mr-1" />
+												Start a Conversation
+											</Button>
+										</EmptyContent>
+									</Empty>
+								)}
 								{recentChats?.map((chat) => (
 									<ChatLinkItem
 										key={chat.id}
