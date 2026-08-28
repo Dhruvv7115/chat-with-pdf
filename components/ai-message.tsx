@@ -10,6 +10,8 @@ import remarkEmoji from "remark-emoji";
 import rehypeExternalLinks from "rehype-external-links";
 import { customComponents } from "@/components/markdown/markdown-components";
 import { escapeCurrencyDollars } from "@/lib/currency";
+import { usePreferences } from "@/hooks/use-preferences";
+import { cn } from "@/lib/utils";
 
 type Message = {
 	id: string;
@@ -100,10 +102,20 @@ const AiMessage = ({ message }: { message: Message }) => {
 			day: "numeric",
 		});
 	}
-
+	const { preferences } = usePreferences();
 	return (
 		<div className="flex items-center justify-center gap-4 w-full h-fit mb-4">
-			<div className="md:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full">
+			<div
+				className={cn(
+					"md:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full",
+					`font-${preferences.fontStyle}`,
+				)}
+				style={
+					{
+						"--typeset-size": `${preferences.fontSize ?? "16px"}`,
+					} as React.CSSProperties
+				}
+			>
 				<ReactMarkdown
 					remarkPlugins={[remarkGfm, remarkMath, remarkBreaks, remarkEmoji]}
 					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}

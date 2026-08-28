@@ -1,4 +1,6 @@
 import {
+	FontSize,
+	FontStyle,
 	Language,
 	ResponseStyle,
 	usePreferences,
@@ -28,9 +30,7 @@ const PreferencesSection = () => {
 	const { theme, setTheme } = useTheme();
 
 	if (!hydrated || !preferences) {
-		return (
-			<div className="h-75 rounded-lg border bg-card animate-pulse" />
-		);
+		return <div className="h-75 rounded-lg border bg-card animate-pulse" />;
 	}
 
 	return (
@@ -98,6 +98,67 @@ const PreferencesSection = () => {
 							<SelectContent>
 								<SelectItem value="en">English</SelectItem>
 								<SelectItem value="hi">Hindi</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					{/* font-styles */}
+					<div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
+						<div>
+							<p className="text-sm font-medium">Font Family</p>
+							<p className="text-xs text-muted-foreground">
+								Change the font style
+							</p>
+						</div>
+
+						<Select
+							value={preferences.fontStyle}
+							onValueChange={(value) =>
+								updatePreferences({
+									fontStyle: value as FontStyle,
+								})
+							}
+						>
+							<SelectTrigger className="w-32.5 h-8 text-xs">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="sans">Geist Sans</SelectItem>
+								<SelectItem value="inter">Inter</SelectItem>
+								<SelectItem value="mono">Geist Mono</SelectItem>
+								<SelectItem value="jet-mono">Jet Mono</SelectItem>
+								<SelectItem value="literata">Literata</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+					{/* font-size */}
+					<div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3">
+						<div>
+							<p className="text-sm font-medium">Font Size</p>
+							<p className="text-xs text-muted-foreground">
+								Change the font size
+							</p>
+						</div>
+
+						<Select
+							value={preferences.fontSize ?? "16px"}
+							onValueChange={(value) =>
+								updatePreferences({
+									fontSize: value as FontSize,
+								})
+							}
+							defaultValue="16px"
+						>
+							<SelectTrigger className="w-32.5 h-8 text-xs">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="14px">Small</SelectItem>
+								<SelectItem value="15px">Medium</SelectItem>
+								<SelectItem value="16px">Large</SelectItem>
+								<SelectItem value="18px">Extra Large</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
@@ -174,7 +235,8 @@ const PreferencesSection = () => {
 						<div>
 							<p className="text-sm font-medium">Custom Persona</p>
 							<p className="text-xs text-muted-foreground">
-								Instruct the AI to adopt a specific role or style (e.g. "Sarcastic Developer", "Physics Professor")
+								Instruct the AI to adopt a specific role or style (e.g.
+								"Sarcastic Developer", "Physics Professor")
 							</p>
 						</div>
 
