@@ -4,12 +4,21 @@ import { useEffect, useState } from "react";
 
 export type ResponseStyle = "concise" | "balanced" | "detailed";
 export type Language = "en" | "hi";
+export type FontSize = "14px" | "15px" | "16px" | "18px";
+export type FontStyle =
+	| "sans"
+	| "inter"
+	| "jet-mono"
+	| "literata"
+	| "mono";
 
 export type Preferences = {
 	language: Language;
 	responseStyle: ResponseStyle;
 	autoScroll: boolean;
 	readAloud: boolean;
+	fontStyle: FontStyle;
+	fontSize: FontSize;
 	persona: string;
 };
 
@@ -18,6 +27,8 @@ const STORAGE_KEY = "chatwithpdf:preferences";
 export const defaultPreferences: Preferences = {
 	language: "en",
 	responseStyle: "balanced",
+	fontStyle: "inter",
+	fontSize: "16px",
 	autoScroll: true,
 	readAloud: false,
 	persona: "",
