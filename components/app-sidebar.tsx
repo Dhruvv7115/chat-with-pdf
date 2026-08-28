@@ -5,7 +5,6 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
-	SidebarGroupLabel,
 	SidebarHeader,
 } from "./ui/sidebar";
 import Link from "next/link";
@@ -21,10 +20,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NavUser } from "./nav-user";
 import { useSession } from "next-auth/react";
-import { api } from "@/trpc/client";
 import { motion } from "motion/react";
-import { ThemeToggle } from "./theme-toggle";
 import ChatList from "./chat-list";
+import MonthlyUsage from "./sidebar/monthly-usage";
 
 const sidebarContents = {
 	group1: [
@@ -97,8 +95,9 @@ const AppSidebar = () => {
 				</SidebarGroup>
 				<ChatList />
 			</SidebarContent>
-			<SidebarFooter>
-				<div className="flex items-center gap-2 pr-2">
+			<SidebarFooter className="gap-2.5 p-2">
+				<MonthlyUsage />
+				<div className="flex items-center gap-2 pr-1">
 					<div className="flex-1">
 						<NavUser
 							user={{
