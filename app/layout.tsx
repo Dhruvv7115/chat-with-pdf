@@ -1,7 +1,14 @@
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Literata, JetBrains_Mono } from "next/font/google";
+import {
+	Geist,
+	Geist_Mono,
+	Inter,
+	Literata,
+	JetBrains_Mono,
+	Instrument_Serif,
+} from "next/font/google";
 import { Providers } from "./providers";
 import { Toaster } from "sonner";
 
@@ -27,6 +34,11 @@ const geistMono = Geist_Mono({
 	subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+	variable: "--font-instrument-serif",
+	weight: "400",
+	subsets: ["latin"],
+});
 export const metadata: Metadata = {
 	title: "ChatWithPDF",
 	description: "Chat with your documents in seconds, powered by Gemini AI.",
@@ -38,9 +50,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html
+			lang="en"
+			suppressHydrationWarning
+		>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${jetBrainsMono.variable} ${inter.variable} antialiased`}
+				className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${jetBrainsMono.variable} ${inter.variable} ${instrumentSerif.variable} antialiased`}
 			>
 				<Toaster
 					richColors
