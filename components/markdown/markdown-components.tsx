@@ -1,9 +1,12 @@
 import CodeBlockHeader from "@/components/markdown/code-block-header";
+import { usePdfViewer } from "@/hooks/pdf-viewer-context";
 import { extractTextFromCode } from "@/utils/markdown";
 import { useTheme } from "next-themes";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism";
-
+import {
+	oneDark,
+	oneLight,
+} from "react-syntax-highlighter/dist/cjs/styles/prism";
 export const customComponents = {
 	pre: (props: any) => {
 		const codeElement = props.children;
@@ -39,5 +42,20 @@ export const customComponents = {
 				</SyntaxHighlighter>
 			</div>
 		);
+	},
+	a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+		const { setPageNumber } = usePdfViewer();
+		const pageMatch = href?.match(/^#page-(\d+)$/);
+		if (pageMatch) {
+			return (
+				<button
+					onClick={() => setPageNumber(Number(pageMatch[1]))}
+					className="inline-flex items-center rounded-md bg-neutral-200 dark:bg-neutral-900/40 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-900/60 transition-colors cursor-pointer"
+				>
+					Page {pageMatch[1]}
+				</button>
+			);
+		}
+		return <a href={href}>{children}</a>;
 	},
 };
