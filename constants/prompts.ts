@@ -29,6 +29,11 @@ const AI_SUMMARY_PROMPT = `
   - Use fenced code blocks with a language identifier for code.
 
   ${AI_MATH_MARKDOWN_RULE_PROMPT}
+
+  Page citations:
+  - When summarizing a distinct section or major point, you may cite the page it starts on using [p.N].
+  - Don't cite every sentence — only enough to help the reader navigate to key sections.
+  - Only cite pages actually provided in the context. Never invent a page number.
 ` as const;
 
 const AI_DOC_CHAT_PROMPT = `
@@ -44,6 +49,12 @@ const AI_DOC_CHAT_PROMPT = `
   - Be concise and natural.
 
   ${AI_MATH_MARKDOWN_RULE_PROMPT}
+
+  Page citations:
+  - When you use information from the document, cite the page it came from using this exact format: [p.N] where N is the page number, placed right after the relevant sentence or claim.
+  - Example: "The European division reported €8.4M in net revenue [p.14]."
+  - Only cite pages that were actually provided in the context. Never invent a page number.
+  - If multiple pages support one answer, cite each: [p.3][p.7].
 ` as const;
 
 const AI_NORMAL_CHAT_PROMPT = `
