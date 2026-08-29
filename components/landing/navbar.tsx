@@ -34,8 +34,6 @@ export function NavbarDemo() {
 
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-	const { theme, setTheme } = useTheme();
-
 	return (
 		<Navbar>
 			{/* Desktop Navigation */}
@@ -64,10 +62,13 @@ export function NavbarDemo() {
 			<MobileNav>
 				<MobileNavHeader>
 					<NavbarLogo />
-					<MobileNavToggle
-						isOpen={isMobileMenuOpen}
-						onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-					/>
+					<div className="flex items-center gap-4 justify-center">
+						<ThemeToggle className="z-50" />
+						<MobileNavToggle
+							isOpen={isMobileMenuOpen}
+							onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+						/>
+					</div>
 				</MobileNavHeader>
 
 				<MobileNavMenu
