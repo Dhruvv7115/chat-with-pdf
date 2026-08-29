@@ -10,7 +10,7 @@ import {
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-
+import { usePdfViewer } from "@/hooks/pdf-viewer-context";
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	"pdfjs-dist/build/pdf.worker.min.mjs",
 	import.meta.url,
@@ -28,7 +28,7 @@ const ReactPdf = ({ docUrl }: { docUrl: string }) => {
 	const [renderWidth, setRenderWidth] = useState<number>();
 
 	const [numPages, setNumPages] = useState<number>();
-	const [pageNumber, setPageNumber] = useState(1);
+	const { pageNumber, setPageNumber } = usePdfViewer();
 	const [showPagination, setShowPagination] = useState<boolean>(false);
 
 	useEffect(() => {

@@ -1,6 +1,6 @@
 import { Role } from "@/lib/generated/prisma/enums";
 import { Check, Copy, Loader2, Square, Volume2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -9,7 +9,7 @@ import remarkBreaks from "remark-breaks";
 import remarkEmoji from "remark-emoji";
 import rehypeExternalLinks from "rehype-external-links";
 import { customComponents } from "@/components/markdown/markdown-components";
-import { escapeCurrencyDollars } from "@/lib/currency";
+import { formatMessageContent } from "@/utils/message-formatting";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +121,7 @@ const AiMessage = ({ message }: { message: Message }) => {
 					rehypePlugins={[rehypeKatex, rehypeExternalLinks]}
 					components={customComponents}
 				>
-					{escapeCurrencyDollars(message.content)}
+					{formatMessageContent(message.content)}
 				</ReactMarkdown>
 
 				<div className="flex items-center gap-2">
