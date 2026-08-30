@@ -12,11 +12,11 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Loader2 } from "lucide-react";
 import { api } from "@/trpc/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import { IconLoader } from "@tabler/icons-react";
 type Inputs = {
 	firstName: string;
 	lastName: string;
@@ -65,7 +65,7 @@ export function SignupForm({
 			onSubmit={handleSubmit(onSubmit)}
 		>
 			<FieldGroup>
-				<div className="flex flex-col items-center gap-1 text-center">
+				<div className="flex flex-col items-start gap-1 text-center">
 					<h1 className="text-2xl font-bold">Create your account</h1>
 					<p className="text-sm text-balance text-muted-foreground">
 						Fill in the form below to create your account
@@ -184,7 +184,7 @@ export function SignupForm({
 					>
 						{isSubmitting || registerUser.isPending ? (
 							<span className="flex items-center gap-2">
-								<Loader2 className="h-4 w-4 animate-spin" />
+								<IconLoader className="h-4 w-4 animate-spin" />
 								Creating Account...
 							</span>
 						) : (
