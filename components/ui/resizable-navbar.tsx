@@ -62,7 +62,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
 	const [visible, setVisible] = useState<boolean>(false);
 
 	useMotionValueEvent(scrollY, "change", (latest) => {
-		if (latest > 100) {
+		if (latest > 80) {
 			setVisible(true);
 		} else {
 			setVisible(false);
@@ -74,7 +74,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
 			<motion.div
 				ref={ref}
 				// IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-				className={cn("fixed inset-x-0 z-40 md:top-10 top-2 w-full", className)}
+				className={cn("mx-auto max-w-7xl lg:rounded-2xl rounded-none transition-all duration-300 shadow-none w-full border-b lg:border-0 z-100 lg:bg-transparent px-0 lg:px-6 bg-background", className)}
 			>
 				{React.Children.map(children, (child) =>
 					React.isValidElement(child)
@@ -110,7 +110,7 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
 				minWidth: "800px",
 			}}
 			className={cn(
-				"relative z-60 mx-auto hidden w-full max-w-7xl flex-row items-center justify-between self-start rounded-full bg-transparent px-6 py-3 lg:flex backdrop-blur-2xl",
+				"relative z-60 mx-auto hidden w-full max-w-6xl flex-row items-center justify-between self-start rounded-xl bg-transparent px-4 py-3 lg:flex backdrop-blur-2xl",
 				visible && "bg-white/50 dark:bg-neutral-950/40",
 				className,
 			)}
@@ -154,31 +154,14 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 
 export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
 	return (
-		<motion.div
-			animate={{
-				backdropFilter: visible ? "blur(10px)" : "none",
-				boxShadow: visible
-					? "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset"
-					: "none",
-				width: visible ? "90%" : "100%",
-				paddingRight: visible ? "12px" : "0px",
-				paddingLeft: visible ? "12px" : "0px",
-				borderRadius: visible ? "4px" : "2rem",
-				y: visible ? 20 : 0,
-			}}
-			transition={{
-				type: "spring",
-				stiffness: 200,
-				damping: 50,
-			}}
+		<div
 			className={cn(
-				"relative z-50 mx-auto flex w-full flex-col items-center justify-between bg-transparent px-4 py-2 lg:hidden",
-				visible && "bg-white/80 dark:bg-neutral-950/80",
+				"relative z-50 mx-auto flex w-full flex-col items-center justify-between bg-transparent py-4 md:py-6 lg:hidden",
 				className,
 			)}
 		>
 			{children}
-		</motion.div>
+		</div>
 	);
 };
 
@@ -189,7 +172,7 @@ export const MobileNavHeader = ({
 	return (
 		<div
 			className={cn(
-				"flex w-full flex-row items-center justify-between px-4",
+				"flex w-full flex-row items-center justify-between px-6",
 				className,
 			)}
 		>
@@ -212,7 +195,7 @@ export const MobileNavMenu = ({
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
 					className={cn(
-						"absolute inset-x-0 top-12 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] dark:bg-neutral-950",
+						"absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-b-lg bg-background px-4 py-8 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]",
 						className,
 					)}
 				>
@@ -250,7 +233,10 @@ export const NavbarLogo = () => {
 			className="flex items-center gap-2 font-bold text-lg"
 		>
 			<div className="flex size-7 items-center justify-center rounded-md bg-primary/90 text-white dark:text-slate-700">
-				<GalleryVerticalEndIcon className="size-4 stroke-1.5" />
+				<GalleryVerticalEndIcon
+					strokeWidth={2}
+					className="size-4"
+				/>
 			</div>
 			ChatWithPDF
 		</Link>

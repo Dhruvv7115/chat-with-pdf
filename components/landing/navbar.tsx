@@ -15,6 +15,8 @@ import { Button } from "../ui/button";
 import { IconBrightness, IconShadow } from "@tabler/icons-react";
 import { useTheme } from "next-themes";
 import { ThemeToggle } from "../theme-toggle";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function NavbarDemo() {
 	const navItems = [
@@ -27,8 +29,8 @@ export function NavbarDemo() {
 			link: "#pricing",
 		},
 		{
-			name: "Contact",
-			link: "#contact",
+			name: "Testimonials",
+			link: "#testimonials",
 		},
 	];
 
@@ -40,21 +42,24 @@ export function NavbarDemo() {
 			<NavBody>
 				<NavbarLogo />
 				<NavItems items={navItems} />
-				<div className="flex items-center">
-					<ThemeToggle className="z-50" />
-					<NavbarButton
-						href="/login"
-						variant="secondary"
-						className="mr-2"
-					>
-						Login
-					</NavbarButton>
+				<div className="flex items-center gap-2">
 					<NavbarButton
 						href="/signup"
-						variant="primary"
+						className={cn(
+							"flex items-center justify-center",
+							"text-sm font-normal tracking-wide",
+							"text-primary-foreground dark:text-secondary-foreground",
+							"h-9 w-fit",
+							"shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)]",
+							"rounded-full px-4",
+							"bg-primary hover:bg-primary/80",
+							"border border-white/12",
+							"transition-all ease-out duration-200 active:scale-95 cursor-pointer",
+						)}
 					>
-						Get Started
+						Try for free
 					</NavbarButton>
+					<ThemeToggle className="z-50" />
 				</div>
 			</NavBody>
 
@@ -76,19 +81,20 @@ export function NavbarDemo() {
 					onClose={() => setIsMobileMenuOpen(false)}
 				>
 					{navItems.map((item, idx) => (
-						<a
+						<Link
 							key={`mobile-link-${idx}`}
 							href={item.link}
 							onClick={() => setIsMobileMenuOpen(false)}
 							className="relative text-neutral-600 dark:text-neutral-300"
 						>
 							<span className="block">{item.name}</span>
-						</a>
+						</Link>
 					))}
 					<div className="flex w-full flex-col gap-4">
 						<NavbarButton
 							onClick={() => setIsMobileMenuOpen(false)}
 							variant="primary"
+							href="/login"
 							className="w-full"
 						>
 							Login
@@ -96,6 +102,7 @@ export function NavbarDemo() {
 						<NavbarButton
 							onClick={() => setIsMobileMenuOpen(false)}
 							variant="primary"
+							href="/signup"
 							className="w-full"
 						>
 							Book a call
