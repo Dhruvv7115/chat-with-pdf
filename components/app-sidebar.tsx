@@ -49,7 +49,7 @@ const AppSidebar = () => {
 						className="flex items-center gap-2 font-bold text-lg"
 					>
 						<div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-							<GalleryVerticalEndIcon className="size-5 stroke-1.5" />
+							<GalleryVerticalEndIcon strokeWidth={1.5} className="size-5 stroke-1.5" />
 						</div>
 						ChatWithPDF
 					</Link>
