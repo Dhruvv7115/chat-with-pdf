@@ -21,16 +21,20 @@ import { cn } from "@/lib/utils";
 export function NavbarDemo() {
 	const navItems = [
 		{
+			name: "Home",
+			link: "#hero",
+		},
+		{
+			name: "How it works?",
+			link: "#how-it-works",
+		},
+		{
 			name: "Features",
 			link: "#features",
 		},
 		{
 			name: "Pricing",
 			link: "#pricing",
-		},
-		{
-			name: "Testimonials",
-			link: "#testimonials",
 		},
 	];
 

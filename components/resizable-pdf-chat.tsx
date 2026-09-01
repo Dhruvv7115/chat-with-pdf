@@ -14,6 +14,7 @@ import { FileType } from "@/lib/generated/prisma/enums";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { PdfViewerProvider } from "@/hooks/pdf-viewer-context";
 
 const ResizablePdfChat = ({
 	doc,
@@ -96,35 +97,37 @@ const ResizablePdfChat = ({
 	}
 
 	return (
-		<ResizablePanelGroup
-			orientation="horizontal"
-			className="w-full h-full"
-		>
-			<ResizablePanel
-				defaultSize={50}
-				className="h-full overflow-hidden"
+		<PdfViewerProvider>
+			<ResizablePanelGroup
+				orientation="horizontal"
+				className="w-full h-full"
 			>
-				{doc?.fileType === FileType.PDF ? (
-					<ReactPdf docUrl={docUrl || ""} />
-				) : (
-					<MarkdownViewer
-						docUrl={docUrl || ""}
+				<ResizablePanel
+					defaultSize={50}
+					className="h-full overflow-hidden"
+				>
+					{doc?.fileType === FileType.PDF ? (
+						<ReactPdf docUrl={docUrl || ""} />
+					) : (
+						<MarkdownViewer
+							docUrl={docUrl || ""}
+							doc={doc}
+						/>
+					)}
+				</ResizablePanel>
+				<ResizableHandle withHandle />
+				<ResizablePanel
+					defaultSize={50}
+					className="h-full overflow-hidden"
+				>
+					<ChatAi
+						chat={chat}
+						docUrl={docUrl}
 						doc={doc}
 					/>
-				)}
-			</ResizablePanel>
-			<ResizableHandle withHandle />
-			<ResizablePanel
-				defaultSize={50}
-				className="h-full overflow-hidden"
-			>
-				<ChatAi
-					chat={chat}
-					docUrl={docUrl}
-					doc={doc}
-				/>
-			</ResizablePanel>
-		</ResizablePanelGroup>
+				</ResizablePanel>
+			</ResizablePanelGroup>
+		</PdfViewerProvider>
 	);
 };
 
