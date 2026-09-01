@@ -6,37 +6,38 @@ import { cn } from "@/lib/utils";
 
 const HeroCta = () => {
 	return (
-		<div className="flex items-center gap-2">
-			<Link href="#">
+		<div className="flex items-center w-full justify-center gap-2 sm:px-0 px-4">
+			<Link href="/login">
 				<button
 					className={cn(
-						"dark:bg-neutral-900 hover:bg-black/90 bg-neutral-900/80",
-						"text-sm font-semibold text-white",
-						"border border-transparent",
-						"rounded-full px-6 py-3",
-						"shadow-[inset_0px_1px_0px_0px_#FFFFFF40,inset_0px_-1px_0px_0px_#FFFFFF40]",
-            "active:scale-95 cursor-pointer",
+						"hover:bg-black/80 bg-neutral-900",
+						"text-sm font-normal tracking-wide",
+						"text-primary-foreground dark:text-secondary-foreground",
+						"h-9 w-32",
+						"rounded-full px-5",
+						"shadow-[inset_0px_1px_0px_0px_#FFFFFF40,inset_0px_-1px_0px_0px_#FFFFFF40] dark:shadow-[inset_0px_1px_0px_0px_#FFFFFF40,inset_0px_-1px_0px_0px_#FFFFFF40]",
 						"flex items-center justify-center",
-            "transition duration-200 ease-in-out",
-						"relative z-10",
+						"transition-all ease-in-out duration-200 active:scale-95 cursor-pointer",
 					)}
 				>
-					How it works? 
+					Log in
 				</button>
 			</Link>
 			<Link href="/signup">
 				<button
 					className={cn(
-						"hover:bg-lime-700 bg-lime-600",
-						"text-sm font-semibold text-white",
-						"rounded-full px-6 py-3",
-            "active:scale-95 cursor-pointer",
-						"shadow-[inset_0px_0px_10px_0px_rgba(0,0,0,0.4)]",
-						"transition-all duration-200 ease-in-out",
+						"flex items-center justify-center",
+						"text-sm font-normal tracking-wide",
+						"text-primary-foreground dark:text-secondary-foreground",
+						"h-9 w-fit",
+						"shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)]",
+						"rounded-full px-4",
+						"bg-primary hover:bg-primary/80",
+						"transition-all ease-out duration-200 active:scale-95 cursor-pointer"
 					)}
 				>
 					<span className="flex items-center gap-2">
-						Get Started
+						Try for free
 						<ArrowRight
 							strokeWidth={2.5}
 							className="ml-1 size-4 animate-[bounceX_1.5s_infinite]"
@@ -49,3 +50,5 @@ const HeroCta = () => {
 };
 
 export default HeroCta;
+
+
