@@ -2,9 +2,8 @@
 
 const HeroSubheading = () => {
 	return (
-		<p className="max-w-xl my-4 lg:text-xl text-lg text-neutral-600 dark:text-neutral-300 text-center">
-			Upload your files and ask questions, summarize content, and find answers
-			instantly with AI.
+		<p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight">
+			Turn complex documents into clear answers. Upload any file to summarize key findings, extract data, and cite sources in seconds.
 		</p>
 	);
 };
