@@ -68,7 +68,7 @@ export function Footer() {
 						{navColumns.map((col) => (
 							<div
 								key={col.title}
-								className="flex flex-col gap-4 min-w-[100px]"
+								className="flex flex-col gap-4 min-w-25"
 							>
 								<h4 className="text-sm font-semibold text-foreground tracking-tight">
 									{col.title}
