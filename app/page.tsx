@@ -1,6 +1,7 @@
-import { ComponentExample } from "@/components/component-example";
 import { NavbarDemo } from "@/components/landing/navbar";
 import HeroSection from "@/components/landing/hero/hero-section";
+import HowItWorksSection from "@/components/landing/how-it-works/how-it-works-section";
+import FeaturesSection from "@/components/landing/features/features-section";
 import Container from "@/components/container";
 import TestimonialsSection from "@/components/landing/testimonials/testimonials-section";
 import { Footer } from "@/components/landing/footer/footer";
@@ -12,9 +13,8 @@ export default async function Page() {
 				<NavbarDemo />
 			</header>
 			<HeroSection />
-			<section>
-				<ComponentExample />
-			</section>
+			<FeaturesSection />
+			<HowItWorksSection />
 			<TestimonialsSection />
 			<Footer />
 		</Container>
