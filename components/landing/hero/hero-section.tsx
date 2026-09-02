@@ -3,6 +3,7 @@ import { HeroHeading } from "./hero-heading";
 import HeroSubheading from "./hero-subheading";
 import HeroCta from "./hero-cta";
 import { IconBoltFilled } from "@tabler/icons-react";
+import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 
 const HeroSection = () => {
 	return (
@@ -28,6 +29,14 @@ const HeroSection = () => {
 					</div>
 					<HeroCta />
 				</div>
+			</div>
+			<div className="relative px-6 mt-10">
+				<HeroVideoDialog
+					animationStyle="from-center"
+					videoSrc="https://www.youtube.com/embed/qh3NGpYRG3I?si=4rb-zSdDkVK9qxxb"
+					thumbnailSrc="https://startup-template-sage.vercel.app/hero-dark.png"
+					thumbnailAlt="Hero Video"
+				/>
 			</div>
 		</section>
 	);
