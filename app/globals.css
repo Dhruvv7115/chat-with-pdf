@@ -252,10 +252,6 @@ html, body {
   scroll-behavior: smooth;
 }
 
-/* scroll margin offset for sections  */
-section {
-  scroll-margin-top: 100px;
-}
 @keyframes bounceX {
   0%, 100% {
     transform: translateX(-30%);

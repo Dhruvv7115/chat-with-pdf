@@ -10,36 +10,34 @@ import {
 	MobileNavToggle,
 	MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { useState } from "react";
-import { Button } from "../ui/button";
-import { IconBrightness, IconShadow } from "@tabler/icons-react";
-import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "../theme-toggle";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useScrollSpy } from "./scroll-spy-context";
 
 export function NavbarDemo() {
 	const navItems = [
 		{
 			name: "Home",
-			link: "#hero",
+			link: "hero",
 		},
 		{
 			name: "How it works?",
-			link: "#how-it-works",
+			link: "how-it-works",
 		},
 		{
 			name: "Features",
-			link: "#features",
+			link: "features",
 		},
 		{
 			name: "Pricing",
-			link: "#pricing",
+			link: "pricing",
 		},
 	];
 
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+	const { activeSection, scrollToSection } = useScrollSpy();
 	return (
 		<Navbar>
 			{/* Desktop Navigation */}
@@ -87,9 +85,18 @@ export function NavbarDemo() {
 					{navItems.map((item, idx) => (
 						<Link
 							key={`mobile-link-${idx}`}
-							href={item.link}
-							onClick={() => setIsMobileMenuOpen(false)}
-							className="relative text-neutral-600 dark:text-neutral-300"
+							href={`#${item.link}`}
+							onClick={(e) => {
+								e.preventDefault();
+								setIsMobileMenuOpen(false);
+								scrollToSection(item.link);
+							}}
+							className={cn(
+								"relative",
+								activeSection === item.link
+									? "text-primary"
+									: "text-neutral-600 dark:text-neutral-300",
+							)}
 						>
 							<span className="block">{item.name}</span>
 						</Link>
