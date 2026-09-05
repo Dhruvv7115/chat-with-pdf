@@ -20,6 +20,8 @@ import {
 	SelectValue,
 	SelectContent,
 	SelectItem,
+	SelectLabel,
+	SelectGroup,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
@@ -40,7 +42,7 @@ const PreferencesSection = () => {
 				"flex flex-col h-full rounded-3xl p-2",
 				"border border-neutral-100 dark:border-neutral-800",
 				"bg-white dark:bg-neutral-900",
-				"lg:col-span-2 col-span-1"
+				"lg:col-span-2 col-span-1",
 			)}
 		>
 			<CardHeader className="rounded-xl bg-neutral-200 dark:bg-neutral-800 py-4">
@@ -50,7 +52,7 @@ const PreferencesSection = () => {
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full p-0">
+			<CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full p-2">
 				{/* Theme */}
 				<div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 bg-muted">
 					<div>
@@ -85,8 +87,11 @@ const PreferencesSection = () => {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="en">English</SelectItem>
-							<SelectItem value="hi">Hindi</SelectItem>
+							<SelectGroup>
+								<SelectLabel>Languages</SelectLabel>
+								<SelectItem value="en">English</SelectItem>
+								<SelectItem value="hi">Hindi</SelectItem>
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>
@@ -113,11 +118,14 @@ const PreferencesSection = () => {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="sans">Geist Sans</SelectItem>
-							<SelectItem value="inter">Inter</SelectItem>
-							<SelectItem value="mono">Geist Mono</SelectItem>
-							<SelectItem value="jet-mono">Jet Mono</SelectItem>
-							<SelectItem value="literata">Literata</SelectItem>
+							<SelectGroup>
+								<SelectLabel>Fonts</SelectLabel>
+								<SelectItem value="sans">Geist Sans</SelectItem>
+								<SelectItem value="inter">Inter</SelectItem>
+								<SelectItem value="mono">Geist Mono</SelectItem>
+								<SelectItem value="jet-mono">Jet Mono</SelectItem>
+								<SelectItem value="literata">Literata</SelectItem>
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>
@@ -144,10 +152,13 @@ const PreferencesSection = () => {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="14px">Small</SelectItem>
-							<SelectItem value="15px">Medium</SelectItem>
-							<SelectItem value="16px">Large</SelectItem>
-							<SelectItem value="18px">Extra Large</SelectItem>
+							<SelectGroup>
+								<SelectLabel>Font Sizes</SelectLabel>
+								<SelectItem value="14px">Small</SelectItem>
+								<SelectItem value="15px">Medium</SelectItem>
+								<SelectItem value="16px">Large</SelectItem>
+								<SelectItem value="18px">Extra Large</SelectItem>
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>
@@ -174,9 +185,12 @@ const PreferencesSection = () => {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="concise">Concise</SelectItem>
-							<SelectItem value="balanced">Balanced</SelectItem>
-							<SelectItem value="detailed">Detailed</SelectItem>
+							<SelectGroup>
+								<SelectLabel>Response Styles</SelectLabel>
+								<SelectItem value="concise">Concise</SelectItem>
+								<SelectItem value="balanced">Balanced</SelectItem>
+								<SelectItem value="detailed">Detailed</SelectItem>
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 				</div>

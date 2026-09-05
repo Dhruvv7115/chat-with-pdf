@@ -49,7 +49,10 @@ const AppSidebar = () => {
 						className="flex items-center gap-2 font-bold text-lg"
 					>
 						<div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-							<GalleryVerticalEndIcon strokeWidth={1.5} className="size-5 stroke-1.5" />
+							<GalleryVerticalEndIcon
+								strokeWidth={1.5}
+								className="size-5 stroke-1.5"
+							/>
 						</div>
 						ChatWithPDF
 					</Link>
@@ -58,39 +61,52 @@ const AppSidebar = () => {
 			<SidebarContent className="overflow-hidden">
 				<SidebarGroup id="group-1">
 					<SidebarGroupContent className="flex flex-col">
-						{sidebarContents.group1.map((item) => (
-							<Link
-								key={item.name}
-								href={item.href}
-								onMouseEnter={() => setHovered(item.name)}
-								onMouseLeave={() => setHovered("")}
-								className={cn(
-									"flex items-center justify-start font-normal gap-2 text-sm px-4 py-2 rounded-md relative z-50 bg-transparent",
-									location === item.href &&
-										"bg-primary text-secondary font-medium",
-								)}
-							>
-								{hovered === item.name && location !== item.href && (
-									<motion.span
-										className="absolute inset-0 -z-20 bg-neutral-500/10 rounded-md"
-										layoutId="hovered-span"
-										transition={{
-											type: "tween",
-											duration: 0.3,
-										}}
-									/>
-								)}
-								<item.icon className="size-5 stroke-[1.5]" />
-								<motion.span
-									animate={{
-										x: hovered === item.name && location !== item.href ? 4 : 0,
-									}}
-									transition={{ type: "tween", duration: 0.2 }}
+						{sidebarContents.group1.map((item) => {
+							const activePage = location === item.href;
+							return (
+								<Link
+									key={item.name}
+									href={item.href}
+									onMouseEnter={() => setHovered(item.name)}
+									onMouseLeave={() => setHovered("")}
+									className={cn(
+										"flex items-center justify-start font-normal gap-2 text-sm px-4 py-2 rounded-md relative bg-transparent",
+										activePage && "text-secondary dark:text-neutral-200 font-medium",
+									)}
 								>
-									{item.name}
-								</motion.span>
-							</Link>
-						))}
+									{activePage && (
+										<motion.span
+											className="absolute inset-0 -z-10 bg-primary rounded-md"
+											layoutId="active-span"
+											transition={{
+												type: "tween",
+												duration: 0.3,
+											}}
+										/>
+									)}
+									{hovered === item.name && location !== item.href && (
+										<motion.span
+											className="absolute inset-0 -z-10 bg-neutral-500/10 rounded-md"
+											layoutId="hovered-span"
+											transition={{
+												type: "tween",
+												duration: 0.3,
+											}}
+										/>
+									)}
+									<item.icon className="size-5 stroke-[1.5]" />
+									<motion.span
+										animate={{
+											x:
+												hovered === item.name && location !== item.href ? 4 : 0,
+										}}
+										transition={{ type: "tween", duration: 0.2 }}
+									>
+										{item.name}
+									</motion.span>
+								</Link>
+							);
+						})}
 					</SidebarGroupContent>
 				</SidebarGroup>
 				<ChatList />
