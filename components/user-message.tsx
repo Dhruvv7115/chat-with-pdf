@@ -25,7 +25,7 @@ const UserMessage = ({ message }: { message: Message }) => {
 				} as React.CSSProperties
 			}
 		>
-			<Bubble variant="tinted">
+			<Bubble variant="default">
 				<BubbleContent>{message.content}</BubbleContent>
 			</Bubble>
 		</div>
