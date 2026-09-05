@@ -2,7 +2,7 @@ import { publicProcedure, createTRPCRouter, protectedProcedure } from "../init";
 import z from "zod";
 import { client } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
-import { hashPassword } from "@/utils/bcrypt";
+import { hashPassword, verifyPassword } from "@/utils/bcrypt";
 import { uploadUserImage } from "@/utils/s3";
 
 export const userRouter = createTRPCRouter({
@@ -113,4 +113,45 @@ export const userRouter = createTRPCRouter({
 		console.log("user", user);
 		return user;
 	}),
+
+	updatePassword: protectedProcedure
+		.input(
+			z.object({
+				currentPassword: z.string().min(1, "Current password is required"),
+				newPassword: z.string().min(8, "New password must be at least 8 characters"),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const user = await client.user.findUnique({
+				where: { id: ctx.userId },
+			});
+
+			if (!user || !user.password) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Account does not have a password configured",
+				});
+			}
+
+			const isCurrentPasswordValid = await verifyPassword(
+				input.currentPassword,
+				user.password,
+			);
+
+			if (!isCurrentPasswordValid) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Current password is incorrect",
+				});
+			}
+
+			const hashedPassword = await hashPassword(input.newPassword);
+
+			await client.user.update({
+				where: { id: ctx.userId },
+				data: { password: hashedPassword },
+			});
+
+			return { success: true };
+		}),
 });
