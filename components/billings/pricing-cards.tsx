@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
 	Card,
@@ -18,8 +20,8 @@ export default function PricingCards({
 	setLoading,
 	handleCheckout,
 }: {
-	loading: boolean;
-	setLoading: (l: boolean) => void;
+	loading?: boolean;
+	setLoading?: (l: boolean) => void;
 	handleCheckout: () => void;
 }) {
 	const [clickedPlan, setClickedPlan] = useState<string>("");
@@ -30,19 +32,19 @@ export default function PricingCards({
 	}));
 
 	return (
-		<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
+		<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border-border lg:p-6 md:p-4 p-2 relative">
 			<span className={cn("-top-0.5 -left-0.5", commonDotStyles)}></span>
 			<span className={cn("-top-0.5 -right-0.5", commonDotStyles)}></span>
 			<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)}></span>
 			<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)}></span>
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-6 mx-auto max-w-7xl">
+			<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-x-3 gap-y-6 mx-auto max-w-7xl">
 				{PLANS_WITH_CURRENT.map((plan) => {
 					if (!plan.available) {
 						return (
 							<Card
 								key={plan.name}
 								className={cn(
-									"flex flex-col h-full rounded-3xl p-2",
+									"flex flex-col h-full rounded-3xl p-2 max-w-xl w-full mx-auto",
 									plan.current && "bg-neutral-800 dark:bg-neutral-300",
 								)}
 							>
@@ -54,10 +56,10 @@ export default function PricingCards({
 											: "bg-muted dark:bg-neutral-800",
 									)}
 								>
-									<div className="flex items-center justify-between gap-2">
+									<div className="flex items-start justify-between gap-2 min-h-[32px]">
 										<CardTitle
 											className={cn(
-												"text-base md:text-2xl  font-bold",
+												"text-base md:text-2xl font-bold",
 												plan.current && "text-white dark:text-neutral-900",
 											)}
 										>
@@ -66,7 +68,7 @@ export default function PricingCards({
 										{plan.current && (
 											<Badge
 												className={cn(
-													"w-fit text-xs mb-2",
+													"w-fit text-xs",
 													"text-neutral-200 dark:text-neutral-800",
 												)}
 											>
@@ -76,7 +78,7 @@ export default function PricingCards({
 									</div>
 									<CardDescription
 										className={cn(
-											"text-sm lg:text-base max-w-xs",
+											"text-sm lg:text-base max-w-xs min-h-12", // <-- ensures 1-line text takes the same vertical space as 2 lines
 											plan.current && "text-neutral-200 dark:text-neutral-500",
 										)}
 									>
@@ -178,7 +180,7 @@ export default function PricingCards({
 						<Card
 							key={plan.name}
 							className={cn(
-								"flex flex-col h-full rounded-3xl p-2",
+								"flex flex-col h-full rounded-3xl p-2 max-w-xl w-full mx-auto",
 								plan.current && "bg-neutral-800 dark:bg-neutral-300",
 							)}
 						>
