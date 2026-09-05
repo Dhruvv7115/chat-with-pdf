@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
 import SectionHeader from "../section-header";
 
@@ -55,13 +54,13 @@ export function HowItWorksSection() {
 	return (
 		<section
 			id="how-it-works"
-			className="w-full border-t bg-background pt-16 text-accent-foreground"
+			className="w-full scroll-mt-24 bg-background text-accent-foreground"
 		>
 			<SectionHeader
 				heading="How It Works?"
 				description="Four simple steps from dense documents to verified answers and page citations."
 			/>
-			<div className="px-6 border-t relative mt-16 border-y">
+			<div className="px-6 relative">
 				<StickyScroll content={content} />
 			</div>
 		</section>

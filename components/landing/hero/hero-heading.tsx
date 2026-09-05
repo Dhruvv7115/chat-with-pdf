@@ -22,7 +22,7 @@ export function HeroHeading() {
 					initial={{ scaleX: 0 }}
 					animate={{ scaleX: 1 }}
 					transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-					className="absolute inset-x-0 -bottom-1.5 h-8 -z-10 origin-left bg-lime-400/80 dark:bg-lime-700/80 hidden sm:inline-block"
+					className="absolute inset-x-0 -bottom-1 lg:-bottom-1.5 xl:h-8 lg:h-7 h-5 -z-10 origin-left bg-lime-400/80 dark:bg-lime-700/80 inline-block"
 				/>
 				PDFs
 			</span>
@@ -32,7 +32,7 @@ export function HeroHeading() {
 					initial={{ scaleX: 0 }}
 					animate={{ scaleX: 1 }}
 					transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-					className="absolute inset-x-0 -bottom-1.5 h-8 -z-10 origin-left bg-lime-400/80 dark:bg-lime-700/80 hidden sm:inline-block"
+					className="absolute inset-x-0 -bottom-1 lg:-bottom-1.5 xl:h-8 lg:h-7 h-5 -z-10 origin-left bg-lime-400/80 dark:bg-lime-700/80 inline-block"
 				/>
 				research papers & reports
 			</span>

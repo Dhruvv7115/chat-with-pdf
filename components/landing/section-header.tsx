@@ -1,3 +1,4 @@
+"use client";
 import { motion } from "motion/react";
 const SectionHeader = ({
 	heading,
@@ -7,7 +8,7 @@ const SectionHeader = ({
 	description: string;
 }) => {
 	return (
-		<div className="mx-auto flex max-w-xl md:max-w-3xl flex-col items-center justify-center gap-4 px-16 md:px-6 text-center">
+		<div className="border-y border-border w-full h-full p-10 md:p-14 flex flex-col items-center gap-4">
 			<div className="relative inline-flex items-center justify-center px-4 py-3 z-10">
 				<motion.span
 					className="inline-block dark:bg-neutral-950/40 bg-white p-2 backdrop-blur-md absolute -z-10 inset-0"
