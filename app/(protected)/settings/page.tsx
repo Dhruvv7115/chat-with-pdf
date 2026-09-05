@@ -19,21 +19,20 @@ export default function SettingsPage() {
 						Manage your account preferences
 					</p>
 				</div>
-				
-				{/* Profile */}
-				<ProfileSection />
 
-				{/* ── Preferences ── */}
-				<PreferencesSection />
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+					{/* Profile and Password Cards */}
+					<ProfileSection />
+					<PasswordSection />
 
-				{/* Password */}
-				<PasswordSection />
+					{/* ── Preferences ── */}
+					<PreferencesSection />
 
-				{/* Connected accounts */}
-				<AccountsSection />
+					{/* Connected accounts and Danger zone */}
+					<AccountsSection />
 
-				{/* Danger zone */}
-				<DangerZone />
+					<DangerZone />
+				</div>
 			</div>
 		</div>
 	);
