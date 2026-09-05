@@ -10,7 +10,6 @@ import {
 	Instrument_Serif,
 } from "next/font/google";
 import { Providers } from "./providers";
-import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -57,13 +56,6 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${jetBrainsMono.variable} ${inter.variable} ${instrumentSerif.variable} antialiased`}
 			>
-				<Toaster
-					richColors
-					position="top-center"
-					toastOptions={{
-						duration: 3000,
-					}}
-				/>
 				<Providers>{children}</Providers>
 			</body>
 		</html>
