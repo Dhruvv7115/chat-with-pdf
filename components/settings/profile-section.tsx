@@ -5,12 +5,11 @@ import { api } from "@/trpc/client";
 import { useRefetch } from "@/hooks/use-refetch";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { commonDotStyles } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { AnimatePresence, motion } from "motion/react";
 import {
 	Card,
 	CardContent,
@@ -18,6 +17,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "../ui/card";
+import { IconCheck, IconLoader } from "@tabler/icons-react";
 function getInitials(firstName?: string | null, lastName?: string | null) {
 	return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
 }
@@ -39,7 +39,6 @@ const ProfileSection = () => {
 	const [userAvatar, setUserAvatar] = useState<string>("");
 	const [userAvatarFile, setUserAvatarFile] = useState<File>();
 	function handleSaveProfile() {
-		// TODO: call your tRPC mutation here e.g. api.user.updateProfile.mutate(...)
 		if (
 			!firstName.trim() &&
 			!lastName.trim() &&
@@ -66,6 +65,9 @@ const ProfileSection = () => {
 			onSuccess: () => {
 				refetch();
 				toast.success("Profile updated successfully");
+				setTimeout(() => {
+					updateProfile.reset();
+				}, 2000);
 			},
 			onError: (error) => {
 				toast.error(error.message);
@@ -73,100 +75,182 @@ const ProfileSection = () => {
 		});
 	}
 	return (
-		<div className="w-full bg-muted dark:bg-neutral-800 border-dashed border border-neutral-300 lg:p-6 md:p-4 p-2 relative">
-			<span className={cn("-top-0.5 -left-0.5", commonDotStyles)} />
-			<span className={cn("-top-0.5 -right-0.5", commonDotStyles)} />
-			<span className={cn("-bottom-0.5 -left-0.5", commonDotStyles)} />
-			<span className={cn("-bottom-0.5 -right-0.5", commonDotStyles)} />
+		<Card
+			className={cn(
+				"flex flex-col h-full rounded-3xl p-2",
+				"border border-neutral-100 dark:border-neutral-800",
+				"bg-white dark:bg-neutral-900",
+				"col-span-1"
+			)}
+		>
+			<CardHeader className="rounded-xl bg-neutral-200 dark:bg-neutral-800 py-4">
+				<CardTitle className="text-base font-medium">Profile</CardTitle>
+				<CardDescription>
+					Manage your personal information and profile picture
+				</CardDescription>
+			</CardHeader>
 
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-base font-medium">Profile</CardTitle>
-					<CardDescription>
-						Manage your personal information and profile picture
-					</CardDescription>
-				</CardHeader>
+			<CardContent className="flex flex-col items-start justify-center gap-4">
+				{/* Avatar */}
+				<div className="flex items-center gap-4">
+					<Avatar className="w-16 h-16">
+						<AvatarImage
+							src={
+								userAvatar.trim() !== ""
+									? userAvatar
+									: (user?.avatar ?? undefined)
+							}
+						/>
+						<AvatarFallback className="text-lg">
+							{getInitials(firstName, lastName)}
+						</AvatarFallback>
+					</Avatar>
 
-				<CardContent className="space-y-6">
-					{/* Avatar */}
-					<div className="flex items-center gap-4">
-						<Avatar className="w-16 h-16">
-							<AvatarImage
-								src={
-									userAvatar.trim() !== ""
-										? userAvatar
-										: (user?.avatar ?? undefined)
-								}
+					<div>
+						<p className="text-sm font-medium">
+							{profile?.firstName} {profile?.lastName}{" "}
+							{!profile?.firstName && !profile?.lastName && user?.name}
+						</p>
+
+						<p className="text-xs text-muted-foreground mb-2">{user?.email}</p>
+
+						<Button
+							variant="secondary"
+							size="sm"
+							className="text-xs h-7 relative"
+						>
+							<input
+								type="file"
+								accept="image/*"
+								className="inset-0 absolute opacity-0 cursor-pointer"
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+
+									if (file) {
+										setUserAvatarFile(file);
+										setUserAvatar(URL.createObjectURL(file));
+									}
+								}}
 							/>
-							<AvatarFallback className="text-lg">
-								{getInitials(firstName, lastName)}
-							</AvatarFallback>
-						</Avatar>
+							Change avatar
+						</Button>
+					</div>
+				</div>
 
-						<div>
-							<p className="text-sm font-medium">
-								{profile?.firstName} {profile?.lastName}{" "}
-								{!profile?.firstName && !profile?.lastName && user?.name}
-							</p>
+				{/* Name */}
+				<div className="grid sm:grid-cols-2 grid-cols-1 gap-4 w-full">
+					<div className="flex flex-col gap-1.5">
+						<Label className="text-xs">First name</Label>
 
-							<p className="text-xs text-muted-foreground mb-2">
-								{user?.email}
-							</p>
+						<Input
+							value={firstName}
+							onChange={(e) => setFirstName(e.target.value)}
+							placeholder="John"
+						/>
+					</div>
 
-							<Button
-								variant="outline"
-								size="sm"
-								className="text-xs h-7 relative"
-							>
-								<input
-									type="file"
-									accept="image/*"
-									className="inset-0 absolute opacity-0 cursor-pointer"
-									onChange={(e) => {
-										const file = e.target.files?.[0];
+					<div className="flex flex-col gap-1.5">
+						<Label className="text-xs">Last name</Label>
 
-										if (file) {
-											setUserAvatarFile(file);
-											setUserAvatar(URL.createObjectURL(file));
-										}
+						<Input
+							value={lastName}
+							onChange={(e) => setLastName(e.target.value)}
+							placeholder="Doe"
+						/>
+					</div>
+				</div>
+
+				<div className="flex justify-end">
+					<Button
+						onClick={handleSaveProfile}
+						disabled={updateProfile.isPending || updateProfile.isSuccess}
+						className="w-32 relative overflow-hidden transition-none"
+					>
+						<AnimatePresence
+							initial={false}
+							mode="wait"
+						>
+							{updateProfile.isSuccess ? (
+								<motion.div
+									key="success"
+									initial={{ width: 0, opacity: 0 }}
+									animate={{ width: "auto", opacity: 1 }}
+									exit={{ width: 0, opacity: 0 }}
+									transition={{
+										duration: 0.25,
+										ease: "easeInOut",
 									}}
-								/>
-								Change avatar
-							</Button>
-						</div>
-					</div>
+									className="flex items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap text-neutral-50"
+								>
+									<motion.svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth={2}
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										className="size-4"
+									>
+										<motion.path
+											d="M5 12l5 5L20 7"
+											initial={{ pathLength: 0 }}
+											animate={{ pathLength: 1 }}
+											transition={{
+												duration: 0.4,
+												ease: "easeInOut",
+											}}
+										/>
+									</motion.svg>
 
-					<Separator />
-
-					{/* Name */}
-					<div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-xs">First name</Label>
-
-							<Input
-								value={firstName}
-								onChange={(e) => setFirstName(e.target.value)}
-								placeholder="John"
-							/>
-						</div>
-
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-xs">Last name</Label>
-
-							<Input
-								value={lastName}
-								onChange={(e) => setLastName(e.target.value)}
-								placeholder="Doe"
-							/>
-						</div>
-					</div>
-
-					<div className="flex justify-end">
-						<Button onClick={handleSaveProfile}>Save changes</Button>
-					</div>
-				</CardContent>
-			</Card>
-		</div>
+									<motion.span
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										transition={{
+											duration: 0.4,
+											ease: "easeInOut",
+										}}
+									>
+										Saved
+									</motion.span>
+								</motion.div>
+							) : updateProfile.isPending ? (
+								<motion.div
+									key="loader"
+									initial={{ width: 0, opacity: 0 }}
+									animate={{ width: "auto", opacity: 1 }}
+									exit={{ width: 0, opacity: 0 }}
+									transition={{
+										duration: 0.25,
+										ease: "easeInOut",
+									}}
+									className="flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap"
+								>
+									<IconLoader className="size-3.5 animate-spin" />
+									<span>Saving...</span>
+								</motion.div>
+							) : (
+								<motion.div
+									key="text"
+									initial={{ width: 0, opacity: 0 }}
+									animate={{ width: "auto", opacity: 1 }}
+									exit={{ width: 0, opacity: 0 }}
+									transition={{
+										duration: 0.25,
+										ease: "easeInOut",
+									}}
+									className="flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap"
+								>
+									<span>Save changes</span>
+								</motion.div>
+							)}
+						</AnimatePresence>
+					</Button>
+				</div>
+			</CardContent>
+		</Card>
 	);
 };
 
