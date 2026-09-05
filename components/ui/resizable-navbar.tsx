@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 
 import React, { useRef, useState, createContext, useContext } from "react";
+import { useScrollSpy } from "../landing/scroll-spy-context";
 
 const NavbarVisibilityContext = createContext<boolean>(false);
 
@@ -74,7 +75,10 @@ export const Navbar = ({ children, className }: NavbarProps) => {
 			<motion.div
 				ref={ref}
 				// IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-				className={cn("mx-auto max-w-7xl lg:rounded-2xl rounded-none transition-all duration-300 shadow-none w-full border-b lg:border-0 z-100 lg:bg-transparent px-0 lg:px-6 bg-background", className)}
+				className={cn(
+					"mx-auto max-w-7xl lg:rounded-2xl rounded-none transition-all duration-300 shadow-none w-full border-b lg:border-0 z-100 lg:bg-transparent px-0 lg:px-6 bg-background",
+					className,
+				)}
 			>
 				{React.Children.map(children, (child) =>
 					React.isValidElement(child)
@@ -121,32 +125,40 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
 };
 
 export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
-	const [hovered, setHovered] = useState<number | null>(null);
+	const { activeSection, scrollToSection } = useScrollSpy();
 
 	return (
 		<motion.div
-			onMouseLeave={() => setHovered(null)}
 			className={cn(
 				"absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2",
 				className,
 			)}
 		>
 			{items.map((item, idx) => (
-				<a
-					onMouseEnter={() => setHovered(idx)}
-					onClick={onItemClick}
-					className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300"
+				<Link
+					onClick={(e) => {
+						e.preventDefault();
+						onItemClick?.();
+						scrollToSection(item.link);
+					}}
+					className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-800 hover:font-medium dark:hover:text-neutral-100 dark:hover:font-medium transition-all duration-200 ease-in-out"
 					key={`link-${idx}`}
-					href={item.link}
+					href={`#${item.link}`}
 				>
-					{hovered === idx && (
+					{activeSection === item.link && (
 						<motion.div
-							layoutId="hovered"
-							className="absolute inset-0 h-full w-full rounded-full bg-neutral-100 dark:bg-neutral-900"
+							layoutId="active-section"
+							transition={{
+								type: "spring",
+								stiffness: 500,
+								damping: 35,
+								mass: 0.8,
+							}}
+							className="pointer-events-none absolute inset-0 h-full w-full rounded-full dark:bg-accent/60 bg-neutral-200/60 dark:border-border  border border-border/40"
 						/>
 					)}
 					<span className="relative z-20">{item.name}</span>
-				</a>
+				</Link>
 			))}
 		</motion.div>
 	);
