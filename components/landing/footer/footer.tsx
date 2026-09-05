@@ -37,7 +37,7 @@ const navColumns = [
 
 export function Footer() {
 	return (
-		<footer className="w-full bg-background text-foreground relative overflow-hidden">
+		<footer id="footer" className="w-full bg-background text-foreground relative overflow-hidden">
 			{/* Top Container */}
 			<div className="mx-auto w-full max-w-7xl px-8 pt-16 pb-8 md:px-12">
 				<div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between">

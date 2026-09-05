@@ -14,7 +14,7 @@ export function PageCitationsCard({ className }: { className?: string }) {
 	return (
 		<div
 			className={cn(
-				"flex flex-col items-center justify-center min-h-150 md:min-h-125 p-0.5 relative group cursor-pointer max-h-100 group",
+				"flex flex-col items-center justify-center min-h-150 md:min-h-125 p-0.5 relative group cursor-pointer max-h-100 group border-t border-l-0 md:border-l md:border-t-0 border-border",
 				className,
 			)}
 		>
