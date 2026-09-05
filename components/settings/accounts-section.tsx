@@ -31,7 +31,7 @@ const AccountsSection = () => {
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="w-full flex flex-col items-center justify-center p-0 gap-2">
+			<CardContent className="w-full flex flex-col items-center justify-center lg:p-2 p-0 gap-2">
 				{/* Google */}
 				<div className="flex items-center justify-between rounded-lg px-4 py-3 w-full bg-muted border-0">
 					<div className="flex items-center gap-3">

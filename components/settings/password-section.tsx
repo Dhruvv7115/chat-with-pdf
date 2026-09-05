@@ -71,7 +71,7 @@ const PasswordSection = () => {
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="flex flex-col gap-4 items-start justify-center">
+			<CardContent className="flex flex-col gap-4 items-start justify-center p-2">
 				<div className="flex flex-col gap-1.5 w-full">
 					<Label className="text-xs">Current password</Label>
 

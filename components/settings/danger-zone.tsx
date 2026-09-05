@@ -48,7 +48,7 @@ const DangerZone = () => {
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="flex flex-col gap-4 w-full p-0">
+			<CardContent className="flex flex-col gap-4 w-full lg:p-2 p-0">
 				{/* Delete PDFs */}
 				<div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 bg-muted shadow-[inset_1px_1px_2px_0_rgba(255,0,0,0.1),inset_-1px_-1px_2px_0_rgba(255,0,0,0.1)]">
 					<div>

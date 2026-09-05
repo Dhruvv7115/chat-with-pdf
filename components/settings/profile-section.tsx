@@ -90,7 +90,7 @@ const ProfileSection = () => {
 				</CardDescription>
 			</CardHeader>
 
-			<CardContent className="flex flex-col items-start justify-center gap-4">
+			<CardContent className="flex flex-col items-start justify-center gap-4 p-2">
 				{/* Avatar */}
 				<div className="flex items-center gap-4">
 					<Avatar className="w-16 h-16">
