@@ -247,6 +247,7 @@ const ChatAi = ({
 		<div className="flex h-full w-full flex-col items-center justify-between">
 			<MessageScrollerProvider
 				autoScroll={preferences.autoScroll}
+				scrollPreviousItemPeek={64}
 				defaultScrollPosition="end"
 			>
 				<MessageScroller className="w-full flex-1">
@@ -273,6 +274,10 @@ const ChatAi = ({
 									<MessageScrollerItem
 										key={message.id}
 										messageId={message.id}
+										scrollAnchor={
+											message.role === "USER" &&
+											message.id === displayMessages[displayMessages.length - 1]?.id
+										}
 									>
 										{message.role === "USER" ? (
 											<UserMessage message={message} />
