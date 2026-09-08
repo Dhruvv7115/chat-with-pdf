@@ -8,14 +8,14 @@ import {
 	InputGroupButton,
 	InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { ArrowUp, Mic, MicOff, Plus } from "lucide-react";
+import { ArrowUp, Mic, MicOff } from "lucide-react";
 import { api } from "@/trpc/client";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const ChatInput = ({
 	chatId,
-	onFileUpload,
 }: {
 	chatId: string;
 	setAiResponse?: React.Dispatch<React.SetStateAction<string>>;
@@ -23,7 +23,6 @@ const ChatInput = ({
 }) => {
 	const utils = api.useUtils();
 	const [question, setQuestion] = useState("");
-	const fileInputRef = useRef<HTMLInputElement>(null);
 	const baseQuestionRef = useRef("");
 
 	const createMessage = api.message.createMessage.useMutation({
@@ -59,15 +58,20 @@ const ChatInput = ({
 		if (isListening) {
 			stopListening();
 		}
-		if (!question.trim() || createMessage.isPending) return;
-		const content = question;
+
+		const trimmed = question.trim();
+		if (!trimmed) return;
+		if (createMessage.isPending) return;
+
 		setQuestion("");
 		baseQuestionRef.current = "";
+
 		try {
-			await createMessage.mutateAsync({ chatId, content, role: "USER" });
-		} catch {
-			setQuestion(content); // restore on failure so the user doesn't lose their draft
-			baseQuestionRef.current = content;
+			await createMessage.mutateAsync({ chatId, content: trimmed, role: "USER" });
+		} catch (error: any) {
+			setQuestion(trimmed); // restore on failure so the user doesn't lose their draft
+			baseQuestionRef.current = trimmed;
+			toast.error(error?.message || "Failed to send message");
 		}
 	};
 
@@ -78,25 +82,15 @@ const ChatInput = ({
 		}
 	};
 
+	const canSend = !createMessage.isPending && !!question.trim();
+
 	return (
 		<InputGroup className="p-2 rounded-4xl active:ring-1! ring-lime-500/60! dark:ring-primary/40!">
-			{onFileUpload && (
-				<input
-					ref={fileInputRef}
-					type="file"
-					accept=".pdf,.docx,.doc,.md,.markdown,.txt,.csv"
-					className="hidden"
-					onChange={(e) => {
-						const files = Array.from(e.target.files ?? []);
-						if (files.length) onFileUpload(files);
-						e.target.value = "";
-					}}
-				/>
-			)}
-
 			<InputGroupTextarea
 				id="chat-input-textarea"
-				placeholder={isListening ? "Listening to your voice..." : "Ask anything…"}
+				placeholder={
+					isListening ? "Listening to your voice..." : "Ask anything…"
+				}
 				className={cn(
 					"min-w-0 max-h-[min(40vh,12rem)] overflow-y-auto wrap-break-word text-base!",
 					isListening && "placeholder:text-lime-500/80 placeholder:animate-pulse"
@@ -113,18 +107,6 @@ const ChatInput = ({
 			/>
 
 			<InputGroupAddon align="block-end">
-				{onFileUpload && (
-					<InputGroupButton
-						variant="ghost"
-						size="sm"
-						className="rounded-full p-2"
-						title="Upload a file"
-						onClick={() => fileInputRef.current?.click()}
-					>
-						<Plus size={18} />
-					</InputGroupButton>
-				)}
-
 				<div className="ml-auto flex items-center gap-1.5">
 					<InputGroupButton
 						variant={isListening ? "destructive" : "ghost"}
@@ -152,7 +134,7 @@ const ChatInput = ({
 						variant="default"
 						size="sm"
 						className="rounded-full p-2 cursor-pointer"
-						disabled={createMessage.isPending || !question.trim()}
+						disabled={!canSend}
 						onClick={handleSend}
 					>
 						<ArrowUp size={18} />
