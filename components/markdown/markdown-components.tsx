@@ -3,10 +3,7 @@ import { usePdfViewer } from "@/hooks/pdf-viewer-context";
 import { extractTextFromCode } from "@/utils/markdown";
 import { useTheme } from "next-themes";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-	oneDark,
-	oneLight,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { flexokiDark, flexokiLight } from "@/utils/flexoki-theme";
 export const customComponents = {
 	pre: (props: any) => {
 		const codeElement = props.children;
@@ -16,30 +13,41 @@ export const customComponents = {
 		const language = match?.[1] ?? "text";
 
 		const rawCode = extractTextFromCode(codeElement?.props?.children);
-		const { theme } = useTheme();
+		const { resolvedTheme } = useTheme();
 
 		return (
-			<div className="not-typeset my-6 overflow-hidden rounded-lg border border-border">
+			<div className="not-typeset my-6 overflow-hidden rounded-lg border border-border w-full min-w-0 max-w-full">
 				<CodeBlockHeader
 					language={language}
 					code={rawCode}
 				/>
 
-				<SyntaxHighlighter
-					language={language}
-					style={theme === "dark" ? oneDark : oneLight}
-					PreTag="div"
-					customStyle={{
-						margin: 0,
-						padding: "1rem",
-						background: "transparent",
-					}}
-					codeTagProps={{
-						className: "font-jet-mono text-base",
-					}}
-				>
-					{rawCode.replace(/\n$/, "")}
-				</SyntaxHighlighter>
+				<div className="p-1 max-w-full min-w-0 overflow-x-auto">
+					<SyntaxHighlighter
+						language={language}
+						style={resolvedTheme === "dark" ? flexokiDark : flexokiLight}
+						PreTag="div"
+						customStyle={{
+							margin: 0,
+							padding: "1rem",
+							background:
+								resolvedTheme === "dark" ? "rgb(0,0,0)" : "rgb(255,255,255)",
+							border:
+								resolvedTheme === "dark"
+									? "1px solid lab(15.7305 0.613764 -2.16959)"
+									: "1px solid lab(90.6853 0.399232 -1.45452)",
+
+							borderRadius: "9px",
+							width: "max-content",
+							minWidth: "100%",
+						}}
+						codeTagProps={{
+							className: "font-code text-base block w-fit min-w-full",
+						}}
+					>
+						{rawCode.replace(/\n$/, "")}
+					</SyntaxHighlighter>
+				</div>
 			</div>
 		);
 	},

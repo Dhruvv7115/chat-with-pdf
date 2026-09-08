@@ -30,7 +30,6 @@ export function SignupForm({
 }: React.ComponentProps<"form">) {
 	const router = useRouter();
 	const registerUser = api.user.register.useMutation();
-	const { theme } = useTheme();
 
 	const {
 		register,
