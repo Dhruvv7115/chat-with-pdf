@@ -6,7 +6,6 @@ import { ThemeProvider, useTheme } from "next-themes";
 import { Toaster } from "sonner";
 
 export const Providers = ({ children }: { children: ReactNode }) => {
-	const { theme } = useTheme();
 
 	return (
 		<ThemeProvider

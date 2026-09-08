@@ -14,7 +14,7 @@ import { IconMessage } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "motion/react";
 
 const springTransition = {
-  type: "spring" as const,
+  type: "tween" as const,
   stiffness: 450,
   damping: 35,
 };

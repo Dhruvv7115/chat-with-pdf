@@ -19,7 +19,6 @@ import {
 	MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
 import { usePreferences } from "@/hooks/use-preferences";
-import { Bubble, BubbleContent } from "./ui/bubble";
 import ThinkingIndicator from "./thinking-indicator";
 import { toast } from "sonner";
 
@@ -251,7 +250,7 @@ const ChatAi = ({
 				defaultScrollPosition="end"
 			>
 				<MessageScroller className="w-full flex-1">
-					<MessageScrollerViewport className="scrollbar-none">
+					<MessageScrollerViewport>
 						<MessageScrollerContent className="mx-auto max-w-4xl">
 							{hasNextPage && (
 								<MessageScrollerItem>

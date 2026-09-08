@@ -17,7 +17,7 @@ const ThinkingIndicator = () => {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setWordIndex((i) => (i + 1) % THINKING_WORDS.length);
-		}, 1800);
+		}, 1500);
 		return () => clearInterval(interval);
 	}, []);
 
