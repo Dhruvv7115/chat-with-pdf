@@ -28,6 +28,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist);
   --font-mono: var(--font-geist-mono);
+  --font-code: var(--font-fira-code);
   --font-jet-mono: var(--font-jetbrains-mono);
   --font-inter: var(--font-inter);
   --font-literata: var(--font-literata);
@@ -277,3 +278,27 @@ html, body {
 .animate-marquee-down { animation: marquee-down linear infinite; }
 .group:hover .animate-marquee-up,
 .group:hover .animate-marquee-down { animation-play-state: paused; }
+
+/* Shimmer animation for attachment uploading / processing */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    var(--muted-foreground) 50%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s infinite linear;
+}
