@@ -1,5 +1,4 @@
 import { Role } from "@/lib/generated/prisma/enums";
-import { Check, Copy, Loader2, Square, Volume2 } from "lucide-react";
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -12,6 +11,13 @@ import { customComponents } from "@/components/markdown/markdown-components";
 import { formatMessageContent } from "@/utils/message-formatting";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/utils";
+import {
+	IconCheck,
+	IconCopy,
+	IconLoader2,
+	IconPlayerStopFilled,
+	IconVolume,
+} from "@tabler/icons-react";
 
 type Message = {
 	id: string;
@@ -24,7 +30,13 @@ type Message = {
 
 type TtsState = "idle" | "loading" | "playing";
 
-const AiMessage = ({ message }: { message: Message }) => {
+const AiMessage = ({
+	message,
+	isLatestMessage,
+}: {
+	message: Message;
+	isLatestMessage: boolean;
+}) => {
 	const [copied, setCopied] = useState(false);
 	const [ttsState, setTtsState] = useState<TtsState>("idle");
 
@@ -104,7 +116,7 @@ const AiMessage = ({ message }: { message: Message }) => {
 	}
 	const { preferences } = usePreferences();
 	return (
-		<div className="flex items-center justify-center gap-4 w-full h-fit mb-4">
+		<div className="flex items-center justify-center w-full h-fit mb-4">
 			<div
 				className={cn(
 					"md:px-4 px-2 py-2 max-w-full typeset typeset-chat relative group w-full",
@@ -124,20 +136,25 @@ const AiMessage = ({ message }: { message: Message }) => {
 					{formatMessageContent(message.content)}
 				</ReactMarkdown>
 
-				<div className="flex items-center gap-2">
+				<div
+					className={cn(
+						"flex items-center gap-2 group-hover:opacity-100  transition-opacity duration-300 ease-in-out mt-2",
+						{
+							"opacity-100": isLatestMessage,
+							"opacity-0": !isLatestMessage,
+						},
+					)}
+				>
 					{/* Copy button */}
 					<button
 						onClick={handleCopyAll}
 						title="Copy full text"
-						className="flex group-hover:opacity-100 opacity-0 items-center justify-center text-sm text-gray-500 hover:text-gray-600 transition-colors bg-transparent border-0 cursor-pointer rounded-md"
+						className="flex items-center justify-center text-sm text-neutral-500 hover:text-neutral-600 transition-colors bg-transparent hover:bg-background border-0 cursor-pointer rounded-md p-1"
 					>
 						{copied ? (
-							<Check
-								size={12}
-								style={{ color: "#10b981" }}
-							/>
+							<IconCheck className="size-3.5 text-lime-600" />
 						) : (
-							<Copy size={12} />
+							<IconCopy className="size-3.5" />
 						)}
 					</button>
 
@@ -152,23 +169,17 @@ const AiMessage = ({ message }: { message: Message }) => {
 									: "Read aloud"
 						}
 						disabled={ttsState === "loading"}
-						className="flex group-hover:opacity-100 opacity-0 items-center justify-center text-sm text-gray-500 hover:text-gray-600 transition-colors bg-transparent border-0 cursor-pointer rounded-md disabled:cursor-not-allowed"
+						className="flex items-center justify-center text-sm text-neutral-500 hover:text-neutral-600 transition-colors bg-transparent border-0 cursor-pointer rounded-md disabled:cursor-not-allowed"
 					>
 						{ttsState === "loading" ? (
-							<Loader2
-								size={12}
-								className="animate-spin"
-							/>
+							<IconLoader2 className="animate-spin size-3.5" />
 						) : ttsState === "playing" ? (
-							<Square
-								size={12}
-								style={{ color: "#f59e0b" }}
-							/>
+							<IconPlayerStopFilled className="size-3.5 fill-red-400" />
 						) : (
-							<Volume2 size={12} />
+							<IconVolume className="size-3.5" />
 						)}
 					</button>
-					<span className="flex group-hover:opacity-100 opacity-0 items-center justify-center text-xs text-gray-500 hover:text-gray-600 transition-colors bg-transparent border-0 cursor-pointer rounded-md disabled:cursor-not-allowed">
+					<span className="flex items-center justify-center text-xs text-neutral-500 cursor-default">
 						{formatMessageDate(message.createdAt)}
 					</span>
 				</div>

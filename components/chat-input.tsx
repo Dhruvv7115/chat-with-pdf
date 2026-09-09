@@ -79,7 +79,7 @@ const ChatInput = ({
 	const canSend = chatStatus === "ready" && !!question.trim();
 
 	return (
-		<InputGroup className="p-2 rounded-2xl active:ring-1! ring-lime-500/60! dark:ring-primary/40!">
+		<InputGroup className="p-2 rounded-2xl active:ring-1! ring-lime-500/60! dark:ring-primary/40! max-w-3xl mx-auto">
 			<InputGroupTextarea
 				id="chat-input-textarea"
 				placeholder={

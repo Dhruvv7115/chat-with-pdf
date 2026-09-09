@@ -340,7 +340,13 @@ const ChatAi = ({
 										{message.role === "USER" ? (
 											<UserMessage message={message} />
 										) : (
-											<AiMessage message={message} />
+											<AiMessage
+												message={message}
+												isLatestMessage={
+													message ===
+													displayMessages[displayMessages.length - 1]
+												}
+											/>
 										)}
 									</MessageScrollerItem>
 								))}
@@ -395,7 +401,7 @@ const ChatAi = ({
 				</MessageScroller>
 			</MessageScrollerProvider>
 
-			<div className=" w-full max-w-4xl bg-transparent mb-4">
+			<div className="w-full max-w-4xl bg-transparent pb-4 px-4">
 				<ChatInput
 					chatId={chat.id}
 					chatStatus={chatStatus}
