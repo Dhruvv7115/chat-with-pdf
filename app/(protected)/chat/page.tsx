@@ -21,7 +21,6 @@ const ChatPage = () => {
 		},
 	});
 	const router = useRouter();
-	const sendMessage = api.message.createMessage.useMutation();
 
 	// Upload progress for the dropzone component
 	const [dropzoneProgress, setDropzoneProgress] = useState<number | undefined>(

@@ -1,10 +1,4 @@
-import React, {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AiMessage from "./ai-message";
 import UserMessage from "./user-message";
 import ChatInput from "./chat-input";
@@ -21,6 +15,9 @@ import {
 import { usePreferences } from "@/hooks/use-preferences";
 import ThinkingIndicator from "./thinking-indicator";
 import { toast } from "sonner";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { LoaderThree } from "./ui/loader";
 
 export type Chat = {
 	id: string;
@@ -67,7 +64,10 @@ const ChatAi = ({
 	const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
 		api.chat.getMessages.useInfiniteQuery(
 			{ chatId: chat.id, limit: 20 },
-			{ getNextPageParam: (lastPage) => lastPage.nextCursor },
+			{
+				getNextPageParam: (lastPage) => lastPage.nextCursor,
+				refetchOnWindowFocus: false,
+			},
 		);
 
 	const createMessage = api.message.createMessage.useMutation({
@@ -91,12 +91,38 @@ const ChatAi = ({
 		id: string;
 		content: string;
 	} | null>(null);
-	const [isStreaming, setIsStreaming] = useState(false);
-	const [error, setError] = useState<string>("");
+	const [isSummaryStreaming, setIsSummaryStreaming] = useState(false);
+	const [summaryError, setSummaryError] = useState<string>("");
+	const hasInitializedSdkChat = useRef(false);
+	const {
+		messages: sdkMessages,
+		setMessages: setSdkMessages,
+		sendMessage,
+		status: chatStatus,
+		error,
+		regenerate,
+	} = useChat({
+		id: chat.id,
+		transport: new DefaultChatTransport({ api: "/api/ai/chat" }),
+		throttle: 50,
+	});
+
+	useEffect(() => {
+		if (hasInitializedSdkChat.current || isLoading) return;
+		setSdkMessages(
+			messages.map(
+				(message): UIMessage => ({
+					id: message.id,
+					role: message.role === "USER" ? "user" : "assistant",
+					parts: [{ type: "text", text: message.content }],
+				}),
+			),
+		);
+		hasInitializedSdkChat.current = true;
+	}, [isLoading, messages, setSdkMessages]);
 
 	// Guards against the effect firing more than once for the same trigger,
 	// regardless of how many times `messages`/`preferences` re-render.
-	const respondedToMessageId = useRef<string | null>(null);
 	const hasFetchedSummary = useRef(false);
 
 	const justFinishedStreaming = useRef(false);
@@ -108,8 +134,8 @@ const ChatAi = ({
 		// Case 1: chat has a doc and no messages yet — generate a summary.
 		if (doc && docUrl && messages.length === 0 && !hasFetchedSummary.current) {
 			hasFetchedSummary.current = true;
-			setIsStreaming(true);
-			setError("");
+			setIsSummaryStreaming(true);
+			setSummaryError("");
 			setStreamingMessage({ id: "streaming-response", content: "" });
 
 			fetch("/api/ai/summary", {
@@ -138,21 +164,29 @@ const ChatAi = ({
 						}));
 					}
 
-					await createMessage.mutateAsync({
+					const newMessage = await createMessage.mutateAsync({
 						chatId: chat.id,
 						content,
 						role: "ASSISTANT",
 					});
-					setIsStreaming(false);
+					setSdkMessages((prev) => [
+						...prev,
+						{
+							id: newMessage.id, // returned from mutateAsync
+							role: "assistant",
+							parts: [{ type: "text", text: content }],
+						},
+					]);
+					setIsSummaryStreaming(false);
 					justFinishedStreaming.current = true;
 				})
 				.catch((err) => {
 					console.error(err);
 					hasFetchedSummary.current = false; // allow retry
-					setError(
+					setSummaryError(
 						err.message || "Something went wrong processing this document.",
 					);
-					setIsStreaming(false);
+					setIsSummaryStreaming(false);
 					setStreamingMessage(null);
 					toast.error(err.message);
 				});
@@ -163,59 +197,57 @@ const ChatAi = ({
 		if (!doc && messages.length === 0) return;
 
 		// Case 3: respond to a new user message, once.
-		if (
-			messages.length !== 0 &&
-			lastMessage.role === "USER" &&
-			respondedToMessageId.current !== lastMessage.id
-		) {
-			respondedToMessageId.current = lastMessage.id;
-			setIsStreaming(true);
-			setError("");
-			setStreamingMessage({ id: "streaming-response", content: "" });
+		// if (
+		// 	false &&
+		// 	messages.length !== 0 &&
+		// 	lastMessage.role === "USER"
+		// ) {
+		// 	setIsStreaming(true);
+		// 	setError("");
+		// 	setStreamingMessage({ id: "streaming-response", content: "" });
 
-			fetch("/api/ai/chat", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ preferences, chatId: chat.id }),
-			})
-				.then(async (res) => {
-					if (!res.ok) {
-						const body = await res.json().catch(() => ({}));
-						throw new Error(body.error || "Failed to generate a response.");
-					}
-					const reader = res.body?.getReader();
-					if (!reader) return;
-					const decoder = new TextDecoder("utf-8");
-					let content = "";
+		// 	fetch("/api/ai/chat", {
+		// 		method: "POST",
+		// 		headers: { "Content-Type": "application/json" },
+		// 		body: JSON.stringify({ preferences, chatId: chat.id }),
+		// 	})
+		// 		.then(async (res) => {
+		// 			if (!res.ok) {
+		// 				const body = await res.json().catch(() => ({}));
+		// 				throw new Error(body.error || "Failed to generate a response.");
+		// 			}
+		// 			const reader = res.body?.getReader();
+		// 			if (!reader) return;
+		// 			const decoder = new TextDecoder("utf-8");
+		// 			let content = "";
 
-					while (true) {
-						const { value, done } = await reader.read();
-						if (done) break;
-						const chunk = decoder.decode(value);
-						content += chunk;
-						setStreamingMessage((prev) => ({
-							id: "streaming-response",
-							content: (prev?.content ?? "") + chunk,
-						}));
-					}
+		// 			while (true) {
+		// 				const { value, done } = await reader.read();
+		// 				if (done) break;
+		// 				const chunk = decoder.decode(value);
+		// 				content += chunk;
+		// 				setStreamingMessage((prev) => ({
+		// 					id: "streaming-response",
+		// 					content: (prev?.content ?? "") + chunk,
+		// 				}));
+		// 			}
 
-					await createMessage.mutateAsync({
-						chatId: chat.id,
-						content,
-						role: "ASSISTANT",
-					});
-					setIsStreaming(false);
-					justFinishedStreaming.current = true;
-				})
-				.catch((err) => {
-					console.error(err);
-					respondedToMessageId.current = null; // allow retry
-					setError(err.message || "Failed to generate a response.");
-					setIsStreaming(false);
-					setStreamingMessage(null);
-					toast.error(err.message);
-				});
-		}
+		// 			await createMessage.mutateAsync({
+		// 				chatId: chat.id,
+		// 				content,
+		// 				role: "ASSISTANT",
+		// 			});
+		// 			setIsStreaming(false);
+		// 			justFinishedStreaming.current = true;
+		// 		})
+		// 		.catch((err) => {
+		// 			console.error(err);
+		// 			setError(err.message || "Failed to generate a response.");
+		// 			setIsStreaming(false);
+		// 			setStreamingMessage(null);
+		// 			toast.error(err.message);
+		// 		});
+		// }
 	}, [messages, isLoading, preferences, doc, docUrl]);
 
 	useEffect(() => {
@@ -228,9 +260,35 @@ const ChatAi = ({
 	}, [messages]);
 
 	// Merge streaming message in for render only — never touches query cache.
+	const persistedMessages =
+		sdkMessages.length > 0
+			? sdkMessages.map((message) => {
+					const savedMessage = messages.find(
+						(saved) => saved.id === message.id,
+					);
+					return {
+						id: message.id,
+						role:
+							message.role === "user"
+								? ("USER" as const)
+								: ("ASSISTANT" as const),
+						content: message.parts
+							.filter(
+								(part): part is Extract<typeof part, { type: "text" }> =>
+									part.type === "text",
+							)
+							.map((part) => part.text)
+							.join(""),
+						createdAt: savedMessage?.createdAt ?? new Date().toISOString(),
+						updatedAt: savedMessage?.updatedAt ?? new Date().toISOString(),
+						chatId: chat.id,
+					};
+				})
+			: messages;
+
 	const displayMessages = streamingMessage
 		? [
-				...messages,
+				...persistedMessages,
 				{
 					id: streamingMessage.id,
 					role: "ASSISTANT" as const,
@@ -240,7 +298,7 @@ const ChatAi = ({
 					chatId: chat.id,
 				},
 			]
-		: messages;
+		: persistedMessages;
 
 	return (
 		<div className="flex h-full w-full flex-col items-center justify-between">
@@ -250,8 +308,8 @@ const ChatAi = ({
 				defaultScrollPosition="end"
 			>
 				<MessageScroller className="w-full flex-1">
-					<MessageScrollerViewport>
-						<MessageScrollerContent className="mx-auto max-w-4xl">
+					<MessageScrollerViewport className="mask-[linear-gradient(to_bottom,black_calc(100%-4rem),transparent_100%)]">
+						<MessageScrollerContent className="mx-auto max-w-4xl mb-24">
 							{hasNextPage && (
 								<MessageScrollerItem>
 									<div className="flex justify-center py-3">
@@ -275,7 +333,8 @@ const ChatAi = ({
 										messageId={message.id}
 										scrollAnchor={
 											message.role === "USER" &&
-											message.id === displayMessages[displayMessages.length - 1]?.id
+											message.id ===
+												displayMessages[displayMessages.length - 1]?.id
 										}
 									>
 										{message.role === "USER" ? (
@@ -286,26 +345,46 @@ const ChatAi = ({
 									</MessageScrollerItem>
 								))}
 
-							{isStreaming && !streamingMessage?.content && (
+							{error && (
+								<MessageScrollerItem messageId="error">
+									<div className="flex flex-col items-center justify-center gap-3 py-8">
+										<p className="text-sm text-red-500">{error?.message}</p>
+										<button
+											type="button"
+											onClick={() => regenerate()}
+											className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
+										>
+											Retry
+										</button>
+									</div>
+								</MessageScrollerItem>
+							)}
+
+							{chatStatus === "submitted" && (
 								<MessageScrollerItem messageId="thinking">
 									<ThinkingIndicator />
 								</MessageScrollerItem>
 							)}
 
-							{error && (
+							{isSummaryStreaming && !streamingMessage?.content && (
+								<div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+									<LoaderThree />
+								</div>
+							)}
+
+							{summaryError && (
 								<MessageScrollerItem messageId="error">
 									<div className="flex flex-col items-center justify-center gap-3 py-8">
-										<p className="text-sm text-red-500">{error}</p>
+										<p className="text-sm text-red-500">{summaryError}</p>
 										<button
 											onClick={() => {
-												setError("");
+												setSummaryError("");
 												hasFetchedSummary.current = false;
-												respondedToMessageId.current = null;
 												utils.chat.getMessages.invalidate({ chatId: chat.id });
 											}}
 											className="rounded-lg bg-primary px-4 py-2 text-sm text-white"
 										>
-											Try again
+											Retry
 										</button>
 									</div>
 								</MessageScrollerItem>
@@ -316,8 +395,17 @@ const ChatAi = ({
 				</MessageScroller>
 			</MessageScrollerProvider>
 
-			<div className="w-full max-w-4xl p-4">
-				<ChatInput chatId={chat.id} />
+			<div className=" w-full max-w-4xl bg-transparent mb-4">
+				<ChatInput
+					chatId={chat.id}
+					chatStatus={chatStatus}
+					onSend={async (content) => {
+						await sendMessage(
+							{ text: content },
+							{ body: { chatId: chat.id, preferences } },
+						);
+					}}
+				/>
 			</div>
 		</div>
 	);
