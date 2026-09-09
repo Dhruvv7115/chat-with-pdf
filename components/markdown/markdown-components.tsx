@@ -58,7 +58,7 @@ export const customComponents = {
 			return (
 				<button
 					onClick={() => setPageNumber(Number(pageMatch[1]))}
-					className="inline-flex items-center rounded-md bg-neutral-200 dark:bg-neutral-900/40 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-900/60 transition-colors cursor-pointer"
+					className="inline-flex items-center rounded-sm bg-primary/30 dark:bg-primary/30 px-1.5 py-0.5 text-xs font-semibold text-neutral-700 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-200 hover:bg-primary/40 dark:hover:bg-primary/50 transition-colors duration-200 ease-in-out cursor-pointer font-mono mr-1"
 				>
 					Page {pageMatch[1]}
 				</button>

@@ -5,8 +5,8 @@
 
 .typeset-chat {
   --typeset-font-body: var(--font-geist);
-  --typeset-font-heading: var(--font-inter);
-  --typeset-font-mono: var(--font-jetbrains-mono);
+  --typeset-font-heading: var(--font-geist);
+  --typeset-font-mono: var(--font-geist-mono);
   --typeset-size: 16px;
   --typeset-leading: 1.75;
   --typeset-flow: 1.25em;
@@ -14,8 +14,8 @@
 
 .typeset-docs {
   --typeset-font-body: var(--font-geist);
-  --typeset-font-heading: var(--font-inter);
-  --typeset-font-mono: var(--font-jetbrains-mono);
+  --typeset-font-heading: var(--font-geist);
+  --typeset-font-mono: var(--font-geist-mono);
   --typeset-size: 18px;
   --typeset-leading: 1.75;
   --typeset-flow: 1.25em;

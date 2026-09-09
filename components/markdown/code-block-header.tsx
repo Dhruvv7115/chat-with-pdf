@@ -70,10 +70,16 @@ const CodeBlockHeader = ({
 				{Icon ? (
 					<Icon
 						variant="mono"
-						className="size-5 rounded-xs"
+						className={cn("size-5 fill-neutral-600 dark:fill-neutral-400", {
+							"size-8": language === "go",
+							"size-4": language === "c",
+						})}
 					/>
 				) : (
-					<Terminal />
+					<Terminal
+						fill="var(--foreground)"
+						className="size-5 rounded-xs"
+					/>
 				)}
 			</span>
 			<button
