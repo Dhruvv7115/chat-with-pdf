@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.64",
+    "@ai-sdk/react": "^4.0.96",
     "@aws-sdk/client-s3": "^3.1006.0",
     "@aws-sdk/s3-request-presigner": "^3.1007.0",
     "@base-ui/react": "^1.2.0",
@@ -27,6 +29,7 @@
     "@trpc/react-query": "^11.11.0",
     "@trpc/server": "^11.11.0",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "ai": "^7.0.93",
     "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
