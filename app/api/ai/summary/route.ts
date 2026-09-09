@@ -48,22 +48,8 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		const response = await indexDocument(docUrl, documentId, doc.fileType);
-
-		const stream = new ReadableStream({
-			async start(controller) {
-				try {
-					for await (const chunk of response) {
-						controller.enqueue(chunk.text);
-					}
-					controller.close();
-				} catch (err) {
-					console.error("Stream error:", err);
-					controller.error(err); // propagates failure to the client's reader
-				}
-			},
-		});
-		return new Response(stream, { headers: { "Content-Type": "text/plain" } });
+		const result = await indexDocument(docUrl, documentId, doc.fileType);
+		return result.toTextStreamResponse();
 	} catch (error: any) {
 		console.error("Error indexing document:", error);
 		return NextResponse.json(

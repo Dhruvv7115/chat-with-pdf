@@ -4,49 +4,40 @@ import {
 	AI_DOC_CHAT_PROMPT,
 	AI_NORMAL_CHAT_PROMPT,
 	AI_SUMMARY_PROMPT,
-} from "@/constants/prompts";
-import { GoogleGenAI } from "@google/genai";
-import { Preferences } from "@/hooks/use-preferences";
+} from "@/constants/prompts/main-prompts";
+import {
+	createGoogleGenerativeAI,
+	type GoogleEmbeddingModelOptions,
+} from "@ai-sdk/google";
+import { embed, streamText, type ModelMessage } from "ai";
+import type { ChatPreferences } from "@/lib/validation/chat";
 
-const client = new GoogleGenAI({
-	apiKey: process.env.GEMINI_API_KEY!,
+const google = createGoogleGenerativeAI({
+	apiKey: process.env.GEMINI_API_KEY,
 });
 
 export async function summarizeDocument(content: string) {
-	try {
-		const response = await client.models.generateContentStream({
-			model: "gemini-3.5-flash-lite",
-			contents: content,
-			config: {
-				systemInstruction: AI_SUMMARY_PROMPT,
-			},
-		});
-
-		return response;
-	} catch (error) {
-		console.log("error:", error);
-		throw new Error("Error summarizing document");
-	}
+	return streamText({
+		model: google("gemini-3.5-flash-lite"),
+		system: AI_SUMMARY_PROMPT,
+		prompt: content,
+	});
 }
 
 export const generateEmbedding = async (text: string) => {
 	try {
-		const response = await client.models.embedContent({
-			model: "gemini-embedding-001",
-			contents: text,
-			config: {
-				outputDimensionality: 768,
-				taskType: "RETRIEVAL_DOCUMENT",
+		const { embedding } = await embed({
+			model: google.embedding("gemini-embedding-001"),
+			value: text,
+			providerOptions: {
+				google: {
+					outputDimensionality: 768,
+					taskType: "RETRIEVAL_DOCUMENT",
+				} satisfies GoogleEmbeddingModelOptions,
 			},
 		});
 
-		if (!response.embeddings) {
-			throw new Error("Error generating embedding");
-		} else {
-			console.log("embedding generated");
-		}
-
-		return response.embeddings?.[0].values ?? [];
+		return embedding;
 	} catch (error) {
 		console.log("error:", error);
 		throw new Error("Error generating embedding");
@@ -55,38 +46,37 @@ export const generateEmbedding = async (text: string) => {
 
 export async function generateQueryEmbedding(text: string) {
 	try {
-		console.log("generating query embedding:", text);
-		const response = await client.models.embedContent({
-			model: "gemini-embedding-001",
-			contents: text,
-			config: {
-				outputDimensionality: 768,
-				taskType: "RETRIEVAL_QUERY",
+		const { embedding } = await embed({
+			model: google.embedding("gemini-embedding-001"),
+			value: text,
+			providerOptions: {
+				google: {
+					outputDimensionality: 768,
+					taskType: "RETRIEVAL_QUERY",
+				} satisfies GoogleEmbeddingModelOptions,
 			},
 		});
 
-		return response.embeddings?.[0].values ?? [];
+		return embedding;
 	} catch (error) {
 		console.log("error:", error);
 		throw new Error("Error generating query embedding");
 	}
 }
 
-export async function generateAnswer(
-	question: string,
-	context: string,
-	formattedMessages: {
-		role: "user" | "model";
-		parts: { text: string }[];
-	}[],
-	preferences?: Preferences,
-) {
+export async function generateAnswer({
+	context,
+	messages,
+	preferences,
+}: {
+	context: string;
+	messages: ModelMessage[];
+	preferences: ChatPreferences;
+}) {
 	const hasContext = context.trim().length > 0;
 	let systemInstruction = hasContext
 		? AI_DOC_CHAT_PROMPT
 		: AI_NORMAL_CHAT_PROMPT;
-
-	console.log("user preferences: ", preferences);
 
 	if (preferences) {
 		const { language, responseStyle, persona } = preferences;
@@ -95,7 +85,7 @@ export async function generateAnswer(
 		if (language === "hi") {
 			systemInstruction +=
 				"\n\nIMPORTANT: You must write your response in Hindi (हिंदी).";
-		} else {
+		} else if (preferences.responseStyle === "balanced") {
 			systemInstruction +=
 				"\n\nIMPORTANT: You must write your response in English.";
 		}
@@ -118,46 +108,13 @@ export async function generateAnswer(
 		}
 	}
 
-	try {
-		console.log("========== GENERATE ANSWER ==========");
-		console.log("QUESTION:", question);
-		console.log("HAS CONTEXT:", hasContext);
-		console.log("CONTEXT:", context);
-		console.log("SYSTEM:", systemInstruction);
-		console.log("MESSAGES:", JSON.stringify(formattedMessages, null, 2));
-		console.log("====================================");
-		const response = await client.models.generateContentStream({
-			model: "gemini-3.5-flash-lite",
-			config: {
-				systemInstruction,
-			},
-			contents: [
-				...(hasContext
-					? [
-							{
-								role: "user" as const,
-								parts: [
-									{
-										text: `Here is the relevant context from the document:\n\n${context}`,
-									},
-								],
-							},
-							{
-								role: "model" as const,
-								parts: [
-									{ text: "Understood, I'll answer based on this context." },
-								],
-							},
-						]
-					: []),
-				...formattedMessages,
-				{ role: "user", parts: [{ text: question }] },
-			],
-		});
-
-		return response;
-	} catch (error) {
-		console.log("error:", error);
-		throw new Error("Error generating answer");
+	if (hasContext) {
+		systemInstruction += `\n\nHere is the relevant context from the document:\n\n${context}`;
 	}
+
+	return streamText({
+		model: google("gemini-3.5-flash-lite"),
+		system: systemInstruction,
+		messages,
+	});
 }
