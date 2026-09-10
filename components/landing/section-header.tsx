@@ -23,7 +23,7 @@ const SectionHeader = ({
 					<div className="absolute bottom-0 left-0 size-3 border-b-2 border-l-2 border-neutral-600 dark:border-neutral-400 animate-pulse" />
 					<div className="absolute bottom-0 right-0 size-3 border-b-2 border-r-2 border-neutral-600 dark:border-neutral-400 animate-pulse" />
 				</motion.span>
-				<h2 className="text-balance text-center text-3xl font-medium tracking-tighter md:text-4xl text-shadow-xs text-shadow-black/20 dark:text-shadow-white/40">
+				<h2 className="text-balance text-center text-3xl font-medium tracking-tighter md:text-4xl text-shadow-xs text-shadow-black/20 dark:text-shadow-white/40 shimmer shimmer-once shimmer-color-background">
 					{heading}
 				</h2>
 			</div>

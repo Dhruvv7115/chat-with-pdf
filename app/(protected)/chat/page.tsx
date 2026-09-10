@@ -117,7 +117,7 @@ const ChatPage = () => {
 				<h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance text-foreground mb-1">
 					Chat With Any PDF
 				</h1>
-				<p className="text-sm leading-none text-muted-foreground">
+				<p className="text-sm leading-none text-muted-foreground text-center">
 					Upload your PDF and start chatting with it
 				</p>
 			</div>

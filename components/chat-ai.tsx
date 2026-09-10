@@ -308,7 +308,7 @@ const ChatAi = ({
 				defaultScrollPosition="end"
 			>
 				<MessageScroller className="w-full flex-1">
-					<MessageScrollerViewport className="mask-[linear-gradient(to_bottom,black_calc(100%-4rem),transparent_100%)]">
+					<MessageScrollerViewport>
 						<MessageScrollerContent className="mx-auto max-w-4xl mb-24">
 							{hasNextPage && (
 								<MessageScrollerItem>

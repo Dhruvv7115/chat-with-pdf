@@ -195,6 +195,29 @@ const PreferencesSection = () => {
 					</Select>
 				</div>
 
+				{/* Custom Persona */}
+				<div className="flex flex-col gap-2.5 rounded-lg px-4 py-3 bg-muted col-span-1 row-span-2">
+					<div>
+						<p className="text-sm font-medium">Custom Persona</p>
+						<p className="text-xs text-muted-foreground">
+							Instruct the AI to adopt a specific role or style (e.g. "Sarcastic
+							Developer", "Physics Professor")
+						</p>
+					</div>
+
+					<textarea
+						value={preferences.persona ?? ""}
+						onChange={(e) =>
+							updatePreferences({
+								persona: e.target.value,
+							})
+						}
+						placeholder="Enter a custom persona..."
+						rows={3}
+						className="w-full min-h-20 p-3 rounded-md border border-input bg-transparent text-xs outline-none resize-none focus-visible:ring-1 focus-visible:ring-ring"
+					/>
+				</div>
+
 				{/* Auto scroll */}
 				<div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 bg-muted">
 					<div>
@@ -230,29 +253,6 @@ const PreferencesSection = () => {
 								readAloud: checked,
 							})
 						}
-					/>
-				</div>
-
-				{/* Custom Persona */}
-				<div className="flex flex-col gap-2.5 rounded-lg px-4 py-3 bg-muted col-span-1 lg:col-span-2">
-					<div>
-						<p className="text-sm font-medium">Custom Persona</p>
-						<p className="text-xs text-muted-foreground">
-							Instruct the AI to adopt a specific role or style (e.g. "Sarcastic
-							Developer", "Physics Professor")
-						</p>
-					</div>
-
-					<textarea
-						value={preferences.persona ?? ""}
-						onChange={(e) =>
-							updatePreferences({
-								persona: e.target.value,
-							})
-						}
-						placeholder="Enter a custom persona..."
-						rows={3}
-						className="w-full min-h-20 p-3 rounded-md border border-input bg-transparent text-xs outline-none resize-none focus-visible:ring-1 focus-visible:ring-ring"
 					/>
 				</div>
 			</CardContent>
