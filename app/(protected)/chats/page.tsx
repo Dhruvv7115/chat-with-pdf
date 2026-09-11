@@ -1,40 +1,21 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/client";
-import { toast } from "sonner";
 import {
 	Search,
-	MessageSquare,
 	Plus,
-	Trash2,
-	Clock,
-	FileText,
-	FileCode,
-	FileCode2,
 	FileType as FileTypeIcon,
 	Bot,
-	ArrowRight,
 	MessagesSquare,
 } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/tabs";
 import {
 	CommandDialog,
 	CommandEmpty,
@@ -85,7 +66,7 @@ function getFileTypeBadge(fileType?: string) {
 				color:
 					"bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
 				badgeColor: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300",
-				icon: FileText,
+				icon: "pdf",
 			};
 		case "DOCX":
 			return {
@@ -94,7 +75,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
 				badgeColor:
 					"bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
-				icon: FileCode2,
+				icon: "microsoft-word",
 			};
 		case "MARKDOWN":
 		case "MD":
@@ -104,7 +85,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
 				badgeColor:
 					"bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
-				icon: FileCode,
+				icon: "markdown",
 			};
 		default:
 			return {
@@ -113,7 +94,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
 				badgeColor:
 					"bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
-				icon: FileTypeIcon,
+				icon: "file",
 			};
 	}
 }
@@ -169,7 +150,7 @@ export default function ChatsPage() {
 	}
 
 	return (
-		<div className="p-6 mx-auto space-y-6 w-full min-h-full bg-sidebar">
+		<div className="p-6 mx-auto flex flex-col gap-6 w-full min-h-full bg-sidebar @container">
 			<CommandDialog
 				open={commandOpen}
 				onOpenChange={setCommandOpen}
@@ -180,16 +161,24 @@ export default function ChatsPage() {
 					<CommandGroup heading="Conversations">
 						{chats?.map((chat) => {
 							const isDocChat = !!chat.documentId;
-							const IconComponent = isDocChat
-								? getFileTypeBadge(chat.document?.fileType).icon
-								: Bot;
+							const typeConfig = isDocChat ? getFileTypeBadge(chat.document?.fileType) : null;
+							const IconComponent = typeConfig?.icon === "file" ? FileTypeIcon : (isDocChat ? null : Bot);
 							return (
 								<CommandItem
 									key={chat.id}
 									value={`${chat.title} ${chat.document?.title ?? ""}`}
 									onSelect={() => goToChat(chat.id)}
 								>
-									<IconComponent className="size-4" />
+									{IconComponent && <IconComponent className="size-4" />}
+									{!IconComponent && isDocChat && typeConfig && (
+										<Image
+											src={`https://thesvg.org/icons/${typeConfig.icon.toLowerCase()}/default.svg`}
+											alt="File"
+											width={24}
+											height={24}
+											className="size-4"
+										/>
+									)}
 									<span className="truncate">{chat.title}</span>
 									{isDocChat && chat.document?.title && (
 										<span className="ml-auto truncate max-w-40 text-xs text-muted-foreground">
@@ -204,7 +193,7 @@ export default function ChatsPage() {
 			</CommandDialog>
 
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
+			<div className="flex flex-col @xl:flex-row justify-between gap-4 border-b pb-5">
 				<div>
 					<div className="flex items-center gap-2.5">
 						<h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -237,7 +226,7 @@ export default function ChatsPage() {
 			</div>
 
 			{/* Toolbar: Category Tabs + Search trigger */}
-			<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+			<div className="flex flex-col @[1085px]:flex-row @[1085px]:items-center justify-between gap-4 w-full">
 				<Tabs
 					value={activeCategory}
 					onValueChange={(v) => setActiveCategory(v as ChatCategory)}
@@ -255,7 +244,7 @@ export default function ChatsPage() {
 									className={cn(
 										"px-1.5 py-0.5 rounded-full text-[10px]",
 										activeCategory === cat.id
-											? "bg-primary/10 text-primary font-bold"
+											? "bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold"
 											: "bg-muted-foreground/15 text-muted-foreground",
 									)}
 								>
@@ -266,21 +255,23 @@ export default function ChatsPage() {
 					</TabsList>
 				</Tabs>
 
-				<Button
-					variant="outline"
-					size="lg"
-					onClick={() => setCommandOpen(true)}
-					className="w-full sm:w-80 justify-between text-muted-foreground font-normal"
-				>
-					<span className="flex items-center gap-2">
-						<Search className="size-4" />
-						Search chats or documents...
-					</span>
-					<KbdGroup>
-						<Kbd>⌘</Kbd>
-						<Kbd>k</Kbd>
-					</KbdGroup>
-				</Button>
+				<div className="w-full @[780px]:w-auto shrink-0">
+					<Button
+						variant="outline"
+						size="lg"
+						onClick={() => setCommandOpen(true)}
+						className="flex-1 @[780px]:w-72 w-full justify-between text-muted-foreground font-normal bg-background"
+					>
+						<span className="flex items-center gap-2">
+							<Search className="size-4" />
+							Search chats or documents...
+						</span>
+						<KbdGroup>
+							<Kbd>⌘</Kbd>
+							<Kbd>k</Kbd>
+						</KbdGroup>
+					</Button>
+				</div>
 			</div>
 
 			{/* Empty State - No Chats At All */}

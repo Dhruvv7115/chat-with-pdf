@@ -21,13 +21,26 @@ import {
 	FileType as FileTypeIcon,
 	MoreVertical,
 	SearchIcon,
+	LayoutGrid,
+	List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardFooter, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Attachment,
+	AttachmentMedia,
+	AttachmentContent,
+	AttachmentTitle,
+	AttachmentDescription,
+	AttachmentActions,
+	AttachmentAction,
+	AttachmentTrigger,
+} from "@/components/ui/attachment";
+import { Tabs, TabsList, TabsTrigger } from "@/components/tabs";
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
@@ -49,11 +62,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -74,6 +82,18 @@ import {
 } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import Image from "next/image";
+import { IconEyeFilled, IconX } from "@tabler/icons-react";
+import { motion } from "motion/react";
 
 type FileCategory = "ALL" | "PDF" | "DOCX" | "MARKDOWN" | "OTHER";
 
@@ -93,10 +113,6 @@ function formatBytes(bytes?: number | null) {
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Reads expiry off a presigned URL without a network round-trip.
-// Supports AWS SigV4 (X-Amz-Date + X-Amz-Expires) and generic Unix-timestamp
-// "Expires" params (GCS, some CDNs). Unknown/unparseable formats are treated
-// as "not expired" here — the iframe's onError is the fallback for those.
 function isUrlExpired(url?: string | null): boolean {
 	if (!url) return true;
 	try {
@@ -130,26 +146,26 @@ function getFileTypeConfig(fileType?: string) {
 			return {
 				label: "PDF",
 				tint: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
-				icon: FileText,
+				icon: "pdf",
 			};
 		case "DOCX":
 			return {
 				label: "DOCX",
 				tint: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
-				icon: FileCode2,
+				icon: "microsoft-word",
 			};
 		case "MARKDOWN":
 		case "MD":
 			return {
 				label: "MARKDOWN",
 				tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
-				icon: FileCode,
+				icon: "markdown",
 			};
 		default:
 			return {
 				label: fileType || "DOCUMENT",
 				tint: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
-				icon: FileTypeIcon,
+				icon: "file",
 			};
 	}
 }
@@ -160,17 +176,16 @@ export default function DocsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [commandOpen, setCommandOpen] = useState(false);
 	const [activeCategory, setActiveCategory] = useState<FileCategory>("ALL");
+
 	const [previewDoc, setPreviewDoc] = useState<{
+		id: string;
 		title: string;
 		url: string;
 		fileType?: string;
 	} | null>(null);
-	// Doc ids whose iframe failed to load at runtime (e.g. a non-standard
-	// presigned URL that expired but wasn't caught by isUrlExpired).
 	const [failedPreviewIds, setFailedPreviewIds] = useState<Set<string>>(
 		new Set(),
 	);
-	// Forces expiry to be re-evaluated periodically for long-open tabs.
 	const [expiryTick, setExpiryTick] = useState(0);
 
 	useEffect(() => {
@@ -270,9 +285,9 @@ export default function DocsPage() {
 	];
 
 	return (
-		<div className="p-6 mx-auto space-y-6 w-full min-h-full bg-sidebar">
+		<div className="p-6 mx-auto flex flex-col gap-6 w-full min-h-full bg-sidebar @container">
 			{/* Page Header */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
+			<div className="flex flex-col @xl:flex-row justify-between gap-4 border-b pb-5">
 				<div>
 					<div className="flex items-center gap-2.5">
 						<h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -301,12 +316,14 @@ export default function DocsPage() {
 			</div>
 
 			{/* Category Filter Tabs & Search Toolbar */}
-			<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+			<div className="flex flex-col @[1085px]:flex-row @[1085px]:items-center justify-between gap-4 w-full">
+				{/* DESKTOP/TABLET VIEW: Tabs visible when container >= 780px */}
 				<Tabs
 					value={activeCategory}
 					onValueChange={(v) => setActiveCategory(v as FileCategory)}
+					className="hidden @[780px]:block"
 				>
-					<TabsList className="h-auto flex-wrap gap-1.5 p-1">
+					<TabsList className="h-auto gap-1.5 p-1">
 						{categories.map((cat) => (
 							<TabsTrigger
 								key={cat.id}
@@ -318,7 +335,7 @@ export default function DocsPage() {
 									className={cn(
 										"px-1.5 py-0.5 rounded-full text-[10px]",
 										activeCategory === cat.id
-											? "bg-primary/10 text-primary font-bold"
+											? "bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold"
 											: "bg-muted-foreground/15 text-muted-foreground",
 									)}
 								>
@@ -328,22 +345,53 @@ export default function DocsPage() {
 						))}
 					</TabsList>
 				</Tabs>
+				{/* MOBILE VIEW: Select Dropdown visible when container < 780px */}
+				<div className="block @[780px]:hidden w-full">
+					<Select
+						value={activeCategory}
+						onValueChange={(v) => setActiveCategory(v as FileCategory)}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								<SelectLabel>Document Categories</SelectLabel>
+								{categories.map((cat) => (
+									<SelectItem
+										key={cat.id}
+										value={cat.id}
+									>
+										<div className="flex w-fit items-center justify-center gap-2">
+											<span>{cat.label}</span>
+											<Badge className="px-1.5 py-0.5 rounded-full text-[10px] bg-muted-foreground/15 text-muted-foreground ml-auto">
+												{cat.count}
+											</Badge>
+										</div>
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+				</div>
 
-				{/* Search trigger — opens the Command palette */}
-				<Button
-					variant="outline"
-					onClick={() => setCommandOpen(true)}
-					className="w-full md:w-72 justify-between text-muted-foreground font-normal bg-background"
-				>
-					<span className="flex items-center gap-2">
-						<SearchIcon className="size-4" />
-						Search documents...
-					</span>
-					<KbdGroup>
-						<Kbd>⌘</Kbd>
-						<Kbd>k</Kbd>
-					</KbdGroup>
-				</Button>
+				{/* Search Toggle */}
+				<div className="w-full @[780px]:w-auto shrink-0">
+					<Button
+						variant="outline"
+						onClick={() => setCommandOpen(true)}
+						className="flex-1 @[780px]:w-72 w-full justify-between text-muted-foreground font-normal bg-background"
+					>
+						<span className="flex items-center gap-2">
+							<SearchIcon className="size-4" />
+							Search documents...
+						</span>
+						<KbdGroup>
+							<Kbd>⌘</Kbd>
+							<Kbd>k</Kbd>
+						</KbdGroup>
+					</Button>
+				</div>
 			</div>
 
 			{/* Command palette: searches across ALL documents regardless of the active tab */}
@@ -361,7 +409,7 @@ export default function DocsPage() {
 					<CommandGroup heading="Documents">
 						{(docs ?? []).map((doc) => {
 							const typeConfig = getFileTypeConfig(doc.fileType);
-							const TypeIcon = typeConfig.icon;
+							const TypeIcon = typeConfig.icon === "file" ? FileTypeIcon : null;
 							return (
 								<CommandItem
 									key={doc.id}
@@ -372,7 +420,17 @@ export default function DocsPage() {
 									}}
 									className="gap-2"
 								>
-									<TypeIcon className="size-4 text-muted-foreground" />
+									{TypeIcon && (
+										<TypeIcon className="size-4 text-muted-foreground" />
+									)}
+									{!TypeIcon && (
+										<Image
+											src={`https://thesvg.org/icons/${typeConfig.icon.toLowerCase()}/default.svg`}
+											alt="File"
+											width={24}
+											height={24}
+										/>
+									)}
 									<span className="truncate">{doc.title}</span>
 									<CommandShortcut>{typeConfig.label}</CommandShortcut>
 								</CommandItem>
@@ -434,235 +492,152 @@ export default function DocsPage() {
 				</Empty>
 			)}
 
-			{/* Document Grid View */}
+			{/* Document View */}
 			{!isLoading && filteredDocs.length > 0 && (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div
+					className={cn(
+						"grid grid-cols-1 @[780px]:grid-cols-2 @[1085px]:grid-cols-3 gap-4",
+					)}
+				>
 					{filteredDocs.map((doc) => {
 						const typeConfig = getFileTypeConfig(doc.fileType);
-						const TypeIcon = typeConfig.icon;
+						const TypeIcon = typeConfig.icon === "file" ? FileTypeIcon : null;
 
 						return (
-							<Card
+							<Attachment
 								key={doc.id}
-								className="group py-0 overflow-hidden border-border/70 hover:border-primary/40 hover:shadow-md transition-all duration-200"
+								orientation="horizontal"
+								className={cn(
+									"group hover:border-primary/40 hover:shadow-md transition-all duration-200 w-full max-w-full",
+								)}
 							>
-								{/* Card Header */}
-								<CardHeader className="p-4 border-b bg-muted/30 space-y-2 gap-0">
-									<div className="flex items-start justify-between gap-2">
-										<div className="flex items-center gap-2 min-w-0">
-											<div
-												className={cn(
-													"p-1.5 rounded border shrink-0",
-													typeConfig.tint,
-												)}
-											>
-												<TypeIcon className="size-4" />
-											</div>
-											<h2
-												className="font-semibold text-sm text-foreground truncate"
-												title={doc.title}
-											>
-												{doc.title}
-											</h2>
-										</div>
+								<AttachmentMedia
+									variant="icon"
+									className={typeConfig.tint}
+								>
+									{TypeIcon && (
+										<TypeIcon className="size-4 text-muted-foreground" />
+									)}
+									{!TypeIcon && (
+										<Image
+											src={`https://thesvg.org/icons/${typeConfig.icon.toLowerCase()}/default.svg`}
+											alt="File"
+											width={24}
+											height={24}
+										/>
+									)}
+								</AttachmentMedia>
 
-										{/* Overflow actions */}
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<Button
-													variant="ghost"
-													size="icon"
-													className="size-7 text-muted-foreground shrink-0"
-												>
-													<MoreVertical className="size-3.5" />
-												</Button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end">
-												<DropdownMenuGroup>
-													{doc.url && (
-														<DropdownMenuItem
-															onClick={() => window.open(doc.url, "_blank")}
-														>
-															<ExternalLink />
-															Open original
-														</DropdownMenuItem>
-													)}
-													<AlertDialog>
-														<AlertDialogTrigger asChild>
-															<DropdownMenuItem
-																onSelect={(e) => e.preventDefault()}
-																variant="destructive"
-															>
-																<Trash2 />
-																Delete
-															</DropdownMenuItem>
-														</AlertDialogTrigger>
-														<AlertDialogContent>
-															<AlertDialogHeader>
-																<AlertDialogTitle>
-																	Delete Document
-																</AlertDialogTitle>
-																<AlertDialogDescription>
-																	Are you sure you want to delete &quot;
-																	{doc.title}
-																	&quot;? This action cannot be undone.
-																</AlertDialogDescription>
-															</AlertDialogHeader>
-															<AlertDialogFooter>
-																<AlertDialogCancel>Cancel</AlertDialogCancel>
-																<AlertDialogAction
-																	onClick={() =>
-																		deleteDocMutation.mutate({
-																			key: doc.fileKey,
-																		})
-																	}
-																	className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-																>
-																	Delete
-																</AlertDialogAction>
-															</AlertDialogFooter>
-														</AlertDialogContent>
-													</AlertDialog>
-												</DropdownMenuGroup>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</div>
+								<AttachmentContent>
+									<AttachmentTitle title={doc.title}>
+										<motion.span layoutId={`doc-title-${doc.id}`}>
+											{doc.title}
+										</motion.span>
+									</AttachmentTitle>
 
-									{/* Metadata */}
-									<div className="flex flex-wrap items-center gap-1.5 pt-1">
-										<Badge
-											variant="outline"
-											className={cn(
-												"text-[10px] font-bold uppercase",
-												typeConfig.tint,
-											)}
-										>
-											{typeConfig.label}
-										</Badge>
-										<Badge
-											variant="outline"
-											className="text-[10px] font-normal gap-1 text-muted-foreground"
-										>
+									<AttachmentDescription className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+										<span className="flex items-center gap-1">
 											<Calendar className="size-3" />
 											{formatDate(doc.createdAt)}
-										</Badge>
+										</span>
 										{doc.fileSize && (
-											<Badge
-												variant="outline"
-												className="text-[10px] font-normal gap-1 text-muted-foreground"
-											>
+											<span className="flex items-center gap-1">
 												<HardDrive className="size-3" />
 												{formatBytes(doc.fileSize)}
-											</Badge>
+											</span>
 										)}
 										{doc.pageCount && (
-											<Badge
-												variant="outline"
-												className="text-[10px] font-normal gap-1 text-muted-foreground"
-											>
+											<span className="flex items-center gap-1">
 												<Layers className="size-3" />
 												{doc.pageCount} {doc.pageCount === 1 ? "page" : "pages"}
-											</Badge>
+											</span>
 										)}
-									</div>
-								</CardHeader>
+									</AttachmentDescription>
+								</AttachmentContent>
 
-								{/* Thumbnail: real presigned-URL preview when the link is still
-								    valid, tinted placeholder when it's expired, missing, or failed
-								    to load at runtime. */}
-								{(() => {
-									// biome-ignore lint: expiryTick is a deliberate re-render trigger
-									void expiryTick;
-									const expired = isUrlExpired(doc.url);
-									const failed = failedPreviewIds.has(doc.id);
-									const showPlaceholder = !doc.url || expired || failed;
-
-									let iframeSrc = doc.url ?? "";
-									if (doc.fileType === "PDF") {
-										iframeSrc = `${doc.url}#toolbar=0&navpanes=0`;
-									} else if (doc.fileType === "DOCX") {
-										iframeSrc = `https://docs.google.com/gview?url=${encodeURIComponent(doc.url ?? "")}&embedded=true`;
-									}
-
-									return (
-										<div className="relative w-full h-48 border-b overflow-hidden bg-muted/20">
-											{showPlaceholder ? (
-												<div
-													className={cn(
-														"w-full h-full flex flex-col justify-center items-center",
-														typeConfig.tint,
-													)}
-												>
-													<TypeIcon className="size-14 opacity-30" />
-													<span className="mt-3 text-xs text-muted-foreground px-4 text-center">
-														{!doc.url
-															? "Preview unavailable"
-															: "Preview link expired — reopen to refresh"}
-													</span>
-												</div>
-											) : (
-												<iframe
-													src={iframeSrc}
-													title={doc.title}
-													className="w-full h-full border-0 pointer-events-none"
-													onError={() =>
-														setFailedPreviewIds((prev) =>
-															new Set(prev).add(doc.id),
-														)
-													}
-												/>
-											)}
-											{doc.url && !showPlaceholder && (
-												<button
-													type="button"
+								<AttachmentActions>
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<AttachmentAction
+												variant="ghost"
+												size="icon"
+												className="text-muted-foreground"
+											>
+												<MoreVertical className="size-4" />
+											</AttachmentAction>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent
+											align="end"
+											className="w-full"
+										>
+											<DropdownMenuGroup>
+												{doc.url && (
+													<DropdownMenuItem
+														onClick={() => window.open(doc.url, "_blank")}
+													>
+														<ExternalLink />
+														Open original
+													</DropdownMenuItem>
+												)}
+												<DropdownMenuItem
 													onClick={() =>
 														setPreviewDoc({
+															id: doc.id,
 															title: doc.title,
 															url: doc.url,
-															fileType: doc.fileType,
+															fileType: doc.fileType
 														})
 													}
-													className="absolute inset-0 flex items-end justify-end p-2 bg-transparent group-hover:bg-black/10 transition-colors"
 												>
-													<span className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-														<Maximize2 className="size-3.5" />
-														Expand
-													</span>
-												</button>
-											)}
-										</div>
-									);
-								})()}
+													<IconEyeFilled />
+													Preview Document
+												</DropdownMenuItem>
+												<AlertDialog>
+													<AlertDialogTrigger asChild>
+														<DropdownMenuItem
+															onSelect={(e) => e.preventDefault()}
+															variant="destructive"
+														>
+															<Trash2 />
+															Delete
+														</DropdownMenuItem>
+													</AlertDialogTrigger>
+													<AlertDialogContent>
+														<AlertDialogHeader>
+															<AlertDialogTitle>
+																Delete Document
+															</AlertDialogTitle>
+															<AlertDialogDescription>
+																Are you sure you want to delete &quot;
+																{doc.title}
+																&quot;? This action cannot be undone.
+															</AlertDialogDescription>
+														</AlertDialogHeader>
+														<AlertDialogFooter>
+															<AlertDialogCancel>Cancel</AlertDialogCancel>
+															<AlertDialogAction
+																onClick={() =>
+																	deleteDocMutation.mutate({
+																		key: doc.fileKey,
+																	})
+																}
+																className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+															>
+																Delete
+															</AlertDialogAction>
+														</AlertDialogFooter>
+													</AlertDialogContent>
+												</AlertDialog>
+											</DropdownMenuGroup>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</AttachmentActions>
 
-								{/* Card Footer Actions */}
-								<CardFooter className="p-3 gap-2">
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Button
-												variant="outline"
-												size="icon"
-												onClick={() =>
-													doc.url && window.open(doc.url, "_blank")
-												}
-												disabled={!doc.url}
-												className="size-8"
-											>
-												<ExternalLink className="size-3.5" />
-											</Button>
-										</TooltipTrigger>
-										<TooltipContent>Open original file</TooltipContent>
-									</Tooltip>
-									<Button
-										size="sm"
-										onClick={() => handleOpenChat(doc.id, doc.title)}
-										disabled={getOrCreateChatMutation.isPending}
-										className="gap-1.5 text-xs h-8 flex-1 font-medium"
-									>
-										<MessageSquare className="size-3.5" />
-										Chat with Doc
-									</Button>
-								</CardFooter>
-							</Card>
+								<AttachmentTrigger
+									onClick={() => handleOpenChat(doc.id, doc.title)}
+									disabled={getOrCreateChatMutation.isPending}
+								/>
+							</Attachment>
 						);
 					})}
 				</div>
@@ -674,23 +649,38 @@ export default function DocsPage() {
 				open={!!previewDoc}
 				onOpenChange={(open) => !open && setPreviewDoc(null)}
 			>
-				<DialogContent className="max-w-none! w-[96vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0">
-					<DialogHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 border-b space-y-0">
+				<DialogContent
+					showCloseButton={false}
+					className="max-w-none! w-[96vw] sm:w-[92vw] h-[92vh] sm:h-[90vh] flex flex-col p-0 gap-0"
+				>
+					<DialogHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 border-b">
 						<DialogTitle className="flex items-center gap-2 truncate pr-8">
 							<Files className="size-4 text-primary shrink-0" />
-							<span className="truncate">{previewDoc?.title}</span>
-						</DialogTitle>
-						{previewDoc?.url && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => window.open(previewDoc.url, "_blank")}
-								className="gap-1.5 self-start sm:self-auto sm:mr-8"
+							<motion.span
+								layoutId={`doc-title-${previewDoc?.id}`}
+								className="truncate"
 							>
-								<ExternalLink className="size-3.5" />
-								Open original
-							</Button>
-						)}
+								{previewDoc?.title}
+							</motion.span>
+						</DialogTitle>
+						<div className="flex items-center justify-center gap-2">
+							{previewDoc?.url && (
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => window.open(previewDoc.url, "_blank")}
+									className="gap-1.5 self-start"
+								>
+									<ExternalLink className="size-3.5" />
+									Open original
+								</Button>
+							)}
+							<DialogClose asChild>
+								<Button variant="ghost">
+									<IconX />
+								</Button>
+							</DialogClose>
+						</div>
 					</DialogHeader>
 					<div className="flex-1 bg-neutral-900 min-h-0">
 						{previewDoc && isUrlExpired(previewDoc.url) ? (
