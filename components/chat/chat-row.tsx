@@ -11,7 +11,9 @@ import {
 	FileTypeIcon,
 	MessageSquare,
 	Trash2,
+	MoreVertical,
 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import {
@@ -27,6 +29,13 @@ import {
 } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api } from "@/trpc/client";
@@ -92,7 +101,7 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 	const fileTypeBadge = isDocChat
 		? getFileTypeBadge(chat.document?.fileType)
 		: null;
-	const IconComponent = fileTypeBadge ? fileTypeBadge.icon : Bot;
+	const IconComponent = fileTypeBadge?.icon === "file" ? FileTypeIcon : (isDocChat ? null : Bot);
 	return (
 		<Card
 			key={chat.id}
@@ -100,7 +109,7 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 			onMouseLeave={() => setIsRowHovered(false)}
 			onClick={() => router.push(`/chat/${chat.id}`)}
 			className={cn(
-				"group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4",
+				"group relative flex flex-row sm:items-center justify-between gap-4 p-4",
 				"hover:bg-muted/30 hover:border-primary/40 transition-all duration-200 cursor-pointer",
 			)}
 		>
@@ -108,19 +117,28 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 			<div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
 				<div
 					className={cn(
-						"p-2.5 rounded-lg border shrink-0 transition-transform duration-200 group-hover:scale-105",
+						"p-1.5 rounded-lg border shrink-0 transition-transform duration-200 group-hover:scale-105",
 						isDocChat && fileTypeBadge
 							? fileTypeBadge.color
 							: "bg-primary/10 text-primary border-primary/20",
 					)}
 				>
-					<IconComponent className="size-5" />
+					{IconComponent && <IconComponent className="size-5 stroke-1.5" />}
+					{!IconComponent && fileTypeBadge && (
+						<Image
+							src={`https://thesvg.org/icons/${fileTypeBadge.icon.toLowerCase()}/default.svg`}
+							alt="File"
+							width={24}
+							height={24}
+							className="size-5"
+						/>
+					)}
 				</div>
 
 				<div className="min-w-0 flex-1 flex flex-col gap-1">
 					<div className="flex items-center gap-2 flex-wrap">
 						<h3
-							className="font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors overflow-hidden max-w-full"
+							className="font-medium sm:font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors overflow-hidden max-w-60 sm:max-w-full"
 							title={chat.title}
 							ref={containerRef}
 						>
@@ -160,10 +178,10 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 						)}
 					</div>
 
-					<div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+					<div className="flex flex-wrap items-center gap-1 sm:gap-3 text-xs text-muted-foreground">
 						{isDocChat && chat.document?.title && (
-							<span className="truncate max-w-50 sm:max-w-xs">
-								Doc: {chat.document.title}
+							<span className="truncate max-w-28 sm:max-w-xs">
+								{chat.document.title}
 							</span>
 						)}
 
@@ -183,16 +201,74 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 
 			{/* Right: Actions */}
 			<div
-				className="flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50"
+				className="flex items-center justify-end gap-2 shrink-0 border-border/50"
 				onClick={(e) => e.stopPropagation()}
 			>
-				{/* Delete Chat Action */}
+				{/* Mobile Dropdown Actions */}
+				<div className="block @[780px]:hidden">
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="size-8 text-muted-foreground"
+							>
+								<MoreVertical className="size-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuGroup>
+								<DropdownMenuItem
+									onClick={() => router.push(`/chat/${chat.id}`)}
+								>
+									<ArrowRight />
+									Open Chat
+								</DropdownMenuItem>
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<DropdownMenuItem
+											onSelect={(e) => e.preventDefault()}
+											variant="destructive"
+										>
+											<Trash2 />
+											Delete
+										</DropdownMenuItem>
+									</AlertDialogTrigger>
+									<AlertDialogContent onClick={(e) => e.stopPropagation()}>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+											<AlertDialogDescription>
+												Are you sure you want to delete &quot;{chat.title}
+												&quot;? All messages in this chat will be permanently removed.
+												This action cannot be undone.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction
+												onClick={() => {
+													setDeletingId(chat.id);
+													deleteChatMutation.mutate({ id: chat.id });
+												}}
+												className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+											>
+												Delete
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</DropdownMenuGroup>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</div>
+
+				{/* Desktop Inline Actions */}
 				<AlertDialog>
 					<AlertDialogTrigger asChild>
 						<Button
 							variant="ghost"
 							size="icon"
-							className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+							className="hidden md:inline-flex size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
 							disabled={deleteChatMutation.isPending && deletingId === chat.id}
 						>
 							<Trash2 className="size-4" />
@@ -224,11 +300,11 @@ const ChatRow = ({ chat }: ChatRowProps) => {
 
 				<Separator
 					orientation="vertical"
-					className="h-6 hidden sm:block"
+					className="h-6 hidden md:block"
 				/>
 
 				{/* Open Chat Link */}
-				<Link href={`/chat/${chat.id}`}>
+				<Link href={`/chat/${chat.id}`} className="hidden md:block">
 					<Button
 						variant="secondary"
 						size="sm"
@@ -253,7 +329,7 @@ function getFileTypeBadge(fileType?: string) {
 				color:
 					"bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50",
 				badgeColor: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300",
-				icon: FileText,
+				icon: "pdf",
 			};
 		case "DOCX":
 			return {
@@ -262,7 +338,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
 				badgeColor:
 					"bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
-				icon: FileCode2,
+				icon: "microsoft-word",
 			};
 		case "MARKDOWN":
 		case "MD":
@@ -272,7 +348,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
 				badgeColor:
 					"bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300",
-				icon: FileCode,
+				icon: "markdown",
 			};
 		default:
 			return {
@@ -281,7 +357,7 @@ function getFileTypeBadge(fileType?: string) {
 					"bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
 				badgeColor:
 					"bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300",
-				icon: FileTypeIcon,
+				icon: "file",
 			};
 	}
 }

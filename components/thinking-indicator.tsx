@@ -22,7 +22,7 @@ const ThinkingIndicator = () => {
 	}, []);
 
 	return (
-		<div className="flex items-center justify-start w-full px-4 my-2 border border-red-500">
+		<div className="flex items-center justify-start w-full px-4 my-2">
 			<div className="flex items-center justify-center gap-2 md:gap-3">
 				<div className="relative flex md:h-3.5 md:w-3.5 w-2.5 h-2.5">
 					<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground opacity-75" />
