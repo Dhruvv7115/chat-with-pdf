@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { LoaderThree } from "./ui/loader";
+import { Marker, MarkerContent } from "./ui/marker";
 
 export type Chat = {
 	id: string;
@@ -48,7 +49,7 @@ interface Message {
 	updatedAt: string;
 	chatId: string;
 }
-
+const limit = 20;
 const ChatAi = ({
 	chat,
 	docUrl,
@@ -63,7 +64,7 @@ const ChatAi = ({
 
 	const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
 		api.chat.getMessages.useInfiniteQuery(
-			{ chatId: chat.id, limit: 20 },
+			{ chatId: chat.id, limit },
 			{
 				getNextPageParam: (lastPage) => lastPage.nextCursor,
 				refetchOnWindowFocus: false,
@@ -119,7 +120,34 @@ const ChatAi = ({
 			),
 		);
 		hasInitializedSdkChat.current = true;
-	}, [isLoading, messages, setSdkMessages]);
+		prevPageCountRef.current = data?.pages.length ?? 1;
+	}, [isLoading, messages, setSdkMessages, data?.pages.length]);
+
+	const prevPageCountRef = useRef(0);
+
+	useEffect(() => {
+		if (!hasInitializedSdkChat.current) return; // wait for initial seed
+		const currentPageCount = data?.pages.length ?? 0;
+		if (currentPageCount <= prevPageCountRef.current) return; // no new page
+
+		prevPageCountRef.current = currentPageCount;
+
+		const existingIds = new Set(sdkMessages.map((m) => m.id));
+		const newOlderMessages = messages.filter((m) => !existingIds.has(m.id));
+
+		if (newOlderMessages.length === 0) return;
+
+		setSdkMessages((prev) => [
+			...newOlderMessages.map(
+				(message): UIMessage => ({
+					id: message.id,
+					role: message.role === "USER" ? "user" : "assistant",
+					parts: [{ type: "text", text: message.content }],
+				}),
+			),
+			...prev,
+		]);
+	}, [data?.pages.length, messages, sdkMessages, setSdkMessages]);
 
 	// Guards against the effect firing more than once for the same trigger,
 	// regardless of how many times `messages`/`preferences` re-render.
@@ -323,6 +351,14 @@ const ChatAi = ({
 												: "Load older messages"}
 										</button>
 									</div>
+								</MessageScrollerItem>
+							)}
+
+							{!hasNextPage && displayMessages.length >= limit && (
+								<MessageScrollerItem>
+									<Marker variant="separator">
+										<MarkerContent>Start Of Conversation</MarkerContent>
+									</Marker>
 								</MessageScrollerItem>
 							)}
 
