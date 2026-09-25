@@ -7,10 +7,10 @@ export type Language = "en" | "hi";
 export type FontSize = "14px" | "15px" | "16px" | "18px";
 export type FontStyle =
 	| "sans"
+	| "mono"
 	| "inter"
-	| "jet-mono"
-	| "literata"
-	| "mono";
+	| "fira-code"
+	| "instrument-serif";
 
 export type Preferences = {
 	language: Language;

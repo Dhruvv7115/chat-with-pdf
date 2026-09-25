@@ -123,8 +123,8 @@ const PreferencesSection = () => {
 								<SelectItem value="sans">Geist Sans</SelectItem>
 								<SelectItem value="inter">Inter</SelectItem>
 								<SelectItem value="mono">Geist Mono</SelectItem>
-								<SelectItem value="jet-mono">Jet Mono</SelectItem>
-								<SelectItem value="literata">Literata</SelectItem>
+								<SelectItem value="instrument-serif">Instrument Serif</SelectItem>
+								<SelectItem value="fira-code">Fira Code</SelectItem>
 							</SelectGroup>
 						</SelectContent>
 					</Select>

@@ -65,7 +65,7 @@ const CodeBlockHeader = ({
 			: null;
 
 	return (
-		<div className="flex items-center justify-between px-2 pt-1.5 text-sm font-jet-mono font-semibold dark:text-primary text-lime-600">
+		<div className="flex items-center justify-between px-2 pt-1.5 text-sm font-mono font-semibold dark:text-primary text-lime-600">
 			<span className="ml-2">
 				{Icon ? (
 					<Icon

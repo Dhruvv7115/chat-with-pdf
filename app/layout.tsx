@@ -5,8 +5,6 @@ import {
 	Geist,
 	Geist_Mono,
 	Inter,
-	Literata,
-	JetBrains_Mono,
 	Instrument_Serif,
 	Fira_Code,
 } from "next/font/google";
@@ -17,15 +15,6 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const firaCode = Fira_Code({
 	variable: "--font-fira-code",
 	subsets: ["latin"],
-});
-const literata = Literata({
-	subsets: ["latin"],
-	variable: "--font-literata",
-});
-
-const jetBrainsMono = JetBrains_Mono({
-	subsets: ["latin"],
-	variable: "--font-jetbrains-mono",
 });
 
 const geistSans = Geist({
@@ -43,6 +32,7 @@ const instrumentSerif = Instrument_Serif({
 	weight: "400",
 	subsets: ["latin"],
 });
+
 export const metadata: Metadata = {
 	title: "ChatWithPDF",
 	description: "Chat with your documents in seconds, powered by Gemini AI.",
@@ -59,7 +49,7 @@ export default function RootLayout({
 			suppressHydrationWarning
 		>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} ${literata.variable} ${jetBrainsMono.variable} ${inter.variable} ${instrumentSerif.variable} ${firaCode.variable} antialiased`}
+				className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${instrumentSerif.variable} ${firaCode.variable} antialiased`}
 			>
 				<Providers>{children}</Providers>
 			</body>
